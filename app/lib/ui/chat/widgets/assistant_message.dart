@@ -183,7 +183,7 @@ class _AssistantMessageState extends State<AssistantMessage> {
   /// 只有「纯散文」才配得上轻量渲染：代码块、表格、列表、标题、引用、链接、
   /// 图片、公式、dsh-ui 围栏都要如实画，宁可回到全文 Markdown 慢一点。
   static bool _plainOk(String tail) {
-    if (tail.contains('```') || tail.contains('$$')) return false;
+    if (tail.contains('```') || tail.contains(r'$$')) return false;
     for (final line in tail.split('\n')) {
       final t = line.trimLeft();
       if (t.startsWith('|') || t.startsWith('![')) return false;
