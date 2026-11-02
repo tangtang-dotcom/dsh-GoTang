@@ -180,6 +180,23 @@ class _AssistantMessageState extends State<AssistantMessage> {
       .replaceAll('~~', '')
       .replaceAll('`', '');
 
+  /// 只有「纯散文」才配得上轻量渲染：代码块、表格、列表、标题、引用、链接、
+  /// 图片、公式、dsh-ui 围栏都要如实画，宁可回到全文 Markdown 慢一点。
+  static bool _plainOk(String tail) {
+    if (tail.contains('```') || tail.contains('$$')) return false;
+    for (final line in tail.split('\n')) {
+      final t = line.trimLeft();
+      if (t.startsWith('|') || t.startsWith('![')) return false;
+      if (t.startsWith('#') || t.startsWith('>') || t.startsWith('- ') || t.startsWith('* ')) return false;
+      if (RegExp(r'^\d+[.)]\s').hasMatch(t)) return false;
+      if (t.contains('](')) return false;
+    }
+    return true;
+  }
+
+  Widget? _structuredBody;
+  String? _structuredText;
+
   Widget _markdown(String text, bool streaming, TextStyle? style) {
     if (!streaming) {
       _pump?.cancel();
@@ -197,6 +214,17 @@ class _AssistantMessageState extends State<AssistantMessage> {
     }
 
     final cut = _streamSplit(text);
+    final tailRaw = cut > 0 ? text.substring(cut) : text;
+    if (!_plainOk(tailRaw)) {
+      // 结构化内容：整段交给 Markdown，正确优先。
+      _pump?.cancel();
+      _pump = null;
+      if (_structuredText != text) {
+        _structuredText = text;
+        _structuredBody = MarkdownBody(text: text, streaming: true, selectable: false, repairBareViews: true);
+      }
+      return _structuredBody!;
+    }
     final prefix = cut > 0 ? text.substring(0, cut) : '';
     if (_prefixText != prefix) {
       _prefixText = prefix;
