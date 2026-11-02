@@ -218,6 +218,17 @@ class _PhoneControlScreenState extends ConsumerState<PhoneControlScreen> {
     if (mounted && open) await _openAppDetails();
   }
 
+  /// 进阶 → 逆向工具: status + one install button. The sheet polls while it is open;
+  /// nothing is installed until the button is tapped.
+  void _openToolchain() {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const _ToolchainSheet(),
+    );
+  }
+
   /// 进阶 → Root 命令: the switch alone. The status refresh redraws it, so nothing is
   /// cached here; a refusal is the only thing worth saying out loud.
   Future<void> _toggleRootShell(bool next) async {
@@ -354,6 +365,13 @@ class _PhoneControlScreenState extends ConsumerState<PhoneControlScreen> {
                   subtitleMaxLines: 3,
                   onTap: () => _toggleRootShell(!status.rootShell),
                   trailing: Switch(value: status.rootShell, onChanged: _toggleRootShell),
+                ),
+                ListPageRow(
+                  icon: AppIcons.code,
+                  title: l10n.toolchainTitle,
+                  subtitle: l10n.toolchainHint,
+                  subtitleMaxLines: 3,
+                  onTap: _openToolchain,
                 ),
                 ListPageRow(
                   icon: AppIcons.keepAlive,
@@ -715,6 +733,119 @@ class _YoursGroup extends ConsumerWidget {
           onTap: () => onLink(_ConfirmLink.unlocks),
         ),
       ],
+    );
+  }
+}
+
+/// 进阶 → 逆向工具: what is installed under the rootfs' /root/opt, and a button that runs
+/// the fixed install script inside PRoot. Rows refresh every 2 s while the sheet is open.
+class _ToolchainSheet extends ConsumerStatefulWidget {
+  const _ToolchainSheet();
+
+  @override
+  ConsumerState<_ToolchainSheet> createState() => _ToolchainSheetState();
+}
+
+class _ToolchainSheetState extends ConsumerState<_ToolchainSheet> {
+  static const _labels = <String, String>{
+    'java': 'Java 17',
+    'jadx': 'jadx',
+    'apktool': 'apktool',
+    'r2': 'radare2',
+    'objdump': 'binutils',
+  };
+
+  Map<Object?, Object?> _status = const {};
+  Timer? _timer;
+  bool _starting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_load());
+    _timer = Timer.periodic(const Duration(seconds: 2), (_) => unawaited(_load()));
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _load() async {
+    try {
+      final next = await ref.read(runtimeBridgeProvider).toolchainStatus();
+      if (mounted) setState(() => _status = next);
+    } catch (_) {
+      // The native side may be busy starting the engine; keep the last snapshot.
+    }
+  }
+
+  Future<void> _install() async {
+    setState(() => _starting = true);
+    try {
+      await ref.read(runtimeBridgeProvider).installToolchain();
+    } finally {
+      if (mounted) setState(() => _starting = false);
+      await _load();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final installed = (_status['installed'] as Map?)?.cast<Object?, Object?>() ?? const {};
+    final running = _status['running'] == true;
+    final runtimeReady = _status['runtimeReady'] != false;
+    final allInstalled = _status['allInstalled'] == true;
+    final log = (_status['log'] as String?)?.trim() ?? '';
+
+    return Material(
+      color: theme.colorScheme.surface,
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l10n.toolchainTitle, style: theme.textTheme.titleMedium),
+              const SizedBox(height: 6),
+              Text(l10n.toolchainHint, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+              const SizedBox(height: 12),
+              for (final entry in _labels.entries)
+                ListPageRow(
+                  title: entry.value,
+                  subtitle: installed[entry.key] == true ? l10n.toolchainInstalled : l10n.toolchainMissing,
+                  trailing: Icon(
+                    installed[entry.key] == true ? Icons.check_circle : Icons.radio_button_unchecked,
+                    size: 20,
+                    color: installed[entry.key] == true ? theme.colorScheme.primary : theme.colorScheme.outline,
+                  ),
+                ),
+              if (log.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Text(log, maxLines: 2, overflow: TextOverflow.ellipsis, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+              ],
+              const SizedBox(height: 12),
+              if (!runtimeReady)
+                Text(l10n.toolchainNoRuntime, style: theme.textTheme.bodySmall)
+              else
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: (_starting || running) ? null : _install,
+                    icon: const Icon(Icons.download, size: 18),
+                    label: Text(running ? l10n.toolchainInstalling : (allInstalled ? l10n.toolchainReinstall : l10n.toolchainInstall)),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

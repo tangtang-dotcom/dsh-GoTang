@@ -50,6 +50,16 @@ class RuntimeController private constructor(private val app: Context) : DshProce
 
     val manifest: RuntimeManifest by lazy { RuntimeManifest.load(app) }
     private val installer by lazy { RuntimeInstaller(app, manifest, ::note) }
+    private val toolchain by lazy { ToolchainInstaller(app, manifest) }
+
+    /** 进阶 → 逆向工具: what is installed under /root/opt, and whether an install is running. */
+    fun toolchainStatus(): Map<String, Any?> = runCatching { toolchain.status() }
+        .getOrElse { mapOf("runtimeReady" to false, "installed" to emptyMap<String, Any?>(), "allInstalled" to false, "running" to false) }
+
+    /** 进阶 → 逆向工具: start /root/install-tools.sh inside PRoot. Never runs su or apt itself. */
+    fun installToolchain(): Map<String, Any?> = runCatching { toolchain.install() }
+        .getOrElse { mapOf("ok" to false, "reason" to "deviceUnavailable") }
+
     @Volatile private var process: DshProcess? = null
     @Volatile private var lastLaunch: LaunchDiagnostics? = null
     /** The start in progress is turning PRoot's fake hard links into real files (see [L2sMigration]). */

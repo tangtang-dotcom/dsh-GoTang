@@ -148,6 +148,9 @@ class RuntimePlugin :
                 }
             }
             "failureLog" -> result.success(controller.failureLog())
+            // 进阶 → 逆向工具: status only reads the rootfs; install runs the fixed script.
+            "toolchainStatus" -> result.success(controller.toolchainStatus())
+            "installToolchain" -> result.success(controller.installToolchain())
             "batteryExempt" -> {
                 val pm = appContext.getSystemService(Context.POWER_SERVICE) as PowerManager
                 result.success(pm.isIgnoringBatteryOptimizations(appContext.packageName))
