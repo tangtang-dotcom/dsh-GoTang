@@ -23,6 +23,9 @@ object PhoneToolCatalog {
     const val TAP_XY = "tap_xy"
     const val HANDOFF = "handoff"
 
+    /** Off by default: 设置 → 手机操控 → 进阶 → Root 命令 turns it on; only the Root channel answers. */
+    const val ROOT_SHELL = "root_shell"
+
     class Tool(val name: String, val description: String, val properties: Map<String, Any?>, val required: List<String>) {
         fun toJson(): Map<String, Any?> = linkedMapOf(
             "name" to name,
@@ -244,6 +247,21 @@ object PhoneToolCatalog {
             // l10n:keep agent tool catalog
             linkedMapOf("reason" to str("要用户做什么，一句话")),
             listOf("reason"),
+        ),
+        Tool(
+            ROOT_SHELL,
+            // l10n:keep agent tool catalog
+            "以 Root 身份执行一条 shell 命令，返回退出码、stdout 与 stderr。" +
+                "需要用户先在 设置 → 手机操控 → 进阶 打开「Root 命令」，且不打扰模式的通道是 Root；" +
+                "未开启或通道不是 Root 时会直接说明原因。" +
+                "只读查询优先；不要用它改系统、刷机或删除用户数据。",
+            linkedMapOf(
+                // l10n:keep agent tool catalog
+                "command" to str("要执行的命令，交给 /system/bin/sh -c"),
+                // l10n:keep agent tool catalog
+                "timeout_ms" to int("超时毫秒，默认 20000，上限 120000"),
+            ),
+            listOf("command"),
         ),
     )
 

@@ -216,6 +216,9 @@ class PhoneController extends Notifier<PhoneState> {
   /// Only an explicit tap: refresh, build and status events never prepare root.
   Future<PhoneResult> prepareRoot() => _ifSupported(PhonePrivilegedMode.root, _channel.prepareRoot);
 
+  /// 进阶 → Root 命令: an explicit tap only; the switch never starts su by itself.
+  Future<PhoneResult> setRootShell(bool on) => _thenRefresh(_channel.setRootShell(on));
+
   Future<PhoneResult> _ifSupported(PhonePrivilegedMode mode, Future<PhoneResult> Function() action) =>
       state.status.background.supportedModes.contains(mode)
       ? _thenRefresh(action())

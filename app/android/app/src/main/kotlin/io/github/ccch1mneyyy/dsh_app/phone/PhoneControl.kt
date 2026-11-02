@@ -170,7 +170,58 @@ class PhoneControl private constructor(private val app: Context) : PhoneEnv, Con
         return true
     }
 
+    // ── Root 命令 (进阶) ────────────────────────────────────────────────────────────
+
+    /** 设置 → 手机操控 → 进阶 → Root 命令. Off unless the person turned it on. */
+    fun rootShellEnabled(): Boolean = prefs.getBoolean(K_ROOT_SHELL, false)
+
+    /** The switch itself: it never runs su, and turning it off takes effect on the next call. */
+    fun setRootShell(enabled: Boolean): Map<String, Any?> {
+        prefs.edit().putBoolean(K_ROOT_SHELL, enabled).apply()
+        emitStatus()
+        return mapOf("ok" to true, "rootShell" to enabled)
+    }
+
+    override fun rootShell(command: String, timeoutMs: Int): ToolOutput {
+        if (!rootShellEnabled()) {
+            // l10n:keep agent tool result
+            return ToolOutput(
+                "Root 命令开关没打开。请用户在 设置 → 手机操控 → 进阶 里打开「Root 命令」；" +
+                    "打开前不要重试这一步，先说清楚要执行什么。",
+                isError = true,
+            )
+        }
+        val result = background.exec(command, timeoutMs)
+        val code = result["reasonCode"] as? String
+        if (code != null) {
+            // l10n:keep agent tool result
+            val text = when (code) {
+                "permissionRequired" -> "不打扰模式的通道不是 Root。请用户在 设置 → 手机操控 → 不打扰模式 里选 Root 并连接。"
+                "channelDisabled" -> "Root 通道没有连上。请用户在不打扰模式里点 Root 连接，或保持 root 通道。"
+                "timeout" -> "命令超时，已中止。已执行的副作用不会回滚；不要直接重试。"
+                "deviceUnavailable" -> "Root 通道通信失败，这一步没有执行。"
+                "rootRequired" -> "Root 通道的身份不是 root。"
+                "invalidArguments" -> "命令为空或不合法。"
+                else -> "Root 命令未执行：$code"
+            }
+            return ToolOutput(text, isError = true)
+        }
+        val exitCode = result["exitCode"] as? Int ?: -1
+        val stdout = result["stdout"] as? String ?: ""
+        val stderr = result["stderr"] as? String ?: ""
+        val truncated = result["truncated"] as? Boolean == true
+        val text = buildString {
+            // l10n:keep agent tool result
+            append("exit=").append(exitCode)
+            if (truncated) append("（输出被截断）")
+            if (stdout.isNotBlank()) append("\n").append(stdout.trimEnd())
+            if (stderr.isNotBlank()) append("\n[stderr]\n").append(stderr.trimEnd())
+        }
+        return ToolOutput(text, isError = exitCode != 0)
+    }
+
     override fun policies(): PhonePolicies = policiesCache ?: run {
+
         val stored = prefs.getString(K_POLICIES, null)
         val p = try {
             PhonePolicies.fromMap(stored?.let { Json.parse(it) as? Map<*, *> })
@@ -441,6 +492,7 @@ class PhoneControl private constructor(private val app: Context) : PhoneEnv, Con
         "notifications" to nm.areNotificationsEnabled(),
         "confirmationNotifications" to notificationGate.available(),
         "background" to backgroundStatus(),
+        "rootShell" to rootShellEnabled(),
         "a11yKeeper" to keeperStatus(),
         "task" to tasks.snapshot().toMap(),
         "device" to linkedMapOf(
@@ -625,6 +677,8 @@ class PhoneControl private constructor(private val app: Context) : PhoneEnv, Con
         private const val K_ENABLED = "enabled"
         private const val K_POLICIES = "policies"
         private const val K_TCP_FALLBACK = "tcpFallback"
+        /** 进阶 → Root 命令. Absent reads as off; an app update never turns it on. */
+        private const val K_ROOT_SHELL = "rootShell"
         private const val CHANNEL_FIX = "dsh-phone-fix"
         private const val NOTIFY_FIX_ID = 4099
 

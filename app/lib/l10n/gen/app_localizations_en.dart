@@ -9508,6 +9508,8 @@ class L10nEn extends L10n {
 
   @override
   String get phoneControlAdvanced => 'Advanced';
+  String get phoneRootShellTitle => 'Root commands';
+  String get phoneRootShellHint => 'Let the model run commands as root; when off, the tool refuses';
 
   @override
   String get phoneControlKeepAliveHint => 'Prevent Android from turning off accessibility';

@@ -2768,6 +2768,8 @@
   "phoneControlTaskNoConfirmHint": "Confirmation skipped for this task · Pause or stop from the floating bar",
   "phoneControlFloatingBarHint": "Pause or stop from the floating bar",
   "phoneControlAdvanced": "Advanced",
+  "phoneRootShellTitle": "Root commands",
+  "phoneRootShellHint": "Let the model run commands as root; when off, the tool refuses",
   "phoneControlKeepAliveHint": "Prevent Android from turning off accessibility",
   "phoneControlReadingEllipsis": "Reading…",
   "phoneControlNotReady": "Not ready",

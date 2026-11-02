@@ -16700,6 +16700,18 @@ abstract class L10n {
   /// **'进阶'**
   String get phoneControlAdvanced;
 
+  /// No description provided for @phoneRootShellTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'Root 命令'**
+  String get phoneRootShellTitle;
+
+  /// No description provided for @phoneRootShellHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'让模型以 Root 身份执行命令；关闭时工具会直接拒绝'**
+  String get phoneRootShellHint;
+
   /// No description provided for @phoneControlKeepAliveHint.
   ///
   /// In zh, this message translates to:

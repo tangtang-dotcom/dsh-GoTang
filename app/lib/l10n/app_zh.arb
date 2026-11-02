@@ -5549,6 +5549,8 @@
   "phoneControlTaskNoConfirmHint": "本任务免确认 · 悬浮条上也能暂停或停止",
   "phoneControlFloatingBarHint": "悬浮条上也能暂停或停止",
   "phoneControlAdvanced": "进阶",
+  "phoneRootShellTitle": "Root 命令",
+  "phoneRootShellHint": "让模型以 Root 身份执行命令；关闭时工具会直接拒绝",
   "phoneControlKeepAliveHint": "防止系统关掉无障碍",
   "phoneControlReadingEllipsis": "正在读取…",
   "phoneControlNotReady": "未就绪",

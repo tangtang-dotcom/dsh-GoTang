@@ -218,6 +218,14 @@ class _PhoneControlScreenState extends ConsumerState<PhoneControlScreen> {
     if (mounted && open) await _openAppDetails();
   }
 
+  /// 进阶 → Root 命令: the switch alone. The status refresh redraws it, so nothing is
+  /// cached here; a refusal is the only thing worth saying out loud.
+  Future<void> _toggleRootShell(bool next) async {
+    final result = await _phone.setRootShell(next);
+    if (!mounted || result.ok) return;
+    _toast(context.l10n.commonFailed);
+  }
+
   Future<void> _offerBackgroundGuide() async {
     if (_backgroundGuideShown) return;
     try {
@@ -338,6 +346,14 @@ class _PhoneControlScreenState extends ConsumerState<PhoneControlScreen> {
                   spot: SettingsIndex.entry(SettingsPageId.phoneDnd),
                   subtitle: dndSummary(status.background),
                   onTap: () => _push(const PhoneDndPage()),
+                ),
+                ListPageRow(
+                  icon: AppIcons.terminal,
+                  title: l10n.phoneRootShellTitle,
+                  subtitle: l10n.phoneRootShellHint,
+                  subtitleMaxLines: 3,
+                  onTap: () => _toggleRootShell(!status.rootShell),
+                  trailing: Switch(value: status.rootShell, onChanged: _toggleRootShell),
                 ),
                 ListPageRow(
                   icon: AppIcons.keepAlive,
