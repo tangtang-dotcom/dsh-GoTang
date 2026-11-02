@@ -33,7 +33,7 @@ jobs:
         run: |
           set -euo pipefail
           source tooling/env.sh
-          bash runtime/build-runtime.sh arm64
+          bash runtime/build-runtime.sh arm64-v8a
 
       - name: APK
         run: |
