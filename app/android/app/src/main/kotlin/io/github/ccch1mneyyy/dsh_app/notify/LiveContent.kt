@@ -40,6 +40,15 @@ data class LiveContent(
         }
     }
 
+    /**
+     * 通知/岛上的主标题：运行中显示「思考中 / 干活中」，等待和结束显示各自的状态词。
+     * 会话名退到 [liveDetail] —— 实时状态比会话名有用。
+     */
+    val headline: String get() = chipWords?.takeIf { it.isNotBlank() } ?: title
+
+    /** 副行：运行中放会话名，其他情况还是原来那句话。 */
+    val detail: String get() = if (busy && title.isNotBlank()) title else text
+
     /** Still going: an indeterminate bar, refreshed while it lasts. */
     val busy: Boolean get() = kind == Kind.PHONE || kind == Kind.RUNNING
 

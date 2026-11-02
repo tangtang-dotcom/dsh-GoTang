@@ -147,19 +147,72 @@ class _AssistantMessageState extends State<AssistantMessage> {
     });
   }
 
-  /// 同一段文字只建一次 Markdown 子树:列表每 32ms 重建一次时,
-  /// 没变的消息直接复用同一个 widget 实例,Flutter 不会再往下走。
-  Widget _markdown(String text, bool streaming) {
-    final shown = _smooth(text, streaming);
-    if (_body == null || _bodyText != shown || _bodyStreaming != streaming) {
-      // Long-press opens the menu; selecting text is one of its entries.
-      // repairBareViews: a model that forgets the ```dsh-ui fence still gets
-      // its view drawn instead of a wall of JSON.
-      _body = MarkdownBody(text: shown, streaming: streaming, selectable: false, repairBareViews: true);
-      _bodyText = shown;
-      _bodyStreaming = streaming;
+  /// 流式期间：已经写完的段落照常渲染成 Markdown，只有正在写的最后一块用
+  /// 轻量文本追字。这样每帧成本与回复长度无关 —— 思考行之所以流畅就是这个原因。
+  String? _prefixText;
+  Widget? _prefixBody;
+
+  /// 最后一个「完整块」的边界：空行，且不在 ``` 围栏里；没有就返回 0（整段都算正在写）。
+  static int _streamSplit(String text) {
+    var fences = 0;
+    var safe = 0;
+    var i = 0;
+    while (i < text.length) {
+      if (text.startsWith('```', i)) {
+        fences++;
+        i += 3;
+        continue;
+      }
+      if (text.startsWith('\n\n', i)) {
+        if (fences.isEven) safe = i + 2;
+        i += 2;
+        continue;
+      }
+      i++;
     }
-    return _body!;
+    return safe;
+  }
+
+  /// 末尾还在写的这一块：去掉行内的 Markdown 标记，先当普通文字显示；
+  /// 整块写完时它会并进上面的 Markdown 里。
+  static String _plainTail(String text) => text
+      .replaceAll('**', '')
+      .replaceAll('~~', '')
+      .replaceAll('`', '');
+
+  Widget _markdown(String text, bool streaming, TextStyle? style) {
+    if (!streaming) {
+      _pump?.cancel();
+      _pump = null;
+      final shown = _smooth(text, false);
+      if (_body == null || _bodyText != shown || _bodyStreaming != streaming) {
+        // Long-press opens the menu; selecting text is one of its entries.
+        // repairBareViews: a model that forgets the ```dsh-ui fence still gets
+        // its view drawn instead of a wall of JSON.
+        _body = MarkdownBody(text: shown, streaming: false, selectable: false, repairBareViews: true);
+        _bodyText = shown;
+        _bodyStreaming = streaming;
+      }
+      return _body!;
+    }
+
+    final cut = _streamSplit(text);
+    final prefix = cut > 0 ? text.substring(0, cut) : '';
+    if (_prefixText != prefix) {
+      _prefixText = prefix;
+      _prefixBody = prefix.isEmpty
+          ? null
+          : MarkdownBody(text: prefix, streaming: false, selectable: false, repairBareViews: true);
+    }
+    final tail = _plainTail(cut > 0 ? text.substring(cut) : text);
+    final shownTail = _smooth(tail, true);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (_prefixBody != null) _prefixBody!,
+        if (shownTail.isNotEmpty) Text(shownTail, style: style),
+      ],
+    );
   }
 
   @override
@@ -184,6 +237,8 @@ class _AssistantMessageState extends State<AssistantMessage> {
     }
 
     final actions = widget.showActions && !streaming && text.isNotEmpty;
+    // 正文样式：和 MarkdownBody 里用的同一套，末尾追字时保持字号/行高一致。
+    final bodyStyle = AppType.chatBody(context, color: Theme.of(context).colorScheme.onSurface);
     final reply = GestureDetector(
       behavior: HitTestBehavior.opaque,
       onLongPress: streaming || text.isEmpty ? null : () => _menu(text),
@@ -194,7 +249,7 @@ class _AssistantMessageState extends State<AssistantMessage> {
             ThinkingPill(reasoning: reasoning, active: streaming && text.isEmpty, streaming: streaming),
             if (text.isNotEmpty) const SizedBox(height: 8),
           ],
-          if (text.isNotEmpty) _markdown(text, streaming),
+          if (text.isNotEmpty) _markdown(text, streaming, bodyStyle),
           if (item.interrupted) const _InterruptedMark(),
           // 一轮结束时和输入条上的胶囊同一节奏展开:胶囊收回多少,这里长出
           // 多少,回答不会先被顶上去再落回来。打开对话时已结束的轮直接展开。
