@@ -119,13 +119,42 @@ internal object PrivilegedExec {
         return Capture(kept.toString(Charsets.UTF_8.name()), truncated)
     }
 
-    private fun destroyTree(process: Process) {
+    private fun destroyTree(process: java.lang.Process) {
         // Children first: a shell's own kill would leave backgrounded grandchildren behind.
-        runCatching {
-            process.toHandle().descendants().forEach { runCatching { it.destroyForcibly() } }
+        // java.lang.ProcessHandle is absent on Android, so walk /proc/<pid>/task/*/children and
+        // kill the collected pids with the system shell; this process is root, so /proc is ours.
+        val root = pidOf(process)
+        val victims = ArrayList<Int>()
+        if (root != null) {
+            fun collect(pid: Int, depth: Int) {
+                if (depth > 6) return
+                val tasks = java.io.File("/proc/$pid/task").listFiles() ?: return
+                for (task in tasks) {
+                    val children = runCatching { java.io.File(task, "children").readText() }.getOrNull() ?: continue
+                    for (child in children.trim().split(' ')) {
+                        val childPid = child.toIntOrNull() ?: continue
+                        collect(childPid, depth + 1)
+                        victims.add(childPid)
+                    }
+                }
+            }
+            runCatching { collect(root, 0) }
+        }
+        if (victims.isNotEmpty()) {
+            runCatching {
+                val kill = ProcessBuilder("/system/bin/sh", "-c", "kill -9 " + victims.joinToString(" "))
+                    .redirectErrorStream(true)
+                    .start()
+                kill.waitFor(2, TimeUnit.SECONDS)
+            }
         }
         runCatching { process.destroyForcibly() }
     }
+
+    /** Reflective: [java.lang.Process.pid] is API 26+, and this file must compile on older stubs. */
+    private fun pidOf(process: java.lang.Process): Int? = runCatching {
+        (process.javaClass.getMethod("pid").invoke(process) as Number).toInt()
+    }.getOrNull()
 
     private fun failure(code: String) = Bundle().apply {
         putBoolean(Proto.OK, false)
