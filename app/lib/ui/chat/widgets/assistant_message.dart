@@ -130,10 +130,10 @@ class _AssistantMessageState extends State<AssistantMessage> {
     return _revealed;
   }
 
-  /// ~41fps 自己推进；追上目标或流式结束时停，不用等父组件下一次重建。
+  /// ~60fps 自己推进；追上目标或流式结束时停，不用等父组件下一次重建。
   void _startPump() {
     if (_pump != null) return;
-    _pump = Timer.periodic(const Duration(milliseconds: 33), (timer) {
+    _pump = Timer.periodic(const Duration(milliseconds: 16), (timer) {
       if (!mounted || !widget.item.streaming) {
         timer.cancel();
         _pump = null;
