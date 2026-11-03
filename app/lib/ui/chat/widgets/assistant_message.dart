@@ -86,6 +86,7 @@ class _AssistantMessageState extends State<AssistantMessage> {
   @override
   void dispose() {
     _pump?.cancel();
+    _structuredRetry?.cancel();
     super.dispose();
   }
 
@@ -196,6 +197,17 @@ class _AssistantMessageState extends State<AssistantMessage> {
 
   Widget? _structuredBody;
   String? _structuredText;
+  DateTime _structuredAt = DateTime.fromMillisecondsSinceEpoch(0);
+  Timer? _structuredRetry;
+
+  /// 距离上次解析还不到 80ms：到点再重建一次，把尾部补齐。
+  void _scheduleStructuredRefresh() {
+    if (_structuredRetry != null) return;
+    _structuredRetry = Timer(const Duration(milliseconds: 80), () {
+      _structuredRetry = null;
+      if (mounted && widget.item.streaming) setState(() {});
+    });
+  }
 
   Widget _markdown(String text, bool streaming, TextStyle? style) {
     if (!streaming) {
@@ -216,14 +228,21 @@ class _AssistantMessageState extends State<AssistantMessage> {
     final cut = _streamSplit(text);
     final tailRaw = cut > 0 ? text.substring(cut) : text;
     if (!_plainOk(tailRaw)) {
-      // 结构化内容：整段交给 Markdown，正确优先。
+      // 结构化内容：整段交给 Markdown，正确优先。解析很贵，所以按 80ms 采样
+      // （参考 rikkahub：全量重解析是这条链路上最贵的 CPU 活），尾部最多晚 80ms，
+      // 不会丢字。
       _pump?.cancel();
       _pump = null;
-      if (_structuredText != text) {
+      final now = DateTime.now();
+      final due = _structuredText == null || now.difference(_structuredAt).inMilliseconds >= 80;
+      if (due && _structuredText != text) {
         _structuredText = text;
+        _structuredAt = now;
         _structuredBody = MarkdownBody(text: text, streaming: true, selectable: false, repairBareViews: true);
+      } else if (!due) {
+        _scheduleStructuredRefresh();
       }
-      return _structuredBody!;
+      return _structuredBody ?? const SizedBox.shrink();
     }
     final prefix = cut > 0 ? text.substring(0, cut) : '';
     if (_prefixText != prefix) {
