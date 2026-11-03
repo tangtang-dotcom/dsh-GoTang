@@ -114,10 +114,14 @@ class _AssistantMessageState extends State<AssistantMessage> {
     return _shown!;
   }
 
-  /// 流式期间：已经写完的段落照常渲染成 Markdown，只有正在写的最后一块用
-  /// 轻量文本。采样之后每帧成本与回复长度无关。
+  /// 流式期间：已经写完的段落渲染成一次 Markdown 并缓存，只有正在写的那一块
+  /// 每次采样重建。每次解析的规模因此和回复长度无关。
   String? _prefixText;
   Widget? _prefixBody;
+
+  /// 正在写的那一块：整段解析（只解析这一块），按采样后的文本缓存。
+  String? _tailSource;
+  Widget? _tailBody;
 
   /// 最后一个「完整块」的边界：空行，且不在 ``` 围栏里；没有就返回 0（整段都算正在写）。
   static int _streamSplit(String text) {
@@ -140,30 +144,7 @@ class _AssistantMessageState extends State<AssistantMessage> {
     return safe;
   }
 
-  /// 末尾还在写的这一块：去掉行内的 Markdown 标记，先当普通文字显示；
-  /// 整块写完时它会并进上面的 Markdown 里。
-  static String _plainTail(String text) => text
-      .replaceAll('**', '')
-      .replaceAll('~~', '')
-      .replaceAll('`', '');
-
-  /// 只有「纯散文」才配得上轻量渲染：代码块、表格、列表、标题、引用、链接、
-  /// 图片、公式、dsh-ui 围栏都要如实画，宁可回到全文 Markdown 慢一点。
-  static bool _plainOk(String tail) {
-    if (tail.contains('```') || tail.contains(r'$$')) return false;
-    for (final line in tail.split('\n')) {
-      final t = line.trimLeft();
-      if (t.startsWith('|') || t.startsWith('![')) return false;
-      if (t.startsWith('#') || t.startsWith('>') || t.startsWith('- ') || t.startsWith('* ')) return false;
-      if (RegExp(r'^\d+[.)]\s').hasMatch(t)) return false;
-      if (t.contains('](')) return false;
-    }
-    return true;
-  }
-
-  Widget? _structuredBody;
-  String? _structuredText;
-  Widget _markdown(String text, bool streaming, TextStyle? style) {
+  Widget _markdown(String text, bool streaming) {
     if (!streaming) {
       if (_body == null || _bodyText != text || _bodyStreaming != streaming) {
         // Long-press opens the menu; selecting text is one of its entries.
@@ -176,18 +157,12 @@ class _AssistantMessageState extends State<AssistantMessage> {
       return _body!;
     }
 
-    // 流式：先按 80ms 采样，再决定这一段怎么画。
+    // 流式：80ms 采样一次整段文本（同 rikkahub 的 sample(80)），但只把文字切成
+    // 「已完成的块」和「正在写的块」——前者只在块结束时重建，后者每次采样重建。
+    // 这样每次解析的只是最后一块，而不是整条回复；排版结果是真正的 Markdown，
+    // 不会像纯文本降级那样在块结束瞬间跳一下。
     final shown = _sampled(text, true);
     final cut = _streamSplit(shown);
-    final tailRaw = cut > 0 ? shown.substring(cut) : shown;
-    if (!_plainOk(tailRaw)) {
-      // 结构化内容（列表、表格、代码块、卡片）：整段交给 Markdown，正确优先。
-      if (_structuredText != shown) {
-        _structuredText = shown;
-        _structuredBody = MarkdownBody(text: shown, streaming: true, selectable: false, repairBareViews: true);
-      }
-      return _structuredBody ?? const SizedBox.shrink();
-    }
     final prefix = cut > 0 ? shown.substring(0, cut) : '';
     if (_prefixText != prefix) {
       _prefixText = prefix;
@@ -196,12 +171,16 @@ class _AssistantMessageState extends State<AssistantMessage> {
           : MarkdownBody(text: prefix, streaming: false, selectable: false, repairBareViews: true);
     }
     final tail = cut > 0 ? shown.substring(cut) : shown;
-    if (tail.isEmpty && _prefixBody == null) return const SizedBox.shrink();
+    if (_tailSource != shown) {
+      _tailSource = shown;
+      _tailBody = MarkdownBody(text: tail, streaming: true, selectable: false, repairBareViews: true);
+    }
+    if (_prefixBody == null && _tailBody == null) return const SizedBox.shrink();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (_prefixBody != null) _prefixBody!,
-        if (tail.isNotEmpty) Text(_plainTail(tail), style: style),
+        if (_tailBody != null) _tailBody!,
       ],
     );
   }
@@ -228,8 +207,6 @@ class _AssistantMessageState extends State<AssistantMessage> {
     }
 
     final actions = widget.showActions && !streaming && text.isNotEmpty;
-    // 正文样式：和 MarkdownBody 里用的同一套，末尾追字时保持字号/行高一致。
-    final bodyStyle = AppType.chatBody(context, color: Theme.of(context).colorScheme.onSurface);
     final reply = GestureDetector(
       behavior: HitTestBehavior.opaque,
       onLongPress: streaming || text.isEmpty ? null : () => _menu(text),
@@ -240,7 +217,7 @@ class _AssistantMessageState extends State<AssistantMessage> {
             ThinkingPill(reasoning: reasoning, active: streaming && text.isEmpty, streaming: streaming),
             if (text.isNotEmpty) const SizedBox(height: 8),
           ],
-          if (text.isNotEmpty) _markdown(text, streaming, bodyStyle),
+          if (text.isNotEmpty) _markdown(text, streaming),
           if (item.interrupted) const _InterruptedMark(),
           // 一轮结束时和输入条上的胶囊同一节奏展开:胶囊收回多少,这里长出
           // 多少,回答不会先被顶上去再落回来。打开对话时已结束的轮直接展开。
