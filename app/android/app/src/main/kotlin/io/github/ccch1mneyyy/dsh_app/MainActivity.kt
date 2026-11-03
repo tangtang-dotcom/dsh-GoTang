@@ -137,16 +137,10 @@ class MainActivity : FlutterActivity() {
         val fastest = display.supportedModes
             .filter { it.physicalWidth == now.physicalWidth && it.physicalHeight == now.physicalHeight }
             .maxByOrNull { it.refreshRate }
-        // auto 请求「跑得动的最快档」：144Hz 每帧只有 6.9ms，这台机器一帧要 9ms，
-        // 盲目要最高档会每帧都错过 vsync，看起来反而卡。90Hz 有 11.1ms，装得下。
-        val comfortable = display.supportedModes
-            .filter { it.physicalWidth == now.physicalWidth && it.physicalHeight == now.physicalHeight }
-            .filter { it.refreshRate <= AUTO_MAX_HZ }
-            .maxByOrNull { it.refreshRate }
         val want = when (refreshMode) {
             "max" -> fastest
             "system" -> null
-            else -> if (framesActive) (comfortable ?: fastest) else null
+            else -> if (framesActive) fastest else null
         }
         val target = want?.modeId ?: 0
         if (window.attributes.preferredDisplayModeId == target) return
@@ -211,8 +205,6 @@ class MainActivity : FlutterActivity() {
     private var framesActive = true
 
     companion object {
-        /** auto 模式最多请求到这个刷新率；更高档位留给显式的「最高」。 */
-        private const val AUTO_MAX_HZ = 90f
 
         private const val ENGINE_ID = "dsh-main"
 
