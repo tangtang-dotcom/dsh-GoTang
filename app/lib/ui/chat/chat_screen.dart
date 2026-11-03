@@ -76,6 +76,7 @@ import 'composer.dart';
 import 'composer_toast.dart';
 import 'dock/chat_dock.dart';
 import 'dock/dock_stack.dart';
+import 'dock/terminal_dock_slot.dart';
 import 'empty_state.dart';
 import 'empty_actions.dart';
 import 'media/generate_mode.dart';
@@ -1785,6 +1786,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> with WidgetsBindingObse
                                     child: DockStack(
                                       cards: [
                                         if (sessionId != null) ...[
+                                          const TerminalDockSlot(),
                                           TodoDockSlot(sessionId: sessionId),
                                           GoalDockSlot(sessionId: sessionId),
                                           ActivityStripSlot(
