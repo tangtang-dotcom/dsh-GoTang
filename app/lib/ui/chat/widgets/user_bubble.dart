@@ -95,7 +95,10 @@ class UserBubble extends StatelessWidget {
     // Selecting goes through the menu ("选择文字"): long-press is the menu.
     // `@` references draw as chips; text with a credential stays a plain
     // SecretText.
-    Widget content = ReferenceText(quote == null ? shown : body, style: style, interactive: interactive);
+    // 长按选中（和助手消息一致）：SelectionArea 让 Text.rich / SecretText 都可选。
+    Widget content = SelectionArea(
+      child: ReferenceText(quote == null ? shown : body, style: style, interactive: interactive),
+    );
     if (quote != null) {
       content = Column(
         mainAxisSize: MainAxisSize.min,
@@ -114,7 +117,8 @@ class UserBubble extends StatelessWidget {
       header: true,
       label: l10n.chatMe,
       child: GestureDetector(
-        onLongPress: () => _menu(context),
+        // 长按交给 SelectionArea 选字；菜单改为轻点气泡（复制 / 选择文字 / 编辑）。
+        onTap: () => _menu(context),
         child: DecoratedBox(
           decoration: ShapeDecoration(color: surfaces.userBubble, shape: AppShape.bubble),
           child: Padding(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8), child: content),
