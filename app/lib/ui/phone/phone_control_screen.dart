@@ -28,6 +28,7 @@ import '../theme/app_icons.dart';
 import '../theme/theme.dart';
 import 'action_log_page.dart';
 import 'a11y_restore_sheet.dart';
+import 'shell_permissions_page.dart';
 import 'app_rules_page.dart';
 import 'dnd_mode_page.dart';
 import 'phone_disclosure_sheet.dart';
@@ -229,14 +230,6 @@ class _PhoneControlScreenState extends ConsumerState<PhoneControlScreen> {
     );
   }
 
-  /// 进阶 → Root 命令: the switch alone. The status refresh redraws it, so nothing is
-  /// cached here; a refusal is the only thing worth saying out loud.
-  Future<void> _toggleRootShell(bool next) async {
-    final result = await _phone.setRootShell(next);
-    if (!mounted || result.ok) return;
-    _toast(context.l10n.commonFailed);
-  }
-
   Future<void> _offerBackgroundGuide() async {
     if (_backgroundGuideShown) return;
     try {
@@ -360,11 +353,14 @@ class _PhoneControlScreenState extends ConsumerState<PhoneControlScreen> {
                 ),
                 ListPageRow(
                   icon: AppIcons.terminal,
-                  title: l10n.phoneRootShellTitle,
-                  subtitle: l10n.phoneRootShellHint,
-                  subtitleMaxLines: 3,
-                  onTap: () => _toggleRootShell(!status.rootShell),
-                  trailing: Switch(value: status.rootShell, onChanged: _toggleRootShell),
+                  title: '终端权限',
+                  subtitle: switch (status.shell.mode) {
+                    'safe' => '进阶模式 · 已允许 ${status.shell.allowed.length} 条命令',
+                    'full' => '高危模式 · 任意命令',
+                    _ => '未开启',
+                  },
+                  subtitleMaxLines: 2,
+                  onTap: () => _push(const ShellPermissionsPage()),
                 ),
                 ListPageRow(
                   icon: AppIcons.code,

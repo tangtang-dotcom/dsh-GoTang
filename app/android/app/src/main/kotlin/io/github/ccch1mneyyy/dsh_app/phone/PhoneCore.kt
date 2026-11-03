@@ -1,5 +1,7 @@
 package io.github.ccch1mneyyy.dsh_app.phone
 
+import java.io.File
+
 import java.time.ZoneId
 
 enum class A11yState { CONNECTED, ENABLED_NOT_CONNECTED, DISABLED }
@@ -27,11 +29,11 @@ interface PhoneEnv {
     fun beforeHandoff(screen: PhoneScreen): String? = null
     fun sleep(ms: Long) = Thread.sleep(ms)
 
-    /**
-     * `root_shell`: run [command] as root and answer the model. Null on builds without the switch
-     * (the default here), so a caller can never get an empty success.
-     */
-    fun rootShell(command: String, timeoutMs: Int): ToolOutput? = null
+    /** 终端权限（设置 → 终端权限）：档位、命令白名单、是否放开整个 /sdcard。 */
+    fun shellPolicy(): ShellPolicy = ShellPolicy.DISABLED
+
+    /** 终端命令的输出临时目录；null 时退回系统临时目录。 */
+    fun cacheDir(): File? = null
 }
 
 /**
@@ -165,22 +167,50 @@ class PhoneCore(
             PhoneToolCatalog.TAP, PhoneToolCatalog.TYPE, PhoneToolCatalog.SCROLL, PhoneToolCatalog.TAP_XY -> act(name, a, scope)
             PhoneToolCatalog.KEY -> key(a)
             PhoneToolCatalog.HANDOFF -> handoff(a, scope)
-            PhoneToolCatalog.ROOT_SHELL -> rootShell(a)
+            PhoneToolCatalog.SHELL -> shell(a)
             // l10n:keep agent tool result
             else -> Out("没有这个手机工具：$name", error = true)
         }
     }
 
-    /** `root_shell`: the switch, the channel, then the command — in that order, so refusals stay cheap. */
-    private fun rootShell(a: Args): Out {
-        val command = a.text("command")?.takeIf { it.isNotBlank() }
-            // l10n:keep agent tool result
-            ?: return Out("root_shell 需要一个非空的 command。", error = true)
-        val timeoutMs = (a.int("timeout_ms") ?: DEFAULT_ROOT_TIMEOUT_MS).coerceIn(1_000, MAX_ROOT_TIMEOUT_MS)
-        val answer = env.rootShell(command, timeoutMs)
-            // l10n:keep agent tool result
-            ?: return Out("这个版本的 App 没有 Root 命令开关，无法执行。", error = true)
-        return Out(answer.text, error = answer.isError, summary = "Root 命令")
+    /** `shell`: 档位 → 守卫 → 执行，三步都过了才真跑。 */
+    private fun shell(a: Args): Out {
+        val policy = env.shellPolicy()
+        if (policy.mode == ShellMode.ORIGINAL) {
+            return Out(
+                "终端权限没开。请用户在 设置 → 终端权限 里切到「进阶模式」或「高危模式」。",
+                error = true,
+                summary = PhoneToolCatalog.SHELL,
+                decision = "refused:original",
+            )
+        }
+        val command = a.str("command").orEmpty().trim()
+        val summary = command.take(120).replace('\n', ' ')
+        if (command.isEmpty()) return Out("command 不能为空。", error = true, summary = summary)
+        when (val verdict = ShellGuard.judge(policy.mode, command, policy.allowed, policy.sdcardAllowed)) {
+            is ShellVerdict.Deny -> return Out(
+                verdict.reason,
+                error = true,
+                summary = summary,
+                decision = "refused:guard",
+            )
+            is ShellVerdict.Confirm -> return Out(
+                "这条命令会执行脚本，需要用户在弹窗里确认后再重试。",
+                error = true,
+                summary = summary,
+                decision = "needs-confirm",
+            )
+            ShellVerdict.Allow -> Unit
+        }
+        val timeoutMs = (a.int("timeoutMs")?.toLong() ?: 20_000L).coerceIn(1_000L, 120_000L)
+        val result = ShellRunner.execute(command, timeoutMs, env.cacheDir())
+        result.failed?.let { return Out(it, error = true, summary = summary) }
+        val prefix = if (result.timedOut) "（超时 ${timeoutMs}ms，已终止）\n" else ""
+        return Out(
+            if (prefix.isEmpty() && result.output.isBlank()) "（没有输出）" else prefix + result.output,
+            summary = summary,
+            decision = if (result.timedOut) "timeout" else null,
+        )
     }
 
     // ── System actions ──────────────────────────────────────────────────────────────
@@ -667,10 +697,6 @@ class PhoneCore(
         const val MAX_APPS = 150
         const val MAX_COLLECT_CHARS = 16_000
 
-        /** `root_shell`'s own bounds; the engine clamps to the same ceiling. */
-        const val DEFAULT_ROOT_TIMEOUT_MS = 20_000
-        const val MAX_ROOT_TIMEOUT_MS = 120_000
-
         /** The call's own time, not counting waits for the person. */
         fun budgetMs(tool: String): Long = when (tool) {
             PhoneToolCatalog.APPS -> 15_000L
@@ -679,7 +705,7 @@ class PhoneCore(
             PhoneToolCatalog.SCREEN -> 12_000L
             PhoneToolCatalog.COLLECT -> 120_000L
             PhoneToolCatalog.HANDOFF -> 30_000L
-            PhoneToolCatalog.ROOT_SHELL -> MAX_ROOT_TIMEOUT_MS + 15_000L
+            PhoneToolCatalog.SHELL -> 120_000L
             else -> 30_000L
         }
     }

@@ -102,11 +102,6 @@ class PrivilegedDisplayCore(private val context: Context) {
                 response.putBoolean(Proto.OK, true)
                 return response
             }
-            // Outside the display lock: a command runs for up to its timeout, and the person must
-            // still be able to observe or stop the background screen meanwhile.
-            if (op == Proto.OP_EXEC) {
-                return PrivilegedExec.run(request)
-            }
             synchronized(lock) { dispatch(op, request, response) }
             if (!response.containsKey(Proto.ERROR)) response.putBoolean(Proto.OK, true)
         } catch (e: Throwable) {

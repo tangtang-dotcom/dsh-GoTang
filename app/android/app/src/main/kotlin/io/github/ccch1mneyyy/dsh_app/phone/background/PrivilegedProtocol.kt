@@ -11,10 +11,7 @@ import java.io.OutputStream
 // stdout stream (PrivilegedDisplayMain). Both carry the same [Bundle]; the engine
 // ([PrivilegedDisplayCore]) only ever sees a Bundle in and a Bundle out. The engine
 // accepts only this fixed verb set — no paths or display ids from callers.
-//
-// `exec` is the one verb that carries a command string. It is off by default: the tool
-// layer ([io.github.ccch1mneyyy.dsh_app.phone.PhoneControl]) answers 「未开启」 unless the
-// person turned on 设置 → 手机操控 → 进阶 → Root 命令, and only the Root channel is offered.
+
 
 object Proto {
     const val REVISION = "dsh-vdisplay-1"
@@ -41,10 +38,6 @@ object Proto {
     const val WANT_IMAGE = "image"
     const val DETAIL = "detail"
 
-    /** `exec` only: the command line, and how long it may run (clamped by the engine). */
-    const val COMMAND = "command"
-    const val TIMEOUT_MS = "timeoutMs"
-
     // ops
     const val OP_PROBE = "probe"
     const val OP_CREATE = "create"
@@ -57,9 +50,6 @@ object Proto {
     const val OP_RELEASE = "release"
     const val OP_DESTROY = "destroy"
     const val OP_GATE = "gate"
-
-    /** One command as the privileged uid. Off unless the person enabled it; see the header. */
-    const val OP_EXEC = "exec"
 
     /** 自动恢复无障碍: grants [APP_PACKAGE] WRITE_SECURE_SETTINGS in [USER]; nothing else is grantable. */
     const val OP_GRANT_SECURE_SETTINGS = "grantSecureSettings"
@@ -75,9 +65,6 @@ object Proto {
     // response keys
     const val OK = "ok"
     const val ERROR = "error"
-    const val EXIT_CODE = "exitCode"
-    const val STDOUT = "stdout"
-    const val STDERR = "stderr"
     /** `exec` only: output hit the engine's cap and was cut. */
     const val TRUNCATED = "truncated"
     const val DISPLAY_ID = "displayId"

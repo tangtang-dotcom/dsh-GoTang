@@ -26,6 +26,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Cache runtime build
+        uses: actions/cache@v4
+        with:
+          path: runtime/out
+          key: runtime-${{ hashFiles('runtime/build-runtime.sh', 'runtime/locks/**', 'runtime/patches/pins.json', 'runtime/bridge/**') }}
+
       - name: Toolchain (JDK 17, Flutter, Android SDK, NDK)
         run: bash tooling/setup-toolchain.sh
 
