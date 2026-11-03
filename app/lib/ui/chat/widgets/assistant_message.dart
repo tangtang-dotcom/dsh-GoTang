@@ -75,81 +75,47 @@ class _AssistantMessageState extends State<AssistantMessage> {
   String? _bodyText;
   bool? _bodyStreaming;
 
-  /// 已经显示出来的那段文字及其长度。流式内容是按块到达的（一次几十上百字），
-  /// 收到就整段替换会看到「一跳一跳」；这里让显示长度自己朝目标追，落后越多
-  /// 追得越快，落后很少时每次两三个字，看上去就是连续流淌。
-  String _revealed = '';
-  int _revealedLength = 0;
-  String _target = '';
-  Timer? _pump;
+  /// 流式期间当前显示的文本。每 80ms 采样一次，而不是逐帧追字：Flutter 里改一次
+  /// 文字就要重排一次，逐帧追字在 144Hz 屏上每帧都超出 6.9ms 预算，反而更卡。
+  /// RikkaHub 同样 80ms 采样（sample(80) 后解析），中间帧只做滚动与合成。
+  String? _shown;
+  DateTime _sampledAt = DateTime.fromMillisecondsSinceEpoch(0);
+  Timer? _sampleTimer;
 
   @override
   void dispose() {
-    _pump?.cancel();
-    _structuredRetry?.cancel();
+    _sampleTimer?.cancel();
     super.dispose();
   }
 
-  /// 追一帧，然后看还要不要继续。
-  void _advance() {
-    final text = _target;
-    final pending = text.length - _revealedLength;
-    if (pending <= 0) {
-      _revealed = text;
-      return;
-    }
-    final step = pending <= 8 ? 2 : (pending / 6).ceil();
-    var next = _revealedLength + step;
-    if (next > text.length) next = text.length;
-    // 不把代理对（emoji 等）切成两半。
-    if (next < text.length) {
-      final unit = text.codeUnitAt(next - 1);
-      if (unit >= 0xD800 && unit <= 0xDBFF) next -= 1;
-    }
-    _revealedLength = next;
-    _revealed = text.substring(0, next);
-  }
-
-  String _smooth(String text, bool streaming) {
-    _target = text;
-    if (!streaming) {
-      _pump?.cancel();
-      _pump = null;
-      _revealed = text;
-      _revealedLength = text.length;
-      return text;
-    }
-    // 内容被整体替换（重新生成、工具卡换回文字）：不再慢慢追，直接对齐。
-    if (!text.startsWith(_revealed)) {
-      _revealed = text;
-      _revealedLength = text.length;
-      return text;
-    }
-    _advance();
-    if (_revealedLength < text.length) _startPump();
-    return _revealed;
-  }
-
-  /// ~60fps 自己推进；追上目标或流式结束时停，不用等父组件下一次重建。
-  void _startPump() {
-    if (_pump != null) return;
-    _pump = Timer.periodic(const Duration(milliseconds: 16), (timer) {
-      if (!mounted || !widget.item.streaming) {
-        timer.cancel();
-        _pump = null;
-        return;
-      }
-      if (_revealedLength >= _target.length) {
-        timer.cancel();
-        _pump = null;
-        return;
-      }
-      setState(_advance);
+  /// 还没到采样点：到点再重建一次，把最新文本取上来（最多晚 80ms，不丢字）。
+  void _scheduleSample() {
+    if (_sampleTimer != null) return;
+    _sampleTimer = Timer(const Duration(milliseconds: 80), () {
+      _sampleTimer = null;
+      if (mounted) setState(() {});
     });
   }
 
+  String _sampled(String text, bool streaming) {
+    if (!streaming) {
+      _sampleTimer?.cancel();
+      _sampleTimer = null;
+      _shown = text;
+      return text;
+    }
+    final now = DateTime.now();
+    if (_shown == null || now.difference(_sampledAt).inMilliseconds >= 80) {
+      _shown = text;
+      _sampledAt = now;
+    } else {
+      _scheduleSample();
+    }
+    return _shown!;
+  }
+
   /// 流式期间：已经写完的段落照常渲染成 Markdown，只有正在写的最后一块用
-  /// 轻量文本追字。这样每帧成本与回复长度无关 —— 思考行之所以流畅就是这个原因。
+  /// 轻量文本。采样之后每帧成本与回复长度无关。
   String? _prefixText;
   Widget? _prefixBody;
 
@@ -197,67 +163,45 @@ class _AssistantMessageState extends State<AssistantMessage> {
 
   Widget? _structuredBody;
   String? _structuredText;
-  DateTime _structuredAt = DateTime.fromMillisecondsSinceEpoch(0);
-  Timer? _structuredRetry;
-
-  /// 距离上次解析还不到 80ms：到点再重建一次，把尾部补齐。
-  void _scheduleStructuredRefresh() {
-    if (_structuredRetry != null) return;
-    _structuredRetry = Timer(const Duration(milliseconds: 80), () {
-      _structuredRetry = null;
-      if (mounted && widget.item.streaming) setState(() {});
-    });
-  }
-
   Widget _markdown(String text, bool streaming, TextStyle? style) {
     if (!streaming) {
-      _pump?.cancel();
-      _pump = null;
-      final shown = _smooth(text, false);
-      if (_body == null || _bodyText != shown || _bodyStreaming != streaming) {
+      if (_body == null || _bodyText != text || _bodyStreaming != streaming) {
         // Long-press opens the menu; selecting text is one of its entries.
         // repairBareViews: a model that forgets the ```dsh-ui fence still gets
         // its view drawn instead of a wall of JSON.
-        _body = MarkdownBody(text: shown, streaming: false, selectable: false, repairBareViews: true);
-        _bodyText = shown;
+        _body = MarkdownBody(text: text, streaming: false, selectable: false, repairBareViews: true);
+        _bodyText = text;
         _bodyStreaming = streaming;
       }
       return _body!;
     }
 
-    final cut = _streamSplit(text);
-    final tailRaw = cut > 0 ? text.substring(cut) : text;
+    // 流式：先按 80ms 采样，再决定这一段怎么画。
+    final shown = _sampled(text, true);
+    final cut = _streamSplit(shown);
+    final tailRaw = cut > 0 ? shown.substring(cut) : shown;
     if (!_plainOk(tailRaw)) {
-      // 结构化内容：整段交给 Markdown，正确优先。解析很贵，所以按 80ms 采样
-      // （参考 rikkahub：全量重解析是这条链路上最贵的 CPU 活），尾部最多晚 80ms，
-      // 不会丢字。
-      _pump?.cancel();
-      _pump = null;
-      final now = DateTime.now();
-      final due = _structuredText == null || now.difference(_structuredAt).inMilliseconds >= 80;
-      if (due && _structuredText != text) {
-        _structuredText = text;
-        _structuredAt = now;
-        _structuredBody = MarkdownBody(text: text, streaming: true, selectable: false, repairBareViews: true);
-      } else if (!due) {
-        _scheduleStructuredRefresh();
+      // 结构化内容（列表、表格、代码块、卡片）：整段交给 Markdown，正确优先。
+      if (_structuredText != shown) {
+        _structuredText = shown;
+        _structuredBody = MarkdownBody(text: shown, streaming: true, selectable: false, repairBareViews: true);
       }
       return _structuredBody ?? const SizedBox.shrink();
     }
-    final prefix = cut > 0 ? text.substring(0, cut) : '';
+    final prefix = cut > 0 ? shown.substring(0, cut) : '';
     if (_prefixText != prefix) {
       _prefixText = prefix;
       _prefixBody = prefix.isEmpty
           ? null
           : MarkdownBody(text: prefix, streaming: false, selectable: false, repairBareViews: true);
     }
-    final shownTail = _smooth(cut > 0 ? text.substring(cut) : text, true);
-    if (shownTail.isEmpty && _prefixBody == null) return const SizedBox.shrink();
+    final tail = cut > 0 ? shown.substring(cut) : shown;
+    if (tail.isEmpty && _prefixBody == null) return const SizedBox.shrink();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (_prefixBody != null) _prefixBody!,
-        if (shownTail.isNotEmpty) Text(_plainTail(shownTail), style: style),
+        if (tail.isNotEmpty) Text(_plainTail(tail), style: style),
       ],
     );
   }
