@@ -19,6 +19,7 @@ import '../../state/agents_state.dart' show subagentParentProvider;
 import '../../state/attachments.dart';
 import '../../state/balance_state.dart';
 import '../../state/chat_error_text.dart';
+import '../../state/chat_pill_prefs.dart';
 import '../../state/chat_state.dart';
 import '../../state/commands_state.dart';
 import '../../state/compose_inbox.dart';
