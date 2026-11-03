@@ -216,20 +216,23 @@ class PhoneController extends Notifier<PhoneState> {
   /// Only an explicit tap: refresh, build and status events never prepare root.
   Future<PhoneResult> prepareRoot() => _ifSupported(PhonePrivilegedMode.root, _channel.prepareRoot);
 
-  /// 设置 → 终端权限：档位与白名单，显式点按才写。
-  Future<void> setShellMode(String mode) async {
-    await _channel.setShellMode(mode);
+  /// 设置 → 终端权限：档位与白名单，显式点按才写；返回值表示原生侧是否接受。
+  Future<bool> setShellMode(String mode) async {
+    final ok = await _channel.setShellMode(mode);
     await refreshStatus();
+    return ok;
   }
 
-  Future<void> setAllowedCommands(List<String> commands) async {
-    await _channel.setAllowedCommands(commands);
+  Future<bool> setAllowedCommands(List<String> commands) async {
+    final ok = await _channel.setAllowedCommands(commands);
     await refreshStatus();
+    return ok;
   }
 
-  Future<void> setSdcardAllowed(bool on) async {
-    await _channel.setSdcardAllowed(on);
+  Future<bool> setSdcardAllowed(bool on) async {
+    final ok = await _channel.setSdcardAllowed(on);
     await refreshStatus();
+    return ok;
   }
 
   Future<PhoneResult> _ifSupported(PhonePrivilegedMode mode, Future<PhoneResult> Function() action) =>

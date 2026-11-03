@@ -76,7 +76,7 @@ import 'composer.dart';
 import 'composer_toast.dart';
 import 'dock/chat_dock.dart';
 import 'dock/dock_stack.dart';
-import 'dock/terminal_dock_slot.dart';
+import 'dock/root_pill.dart';
 import 'empty_state.dart';
 import 'empty_actions.dart';
 import 'media/generate_mode.dart';
@@ -1786,7 +1786,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> with WidgetsBindingObse
                                     child: DockStack(
                                       cards: [
                                         if (sessionId != null) ...[
-                                          const TerminalDockSlot(),
                                           TodoDockSlot(sessionId: sessionId),
                                           GoalDockSlot(sessionId: sessionId),
                                           ActivityStripSlot(
@@ -1800,7 +1799,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> with WidgetsBindingObse
                                         if (!readOnly) ComposerStripSlot(sessionId: sessionId, visible: !running),
                                       ],
                                       accessory: pillsBesideStrip
-                                          ? _stripRisk(sessionId, autoApprove: chat?.autoApprove ?? false)
+                                          ? Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                const RootPill(compact: true),
+                                                const SizedBox(width: 6),
+                                                _stripRisk(sessionId, autoApprove: chat?.autoApprove ?? false) ??
+                                                    const SizedBox.shrink(),
+                                              ],
+                                            )
                                           : null,
                                     ),
                                   ),
@@ -1814,7 +1821,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> with WidgetsBindingObse
                                     child: NativeComposerBar(
                                       sessionId: sessionId,
                                       visible: !running,
-                                      leading: pillsInCapsules ? composerPills : null,
+                                      leading: pillsInCapsules
+                                          ? Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                const RootPill(),
+                                                if (composerPills != null) ...[
+                                                  const SizedBox(width: GenerateCapsuleMetrics.gap),
+                                                  composerPills,
+                                                ],
+                                              ],
+                                            )
+                                          : null,
                                       strip: false,
                                     ),
                                   ),
