@@ -1,7 +1,5 @@
 // Portions derived from PiPilot (https://github.com/CikeSeven/pi_pilot), MIT, Copyright (c) 2026 CikeSeven. See THIRD_PARTY_NOTICES.md.
 
-import 'dart:async';
-
 import 'package:dsh_client/dsh_client.dart';
 import 'package:flutter/material.dart';
 
@@ -75,114 +73,18 @@ class _AssistantMessageState extends State<AssistantMessage> {
   String? _bodyText;
   bool? _bodyStreaming;
 
-  /// 流式期间当前显示的文本。每 80ms 采样一次，而不是逐帧追字：Flutter 里改一次
-  /// 文字就要重排一次，逐帧追字在 144Hz 屏上每帧都超出 6.9ms 预算，反而更卡。
-  /// RikkaHub 同样 80ms 采样（sample(80) 后解析），中间帧只做滚动与合成。
-  String? _shown;
-  DateTime _sampledAt = DateTime.fromMillisecondsSinceEpoch(0);
-  Timer? _sampleTimer;
-
-  @override
-  void dispose() {
-    _sampleTimer?.cancel();
-    super.dispose();
-  }
-
-  /// 还没到采样点：到点再重建一次，把最新文本取上来（最多晚 80ms，不丢字）。
-  void _scheduleSample() {
-    if (_sampleTimer != null) return;
-    _sampleTimer = Timer(const Duration(milliseconds: 80), () {
-      _sampleTimer = null;
-      if (mounted) setState(() {});
-    });
-  }
-
-  String _sampled(String text, bool streaming) {
-    if (!streaming) {
-      _sampleTimer?.cancel();
-      _sampleTimer = null;
-      _shown = text;
-      return text;
-    }
-    final now = DateTime.now();
-    if (_shown == null || now.difference(_sampledAt).inMilliseconds >= 80) {
-      _shown = text;
-      _sampledAt = now;
-    } else {
-      _scheduleSample();
-    }
-    return _shown!;
-  }
-
-  /// 流式期间：已经写完的段落渲染成一次 Markdown 并缓存，只有正在写的那一块
-  /// 每次采样重建。每次解析的规模因此和回复长度无关。
-  String? _prefixText;
-  Widget? _prefixBody;
-
-  /// 正在写的那一块：整段解析（只解析这一块），按采样后的文本缓存。
-  String? _tailSource;
-  Widget? _tailBody;
-
-  /// 最后一个「完整块」的边界：空行，且不在 ``` 围栏里；没有就返回 0（整段都算正在写）。
-  static int _streamSplit(String text) {
-    var fences = 0;
-    var safe = 0;
-    var i = 0;
-    while (i < text.length) {
-      if (text.startsWith('```', i)) {
-        fences++;
-        i += 3;
-        continue;
-      }
-      if (text.startsWith('\n\n', i)) {
-        if (fences.isEven) safe = i + 2;
-        i += 2;
-        continue;
-      }
-      i++;
-    }
-    return safe;
-  }
-
+  /// 同一段文字只建一次 Markdown 子树:列表每 32ms 重建一次时,
+  /// 没变的消息直接复用同一个 widget 实例,Flutter 不会再往下走。
   Widget _markdown(String text, bool streaming) {
-    if (!streaming) {
-      if (_body == null || _bodyText != text || _bodyStreaming != streaming) {
-        // Long-press opens the menu; selecting text is one of its entries.
-        // repairBareViews: a model that forgets the ```dsh-ui fence still gets
-        // its view drawn instead of a wall of JSON.
-        _body = MarkdownBody(text: text, streaming: false, selectable: false, repairBareViews: true);
-        _bodyText = text;
-        _bodyStreaming = streaming;
-      }
-      return _body!;
+    if (_body == null || _bodyText != text || _bodyStreaming != streaming) {
+      // Long-press opens the menu; selecting text is one of its entries.
+      // repairBareViews: a model that forgets the ```dsh-ui fence still gets
+      // its view drawn instead of a wall of JSON.
+      _body = MarkdownBody(text: text, streaming: streaming, selectable: false, repairBareViews: true);
+      _bodyText = text;
+      _bodyStreaming = streaming;
     }
-
-    // 流式：80ms 采样一次整段文本（同 rikkahub 的 sample(80)），但只把文字切成
-    // 「已完成的块」和「正在写的块」——前者只在块结束时重建，后者每次采样重建。
-    // 这样每次解析的只是最后一块，而不是整条回复；排版结果是真正的 Markdown，
-    // 不会像纯文本降级那样在块结束瞬间跳一下。
-    final shown = _sampled(text, true);
-    final cut = _streamSplit(shown);
-    final prefix = cut > 0 ? shown.substring(0, cut) : '';
-    if (_prefixText != prefix) {
-      _prefixText = prefix;
-      _prefixBody = prefix.isEmpty
-          ? null
-          : MarkdownBody(text: prefix, streaming: false, selectable: false, repairBareViews: true);
-    }
-    final tail = cut > 0 ? shown.substring(cut) : shown;
-    if (_tailSource != shown) {
-      _tailSource = shown;
-      _tailBody = MarkdownBody(text: tail, streaming: true, selectable: false, repairBareViews: true);
-    }
-    if (_prefixBody == null && _tailBody == null) return const SizedBox.shrink();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (_prefixBody != null) _prefixBody!,
-        if (_tailBody != null) _tailBody!,
-      ],
-    );
+    return _body!;
   }
 
   @override

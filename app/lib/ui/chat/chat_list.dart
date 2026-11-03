@@ -217,11 +217,6 @@ class _ChatListState extends ConsumerState<ChatList> {
   /// 第一次建出来就从这里拿掉:滚出去再滚回来不会重播。
   final Map<String, int> _fresh = {};
 
-  /// 行 → 已经建好的子树。流式期间列表每 32ms 重建一次，没变的行直接复用
-  /// 上一次的 widget 实例：Flutter 看到同一个实例就不再往下走，省掉整棵子树
-  /// 的 build（这是参考项目把解析搬走之外的另一半）。
-  final Map<String, _RowSubtree> _rowSubtrees = {};
-
   // 方法 tear-off 对同一个 State 恒等:子行的回调不会每帧都"变"。
   Future<void> _respond(ApprovalRequest request, ApprovalDecision decision) =>
       ref.read(chatProvider(widget.sessionId).notifier).respond(request, decision);
@@ -467,7 +462,6 @@ class _ChatListState extends ConsumerState<ChatList> {
   /// 不播;回显的用户消息替换的是刚才的乐观气泡,也不播。
   void _markFresh(Map<String, int> previous, {required bool hadPending, required bool loading}) {
     _fresh.removeWhere((key, _) => !_index.containsKey(key));
-    _rowSubtrees.removeWhere((key, _) => !_index.containsKey(key));
     if (!_splitChosen || loading) return;
     final split = _split;
     var order = 0;
@@ -629,41 +623,20 @@ class _ChatListState extends ConsumerState<ChatList> {
     );
   }
 
-  /// 主题、字号或语言变了（这些值经由 InheritedWidget 下发），缓存的行子树就作废。
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _rowSubtrees.clear();
-  }
-
   Widget _buildRow(int index) {
     final row = _rows[index];
     final previous = index > 0 ? _rows[index - 1] : null;
     final fresh = _fresh.remove(row.key);
-    // 行对象没变（没有新内容、上一条也没变）就复用上次建好的子树。
-    final cached = _rowSubtrees[row.key];
-    if (fresh == null && cached != null && identical(cached.row, row) && identical(cached.previous, previous)) {
-      return cached.subtree;
-    }
-    final subtree = _buildRowSubtree(row, previous, fresh);
-    _rowSubtrees[row.key] = _RowSubtree(row, previous, subtree);
-    return subtree;
-  }
-
-  Widget _buildRowSubtree(ChatRow row, ChatRow? previous, int? fresh) {
     return KeyedSubtree(
       key: ValueKey<String>(row.key),
-      // 独立重绘层:流式那一行每帧长高时,其余行不跟着重绘。
-      child: RepaintBoundary(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: AppSpace.readingWidth),
-            // 撑满阅读宽度:否则短行(用户气泡、提示行)会被 Center 居中。
-            child: Container(
-              width: double.infinity,
-              padding: EdgeInsets.fromLTRB(AppSpace.gutter, _gapBefore(row, previous), AppSpace.gutter, 0),
-              child: StreamFadeIn(enabled: fresh != null, index: fresh ?? 0, child: _rowWidget(row)),
-            ),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: AppSpace.readingWidth),
+          // 撑满阅读宽度:否则短行(用户气泡、提示行)会被 Center 居中。
+          child: Container(
+            width: double.infinity,
+            padding: EdgeInsets.fromLTRB(AppSpace.gutter, _gapBefore(row, previous), AppSpace.gutter, 0),
+            child: StreamFadeIn(enabled: fresh != null, index: fresh ?? 0, child: _rowWidget(row)),
           ),
         ),
       ),
@@ -1280,13 +1253,4 @@ class _TopBoundedScrollPosition extends ScrollPositionWithSingleContext {
     }
     return super.applyContentDimensions(minScrollExtent, maxScrollExtent);
   }
-}
-
-/// 一行已经建好的子树，以及它是从哪两个行对象建出来的。
-class _RowSubtree {
-  const _RowSubtree(this.row, this.previous, this.subtree);
-
-  final ChatRow row;
-  final ChatRow? previous;
-  final Widget subtree;
 }
