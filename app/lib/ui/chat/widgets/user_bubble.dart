@@ -12,6 +12,7 @@ import '../media/media_format.dart' show mediaParamsLine;
 import '../mention/mention_chip.dart';
 import '../secret_mask.dart';
 import 'message_actions.dart';
+import 'tap_to_menu.dart';
 import 'quote_chip.dart';
 
 /// 用户消息:**右对齐的软气泡**,比页面深一档,像"按进去"的(Claude 式)。
@@ -116,8 +117,10 @@ class UserBubble extends StatelessWidget {
       container: true,
       header: true,
       label: l10n.chatMe,
-      child: GestureDetector(
-        // 长按交给 SelectionArea 选字；菜单走下面的 ⋯ 按钮（点击会被 SelectionArea 用掉）。
+      child: TapToMenu(
+        // 长按交给 SelectionArea 选字；轻点打开消息菜单（指针事件在手势竞技场之前，
+        // 所以 SelectionArea 抢不走判定）。
+        onTap: () => _menu(context),
         child: DecoratedBox(
           decoration: ShapeDecoration(color: surfaces.userBubble, shape: AppShape.bubble),
           child: Padding(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8), child: content),
@@ -159,24 +162,6 @@ class UserBubble extends StatelessWidget {
                       right: GenerateParamsLine.inset,
                     ),
                     child: GenerateParamsLine(header: header),
-                  ),
-                ),
-              // 长按已被选字占用（SelectionArea 会吃掉点击），所以给一个显式入口：
-              // 气泡下方右对齐的小 ⋯，点开原来的消息菜单（复制 / 选择文字 / 编辑）。
-              if (shown.trim().isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(top: 2, right: 4),
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: () => _menu(context),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      child: Icon(
-                        AppIcons.more,
-                        size: 16,
-                        color: surfaces.onUserBubble.withValues(alpha: 0.55),
-                      ),
-                    ),
                   ),
                 ),
               _PendingSlot(label: pendingLabel, icon: pendingIcon, actions: pendingActions),
