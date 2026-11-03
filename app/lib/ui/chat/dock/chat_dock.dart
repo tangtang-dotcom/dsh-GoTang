@@ -9,6 +9,7 @@ import '../../../state/chat_state.dart';
 import '../../../state/goal_dock_state.dart';
 import 'dock_pill.dart';
 import 'goal_bar.dart';
+import 'terminal_dock_slot.dart';
 import 'goal_sheet.dart';
 import 'todo_bar.dart';
 
@@ -31,6 +32,7 @@ class ChatDock extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          const TerminalDockSlot(),
           TodoDockSlot(sessionId: sessionId),
           GoalDockSlot(sessionId: sessionId),
         ],
