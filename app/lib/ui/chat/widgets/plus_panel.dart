@@ -23,6 +23,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../l10n/l10n.dart';
 import '../../../state/chat_state.dart';
+import '../../../state/chat_pill_prefs.dart';
 import '../../../state/connection_state.dart';
 import '../../../state/features_state.dart';
 import '../../../state/phone_state.dart';
@@ -241,6 +242,16 @@ class _ThisChatCardState extends ConsumerState<_ThisChatCard> {
             title: l10n.hubSessionPlanMode,
             onTap: _busy ? null : () => unawaited(_togglePlan(!plan)),
             trailing: Switch(value: plan, onChanged: _busy ? null : (v) => unawaited(_togglePlan(v))),
+          ),
+        ),
+        MergeSemantics(
+          child: ListPageRow(
+            title: '隐藏「完全权限」提醒',
+            subtitle: '只是不再提示，对话权限本身不变',
+            trailing: Switch(
+              value: ref.watch(hidePermissionPillProvider),
+              onChanged: (v) => unawaited(ref.read(hidePermissionPillProvider.notifier).set(v)),
+            ),
           ),
         ),
       ],

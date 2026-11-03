@@ -5,9 +5,9 @@ import '../../../state/phone_state.dart';
 import '../../phone/shell_permissions_page.dart';
 import 'dock_pill.dart';
 
-/// 输入条上方的终端权限胶囊：显示当前档位，点一下进设置。
+/// 输入条上方的终端权限条：和输入框同宽、同一套圆角，显示「root 已启用 / 点击关闭」。
 ///
-/// 原版不显示（没有终端能力就没必要打扰）；进阶黄、高危红 —— 危险档位不该安安静静待着。
+/// 轻点关闭终端权限，长按进设置。原版档位不显示。
 class TerminalDockSlot extends ConsumerWidget {
   const TerminalDockSlot({super.key});
 
@@ -16,40 +16,62 @@ class TerminalDockSlot extends ConsumerWidget {
     final shell = ref.watch(phoneProvider.select((s) => s.status.shell));
     if (shell.isOriginal) return const DockSlot(child: null);
     final theme = Theme.of(context);
-    // 和他的胶囊一致：显示“root 已启用”，点一下直接关掉。
-    final (label, color, icon) = switch (shell.mode) {
-      'safe' => ('root 已启用 · 进阶', Colors.amber.shade700, Icons.shield_outlined),
-      'full' => ('root 已启用 · 高危', Colors.red.shade600, Icons.terminal),
-      _ => ('启用终端', theme.colorScheme.onSurfaceVariant, Icons.terminal_outlined),
+    final gold = theme.brightness == Brightness.dark ? Colors.amber.shade200 : Colors.amber.shade900;
+    final detail = switch (shell.mode) {
+      'safe' => '（进阶）',
+      'full' => '（高危）',
+      _ => '',
     };
+
     return DockSlot(
       key: const ValueKey('terminal'),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
         child: Semantics(
           button: true,
-          label: '$label，点击关闭',
+          label: 'root 已启用$detail，点击关闭',
           excludeSemantics: true,
           child: Material(
-            color: color.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(999),
+            color: theme.colorScheme.surfaceContainerHigh,
+            borderRadius: BorderRadius.circular(28),
+            clipBehavior: Clip.antiAlias,
             child: InkWell(
-              borderRadius: BorderRadius.circular(999),
-              // 轻点关闭（和他的胶囊一致）；长按进设置。
               onTap: () => ref.read(phoneProvider.notifier).setShellMode('original'),
               onLongPress: () => Navigator.of(context).push(
                 MaterialPageRoute<void>(builder: (_) => const ShellPermissionsPage()),
               ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                child: Row(
-                  children: [
-                    Icon(icon, size: 16, color: color),
-                    const SizedBox(width: 8),
-                    Text(label, style: theme.textTheme.labelMedium?.copyWith(color: color, fontWeight: FontWeight.w600)),
-                    const Spacer(),
-                    Text('点击关闭', style: theme.textTheme.labelSmall?.copyWith(color: color.withValues(alpha: 0.8))),
-                  ],
+              child: SizedBox(
+                height: 56,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: gold.withValues(alpha: 0.16),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(Icons.terminal, size: 18, color: gold),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'root 已启用',
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          color: gold,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const Spacer(),
+                      Text(
+                        '点击关闭',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
