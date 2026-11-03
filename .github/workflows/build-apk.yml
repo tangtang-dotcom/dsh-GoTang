@@ -1,0 +1,50 @@
+# Builds the arm64 APK on GitHub, so a change can be installed without a local
+# Flutter/Android toolchain. Same steps as a developer machine:
+# tooling/setup-toolchain.sh → runtime/build-runtime.sh → tooling/build-apk.sh.
+#
+# No signing key here: app/android/app/build.gradle.kts falls back to the debug
+# key when app/android/key.properties is absent, so the artifact installs over a
+# debug-key build and needs no secrets. Replace it with your own keystore once
+# you care about upgrades over a release-signed install.
+name: Build APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - 'feat/**'
+
+concurrency:
+  group: apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Toolchain (JDK 17, Flutter, Android SDK, NDK)
+        run: bash tooling/setup-toolchain.sh
+
+      - name: Runtime (rootfs, proot, Node)
+        run: |
+          set -euo pipefail
+          source tooling/env.sh
+          bash runtime/build-runtime.sh arm64-v8a
+
+      - name: APK
+        run: |
+          set -euo pipefail
+          source tooling/env.sh
+          bash tooling/build-apk.sh -f arm64
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: dsh-go-arm64-${{ github.sha }}
+          if-no-files-found: error
+          retention-days: 14
+          path: app/build/app/outputs/flutter-apk/*.apk

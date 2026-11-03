@@ -11935,5 +11935,15 @@
         "type": "String"
       }
     }
-  }
+  },
+  "phoneRootShellTitle": "Root 命令",
+  "phoneRootShellHint": "让模型以 Root 身份执行命令；关闭时工具会直接拒绝",
+  "toolchainTitle": "逆向工具",
+  "toolchainHint": "jadx、apktool、radare2、binutils，装在 /root，App 更新不会丢",
+  "toolchainInstalled": "已安装",
+  "toolchainMissing": "未安装",
+  "toolchainInstall": "下载并安装",
+  "toolchainReinstall": "重新安装",
+  "toolchainInstalling": "正在安装…",
+  "toolchainNoRuntime": "运行时还没装好，请先在引擎页安装运行时"
 }

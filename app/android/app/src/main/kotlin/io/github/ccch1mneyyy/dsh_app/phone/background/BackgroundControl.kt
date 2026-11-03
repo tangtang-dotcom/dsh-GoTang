@@ -199,6 +199,36 @@ class BackgroundControl private constructor(context: Context) {
 
     fun rootGrantSelected(): Boolean = rootSelected
 
+    /**
+     * `root_shell`: one command through the connected channel, as that channel's own uid.
+     *
+     * Only the Root channel is offered: a command is not a second way to drive a display, and
+     * the person's switch says 「Root 命令」. Whether the switch is on is the tool layer's call;
+     * this method reports what actually happened, so a stale UI can never widen the gate.
+     */
+    fun exec(command: String, timeoutMs: Int): Map<String, Any?> {
+        if (mode != "root") return mapOf("ok" to false, "reasonCode" to "permissionRequired")
+        val channel = activeChannel() ?: return mapOf("ok" to false, "reasonCode" to "channelDisabled")
+        val request = Bundle().apply {
+            putString(Proto.OP, Proto.OP_EXEC)
+            putString(Proto.COMMAND, command)
+            putInt(Proto.TIMEOUT_MS, timeoutMs)
+        }
+        return try {
+            val response = channel.execute(request)
+            mapOf(
+                "ok" to response.getBoolean(Proto.OK, false),
+                "exitCode" to response.getInt(Proto.EXIT_CODE, -1),
+                "stdout" to response.getString(Proto.STDOUT).orEmpty(),
+                "stderr" to response.getString(Proto.STDERR).orEmpty(),
+                "truncated" to response.getBoolean(Proto.TRUNCATED, false),
+                "reasonCode" to response.getString(Proto.ERROR),
+            )
+        } catch (_: Exception) {
+            mapOf("ok" to false, "reasonCode" to "deviceUnavailable")
+        }
+    }
+
     /** Detach invalidates only the caller's unpublished UI attempt, not borrowed healthy channels. */
     fun cancelUnwantedPending() {
         root.cancelUnwantedPending()

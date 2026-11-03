@@ -160,6 +160,8 @@ class PhonePlugin : FlutterPlugin, ActivityAware, MethodChannel.MethodCallHandle
                 val live = stillWanted(privilegedActions.select())
                 async(result) { if (live()) control.background.prepareRoot(live) else cancelledSelection() }
             }
+            // 设置 → 手机操控 → 进阶 → Root 命令: the switch alone; nothing runs here.
+            "setRootShell" -> async(result) { control.setRootShell(call.argument<Boolean>("on") == true) }
             "adbStartPairing" -> async(result) { control.background.adbStartPairing() }
             "adbPair" -> async(result) {
                 val code = call.argument<String>("code")?.trim().orEmpty()

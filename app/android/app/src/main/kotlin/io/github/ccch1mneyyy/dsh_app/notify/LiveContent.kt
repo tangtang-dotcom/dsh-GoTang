@@ -40,14 +40,27 @@ data class LiveContent(
         }
     }
 
+    /**
+     * 通知/岛上的主标题：运行中显示「思考中 / 干活中」，等待和结束显示各自的状态词。
+     * 会话名退到 [liveDetail] —— 实时状态比会话名有用。
+     */
+    val headline: String get() = chipWords?.takeIf { it.isNotBlank() } ?: title
+
+    /** 副行：运行中放会话名，其他情况还是原来那句话。 */
+    val detail: String get() = if (busy && title.isNotBlank()) title else text
+
     /** Still going: an indeterminate bar, refreshed while it lasts. */
     val busy: Boolean get() = kind == Kind.PHONE || kind == Kind.RUNNING
 
     /** A finish, shown for a moment: posted with a short timeout in case no update follows. */
     val ending: Boolean get() = kind == Kind.DONE || kind == Kind.FAILED
 
-    /** The status bar chip's words; null while a run counts up, so the chip shows its clock. */
-    val chipWords: String? get() = if (kind == Kind.RUNNING && sinceMs != null) null else chip
+    /**
+     * The status bar chip's words. A running task keeps them ("思考中" / "干活中") instead of
+     * yielding the chip to the chronometer: HyperOS/ColorOS islands draw this text as the
+     * island's word, and a chip that only ever shows the session title looks frozen.
+     */
+    val chipWords: String? get() = chip
 
     companion object {
         /** The agent's live activity as Dart sends it; null for a missing or malformed one. */

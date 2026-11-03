@@ -26,6 +26,12 @@ interface PhoneEnv {
      */
     fun beforeHandoff(screen: PhoneScreen): String? = null
     fun sleep(ms: Long) = Thread.sleep(ms)
+
+    /**
+     * `root_shell`: run [command] as root and answer the model. Null on builds without the switch
+     * (the default here), so a caller can never get an empty success.
+     */
+    fun rootShell(command: String, timeoutMs: Int): ToolOutput? = null
 }
 
 /**
@@ -159,9 +165,22 @@ class PhoneCore(
             PhoneToolCatalog.TAP, PhoneToolCatalog.TYPE, PhoneToolCatalog.SCROLL, PhoneToolCatalog.TAP_XY -> act(name, a, scope)
             PhoneToolCatalog.KEY -> key(a)
             PhoneToolCatalog.HANDOFF -> handoff(a, scope)
+            PhoneToolCatalog.ROOT_SHELL -> rootShell(a)
             // l10n:keep agent tool result
             else -> Out("没有这个手机工具：$name", error = true)
         }
+    }
+
+    /** `root_shell`: the switch, the channel, then the command — in that order, so refusals stay cheap. */
+    private fun rootShell(a: Args): Out {
+        val command = a.text("command")?.takeIf { it.isNotBlank() }
+            // l10n:keep agent tool result
+            ?: return Out("root_shell 需要一个非空的 command。", error = true)
+        val timeoutMs = (a.int("timeout_ms") ?: DEFAULT_ROOT_TIMEOUT_MS).coerceIn(1_000, MAX_ROOT_TIMEOUT_MS)
+        val answer = env.rootShell(command, timeoutMs)
+            // l10n:keep agent tool result
+            ?: return Out("这个版本的 App 没有 Root 命令开关，无法执行。", error = true)
+        return Out(answer.text, error = answer.isError, summary = "Root 命令")
     }
 
     // ── System actions ──────────────────────────────────────────────────────────────
@@ -648,6 +667,10 @@ class PhoneCore(
         const val MAX_APPS = 150
         const val MAX_COLLECT_CHARS = 16_000
 
+        /** `root_shell`'s own bounds; the engine clamps to the same ceiling. */
+        const val DEFAULT_ROOT_TIMEOUT_MS = 20_000
+        const val MAX_ROOT_TIMEOUT_MS = 120_000
+
         /** The call's own time, not counting waits for the person. */
         fun budgetMs(tool: String): Long = when (tool) {
             PhoneToolCatalog.APPS -> 15_000L
@@ -656,6 +679,7 @@ class PhoneCore(
             PhoneToolCatalog.SCREEN -> 12_000L
             PhoneToolCatalog.COLLECT -> 120_000L
             PhoneToolCatalog.HANDOFF -> 30_000L
+            PhoneToolCatalog.ROOT_SHELL -> MAX_ROOT_TIMEOUT_MS + 15_000L
             else -> 30_000L
         }
     }

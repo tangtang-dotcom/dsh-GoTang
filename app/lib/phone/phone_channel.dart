@@ -387,6 +387,7 @@ class PhoneStatus {
     this.notifications = false,
     this.confirmationNotifications,
     this.background = const PhoneBackgroundStatus(),
+    this.rootShell = false,
     this.task = const PhoneTaskStatus(),
     this.device = const PhoneDevice(),
   });
@@ -402,6 +403,7 @@ class PhoneStatus {
       notifications = false,
       confirmationNotifications = null,
       background = const PhoneBackgroundStatus(),
+      rootShell = false,
       task = const PhoneTaskStatus(),
       device = const PhoneDevice();
 
@@ -414,6 +416,7 @@ class PhoneStatus {
     notifications: _flag(m['notifications']),
     confirmationNotifications: _maybeFlag(m['confirmationNotifications']),
     background: PhoneBackgroundStatus.fromMap(_map(m['background'])),
+    rootShell: _flag(m['rootShell']),
     task: PhoneTaskStatus.fromMap(_map(m['task'])),
     device: PhoneDevice.fromMap(_map(m['device'])),
   );
@@ -438,6 +441,10 @@ class PhoneStatus {
   /// Null on older native modules; it does not replace the global switch.
   final bool? confirmationNotifications;
   final PhoneBackgroundStatus background;
+
+  /// 进阶 → Root 命令: whether the model may run a command as root. Off unless the
+  /// person turned it on; the tool answers 「未开启」 in the meantime.
+  final bool rootShell;
   final PhoneTaskStatus task;
   final PhoneDevice device;
 
@@ -452,6 +459,7 @@ class PhoneStatus {
     notifications: notifications,
     confirmationNotifications: confirmationNotifications,
     background: background,
+    rootShell: rootShell,
     task: task,
     device: device,
   );
@@ -965,6 +973,9 @@ class PhoneChannel {
       _result('setBackgroundKeep', {'mode': mode.name, 'enabled': enabled});
 
   Future<PhoneResult> prepareRoot() => _result('prepareRoot');
+
+  /// 设置 → 手机操控 → 进阶 → Root 命令: the switch alone; nothing is executed here.
+  Future<PhoneResult> setRootShell(bool on) => _result('setRootShell', {'on': on});
 
   Future<bool> requestPrivilegedPermission(String provider) =>
       _bool('requestShizukuPermission', {'provider': provider});
