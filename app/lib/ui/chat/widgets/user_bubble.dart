@@ -117,8 +117,7 @@ class UserBubble extends StatelessWidget {
       header: true,
       label: l10n.chatMe,
       child: GestureDetector(
-        // 长按交给 SelectionArea 选字；菜单改为轻点气泡（复制 / 选择文字 / 编辑）。
-        onTap: () => _menu(context),
+        // 长按交给 SelectionArea 选字；菜单走下面的 ⋯ 按钮（点击会被 SelectionArea 用掉）。
         child: DecoratedBox(
           decoration: ShapeDecoration(color: surfaces.userBubble, shape: AppShape.bubble),
           child: Padding(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8), child: content),
@@ -160,6 +159,24 @@ class UserBubble extends StatelessWidget {
                       right: GenerateParamsLine.inset,
                     ),
                     child: GenerateParamsLine(header: header),
+                  ),
+                ),
+              // 长按已被选字占用（SelectionArea 会吃掉点击），所以给一个显式入口：
+              // 气泡下方右对齐的小 ⋯，点开原来的消息菜单（复制 / 选择文字 / 编辑）。
+              if (shown.trim().isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 2, right: 4),
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => _menu(context),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      child: Icon(
+                        AppIcons.more,
+                        size: 16,
+                        color: surfaces.onUserBubble.withValues(alpha: 0.55),
+                      ),
+                    ),
                   ),
                 ),
               _PendingSlot(label: pendingLabel, icon: pendingIcon, actions: pendingActions),

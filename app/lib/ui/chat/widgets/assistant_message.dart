@@ -1,7 +1,5 @@
 // Portions derived from PiPilot (https://github.com/CikeSeven/pi_pilot), MIT, Copyright (c) 2026 CikeSeven. See THIRD_PARTY_NOTICES.md.
 
-import 'dart:async';
-
 import 'package:dsh_client/dsh_client.dart';
 import 'package:flutter/material.dart';
 
@@ -75,77 +73,15 @@ class _AssistantMessageState extends State<AssistantMessage> {
   String? _bodyText;
   bool? _bodyStreaming;
 
-  /// 匀速揭示：模型是按块送字的（每 200~400ms 一块），块一到就整段画出来会
-  /// 「一蹦一蹦」。这里让显示长度按 33ms 的节奏自己往前走，把同一套 Markdown
-  /// 渲染器匀速喂满。开销与官方在快速流式时相同（约 30 次/秒重画，实测可承受）。
-  Timer? _reveal;
-  int _shownChars = 0;
-  String _revealed = '';
-
-  @override
-  void dispose() {
-    _reveal?.cancel();
-    super.dispose();
-  }
-
-  String _displayed(String text, bool streaming) {
-    if (!streaming) {
-      _reveal?.cancel();
-      _reveal = null;
-      _shownChars = text.length;
-      _revealed = text;
-      return text;
-    }
-    // 内容被整体替换（重新生成 / 工具卡换文字）：不追，直接对齐。
-    if (!text.startsWith(_revealed)) {
-      _shownChars = text.length;
-      _revealed = text;
-      return text;
-    }
-    if (_shownChars < text.length) _startReveal();
-    return _revealed;
-  }
-
-  void _startReveal() {
-    _reveal ??= Timer.periodic(const Duration(milliseconds: 33), (timer) {
-      if (!mounted) {
-        timer.cancel();
-        _reveal = null;
-        return;
-      }
-      final target = widget.item.text.trimRight();
-      final pending = target.length - _shownChars;
-      if (pending <= 0) {
-        timer.cancel();
-        _reveal = null;
-        return;
-      }
-      // 落后多就多放几个字，落后少就慢慢放，追上就停。
-      final step = pending > 120 ? (pending / 4).ceil() : (pending > 24 ? 4 : 2);
-      var next = _shownChars + step;
-      if (next > target.length) next = target.length;
-      // 不把代理对（emoji）切成两半。
-      if (next < target.length) {
-        final unit = target.codeUnitAt(next - 1);
-        if (unit >= 0xD800 && unit <= 0xDBFF) next -= 1;
-      }
-      setState(() {
-        _shownChars = next;
-        _revealed = target.substring(0, next);
-      });
-    });
-  }
-
   /// 同一段文字只建一次 Markdown 子树:列表每 32ms 重建一次时,
   /// 没变的消息直接复用同一个 widget 实例,Flutter 不会再往下走。
   Widget _markdown(String text, bool streaming) {
-    final shown = _displayed(text, streaming);
-    if (_body == null || _bodyText != shown || _bodyStreaming != streaming) {
+    if (_body == null || _bodyText != text || _bodyStreaming != streaming) {
       // Long-press opens the menu; selecting text is one of its entries.
       // repairBareViews: a model that forgets the ```dsh-ui fence still gets
       // its view drawn instead of a wall of JSON.
-      _body = MarkdownBody(text: shown, streaming: streaming, selectable: !streaming, repairBareViews: true);
-      _bodyText = shown;
+      _body = MarkdownBody(text: text, streaming: streaming, selectable: !streaming, repairBareViews: true);
+      _bodyText = text;
       _bodyStreaming = streaming;
     }
     return _body!;
