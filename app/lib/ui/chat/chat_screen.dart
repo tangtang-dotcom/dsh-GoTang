@@ -1947,6 +1947,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> with WidgetsBindingObse
 
   /// 「自动允许中」/「完全权限」 beside the activity strip while a reply generates.
   Widget? _stripRisk(String sessionId, {required bool autoApprove}) {
+    // 生成期间这是徽标的另一条显示路径（贴在活动条旁边）；隐藏开关也要管到这里，
+    // 否则一回复就又冒出来。
+    if (ref.watch(hidePermissionPillProvider)) return null;
     if (autoApprove) {
       return StripRiskChip.autoApprove(
         context,
