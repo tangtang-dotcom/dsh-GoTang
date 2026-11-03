@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../phone/phone_channel.dart';
+import '../../state/chat_pill_prefs.dart';
 import '../../state/phone_state.dart';
 import '../settings/settings_widgets.dart';
 import '../shell/page_frame.dart';
@@ -211,6 +214,12 @@ class _ShellPermissionsPageState extends ConsumerState<ShellPermissionsPage> {
                 subtitle: '展开后可以逐条开关；收起仍保留你的选择',
                 value: _showCommands,
                 onChanged: _setShowCommands,
+              ),
+              SettingsSwitchTile(
+                title: '在输入框上方显示 root 状态条',
+                subtitle: '关掉只是不显示提示，终端能力不变',
+                value: ref.watch(showRootPillProvider),
+                onChanged: (v) => unawaited(ref.read(showRootPillProvider.notifier).set(v)),
               ),
               if (!isFull)
                 SettingsSwitchTile(
