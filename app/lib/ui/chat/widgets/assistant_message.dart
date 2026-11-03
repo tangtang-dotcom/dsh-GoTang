@@ -132,7 +132,7 @@ class _AssistantMessageState extends State<AssistantMessage> {
   /// ~41fps 自己推进；追上目标或流式结束时停，不用等父组件下一次重建。
   void _startPump() {
     if (_pump != null) return;
-    _pump = Timer.periodic(const Duration(milliseconds: 24), (timer) {
+    _pump = Timer.periodic(const Duration(milliseconds: 33), (timer) {
       if (!mounted || !widget.item.streaming) {
         timer.cancel();
         _pump = null;
@@ -232,13 +232,13 @@ class _AssistantMessageState extends State<AssistantMessage> {
           ? null
           : MarkdownBody(text: prefix, streaming: false, selectable: false, repairBareViews: true);
     }
-    final tail = _plainTail(cut > 0 ? text.substring(cut) : text);
-    final shownTail = _smooth(tail, true);
+    final shownTail = _smooth(cut > 0 ? text.substring(cut) : text, true);
+    if (shownTail.isEmpty && _prefixBody == null) return const SizedBox.shrink();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (_prefixBody != null) _prefixBody!,
-        if (shownTail.isNotEmpty) Text(shownTail, style: style),
+        if (shownTail.isNotEmpty) Text(_plainTail(shownTail), style: style),
       ],
     );
   }

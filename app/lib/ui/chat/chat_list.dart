@@ -629,14 +629,17 @@ class _ChatListState extends ConsumerState<ChatList> {
     final fresh = _fresh.remove(row.key);
     return KeyedSubtree(
       key: ValueKey<String>(row.key),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: AppSpace.readingWidth),
-          // 撑满阅读宽度:否则短行(用户气泡、提示行)会被 Center 居中。
-          child: Container(
-            width: double.infinity,
-            padding: EdgeInsets.fromLTRB(AppSpace.gutter, _gapBefore(row, previous), AppSpace.gutter, 0),
-            child: StreamFadeIn(enabled: fresh != null, index: fresh ?? 0, child: _rowWidget(row)),
+      // 独立重绘层:流式那一行每帧长高时,其余行不跟着重绘。
+      child: RepaintBoundary(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: AppSpace.readingWidth),
+            // 撑满阅读宽度:否则短行(用户气泡、提示行)会被 Center 居中。
+            child: Container(
+              width: double.infinity,
+              padding: EdgeInsets.fromLTRB(AppSpace.gutter, _gapBefore(row, previous), AppSpace.gutter, 0),
+              child: StreamFadeIn(enabled: fresh != null, index: fresh ?? 0, child: _rowWidget(row)),
+            ),
           ),
         ),
       ),
