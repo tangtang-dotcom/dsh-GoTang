@@ -27,3 +27,29 @@ class HidePermissionPill extends Notifier<bool> {
 }
 
 final hidePermissionPillProvider = NotifierProvider<HidePermissionPill, bool>(HidePermissionPill.new);
+
+/// 是否在输入框上方显示 root 状态条（终端权限档位）。
+///
+/// 默认显示；关掉后连生成期间的紧凑图标也不出现。
+class ShowRootPill extends Notifier<bool> {
+  static const _key = 'chat.showRootPill';
+
+  @override
+  bool build() {
+    _load();
+    return true;
+  }
+
+  Future<void> _load() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (ref.mounted) state = prefs.getBool(_key) ?? true;
+  }
+
+  Future<void> set(bool value) async {
+    state = value;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_key, value);
+  }
+}
+
+final showRootPillProvider = NotifierProvider<ShowRootPill, bool>(ShowRootPill.new);

@@ -254,6 +254,16 @@ class _ThisChatCardState extends ConsumerState<_ThisChatCard> {
             ),
           ),
         ),
+        MergeSemantics(
+          child: ListPageRow(
+            title: '在输入框上方显示 root 状态',
+            subtitle: '关闭后不再显示终端档位条',
+            trailing: Switch(
+              value: ref.watch(showRootPillProvider),
+              onChanged: (v) => unawaited(ref.read(showRootPillProvider.notifier).set(v)),
+            ),
+          ),
+        ),
       ],
     );
   }
