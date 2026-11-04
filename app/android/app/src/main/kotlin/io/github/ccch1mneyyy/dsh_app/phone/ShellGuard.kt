@@ -340,7 +340,9 @@ object ShellGuard {
      * 解析（[resolve]），不能因为“不是 / 开头”就跳过检查。
      */
     private fun pathArgs(seg: String): List<String> =
-        Regex("""(?:^|[\s>])([^\s'"`()|;&<>]+)""").findAll(seg)
+        // 只认「空格或 > 之后」的参数：`^` 会把命令名本身也当成路径
+        //（`cp -t /x /y` 里 cp 会被解析成 /cp，再被当成写入目标而误拒）。
+        Regex("""[\s>]([^\s'"`()|;&<>]+)""").findAll(seg)
             .map { it.groupValues[1] }
             .filter { it.isNotEmpty() && it != ">" && it != ">>" && !it.startsWith("-") }
             .toList()
