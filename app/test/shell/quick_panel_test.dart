@@ -211,6 +211,8 @@ void main() {
       // Fast, and leftwards: it would have flung open.
       await pull(3);
       expect(_panel, findsNothing);
+      // 上一根手指收起的那段动画要跑完，否则第二根手指量到的是它的残余。
+      await tester.pumpAndSettle();
 
       // 拉过面板宽度:取消没有速度,能不能开只看拉到了哪儿。
       await pull(12);
