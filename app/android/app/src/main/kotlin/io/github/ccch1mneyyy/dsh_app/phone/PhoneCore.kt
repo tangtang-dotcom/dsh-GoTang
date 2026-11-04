@@ -1,5 +1,7 @@
 package io.github.ccch1mneyyy.dsh_app.phone
 
+import java.io.File
+
 import java.time.ZoneId
 
 enum class A11yState { CONNECTED, ENABLED_NOT_CONNECTED, DISABLED }
@@ -26,6 +28,12 @@ interface PhoneEnv {
      */
     fun beforeHandoff(screen: PhoneScreen): String? = null
     fun sleep(ms: Long) = Thread.sleep(ms)
+
+    /** 终端权限（设置 → 终端权限）：档位、命令白名单、是否放开整个 /sdcard。 */
+    fun shellPolicy(): ShellPolicy = ShellPolicy.DISABLED
+
+    /** 终端命令的输出临时目录；null 时退回系统临时目录。 */
+    fun cacheDir(): File? = null
 }
 
 /**
@@ -159,9 +167,50 @@ class PhoneCore(
             PhoneToolCatalog.TAP, PhoneToolCatalog.TYPE, PhoneToolCatalog.SCROLL, PhoneToolCatalog.TAP_XY -> act(name, a, scope)
             PhoneToolCatalog.KEY -> key(a)
             PhoneToolCatalog.HANDOFF -> handoff(a, scope)
+            PhoneToolCatalog.SHELL -> shell(a)
             // l10n:keep agent tool result
             else -> Out("没有这个手机工具：$name", error = true)
         }
+    }
+
+    /** `shell`: 档位 → 守卫 → 执行，三步都过了才真跑。 */
+    private fun shell(a: Args): Out {
+        val policy = env.shellPolicy()
+        if (policy.mode == ShellMode.ORIGINAL) {
+            return Out(
+                "终端权限没开。请用户在 设置 → 终端权限 里切到「进阶模式」或「高危模式」。",
+                error = true,
+                summary = PhoneToolCatalog.SHELL,
+                decision = "refused:original",
+            )
+        }
+        val command = a.str("command").orEmpty().trim()
+        val summary = command.take(120).replace('\n', ' ')
+        if (command.isEmpty()) return Out("command 不能为空。", error = true, summary = summary)
+        when (val verdict = ShellGuard.judge(policy.mode, command, policy.allowed, policy.sdcardAllowed)) {
+            is ShellVerdict.Deny -> return Out(
+                verdict.reason,
+                error = true,
+                summary = summary,
+                decision = "refused:guard",
+            )
+            is ShellVerdict.Confirm -> return Out(
+                "这条命令会执行脚本，需要用户在弹窗里确认后再重试。",
+                error = true,
+                summary = summary,
+                decision = "needs-confirm",
+            )
+            ShellVerdict.Allow -> Unit
+        }
+        val timeoutMs = (a.int("timeoutMs")?.toLong() ?: 20_000L).coerceIn(1_000L, 120_000L)
+        val result = ShellRunner.execute(command, timeoutMs, env.cacheDir())
+        result.failed?.let { return Out(it, error = true, summary = summary) }
+        val prefix = if (result.timedOut) "（超时 ${timeoutMs}ms，已终止）\n" else ""
+        return Out(
+            if (prefix.isEmpty() && result.output.isBlank()) "（没有输出）" else prefix + result.output,
+            summary = summary,
+            decision = if (result.timedOut) "timeout" else null,
+        )
     }
 
     // ── System actions ──────────────────────────────────────────────────────────────
@@ -656,6 +705,7 @@ class PhoneCore(
             PhoneToolCatalog.SCREEN -> 12_000L
             PhoneToolCatalog.COLLECT -> 120_000L
             PhoneToolCatalog.HANDOFF -> 30_000L
+            PhoneToolCatalog.SHELL -> 120_000L
             else -> 30_000L
         }
     }

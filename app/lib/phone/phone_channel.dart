@@ -387,6 +387,7 @@ class PhoneStatus {
     this.notifications = false,
     this.confirmationNotifications,
     this.background = const PhoneBackgroundStatus(),
+    this.shell = const PhoneShellStatus(),
     this.task = const PhoneTaskStatus(),
     this.device = const PhoneDevice(),
   });
@@ -402,6 +403,7 @@ class PhoneStatus {
       notifications = false,
       confirmationNotifications = null,
       background = const PhoneBackgroundStatus(),
+      shell = const PhoneShellStatus(),
       task = const PhoneTaskStatus(),
       device = const PhoneDevice();
 
@@ -414,6 +416,7 @@ class PhoneStatus {
     notifications: _flag(m['notifications']),
     confirmationNotifications: _maybeFlag(m['confirmationNotifications']),
     background: PhoneBackgroundStatus.fromMap(_map(m['background'])),
+    shell: PhoneShellStatus.fromMap(_map(m['shell'])),
     task: PhoneTaskStatus.fromMap(_map(m['task'])),
     device: PhoneDevice.fromMap(_map(m['device'])),
   );
@@ -438,6 +441,9 @@ class PhoneStatus {
   /// Null on older native modules; it does not replace the global switch.
   final bool? confirmationNotifications;
   final PhoneBackgroundStatus background;
+
+  /// 设置 → 终端权限：档位、命令白名单、/sdcard 开关。
+  final PhoneShellStatus shell;
   final PhoneTaskStatus task;
   final PhoneDevice device;
 
@@ -452,6 +458,7 @@ class PhoneStatus {
     notifications: notifications,
     confirmationNotifications: confirmationNotifications,
     background: background,
+    shell: shell,
     task: task,
     device: device,
   );
@@ -966,6 +973,14 @@ class PhoneChannel {
 
   Future<PhoneResult> prepareRoot() => _result('prepareRoot');
 
+  /// 设置 → 终端权限：档位 original / safe / full。
+  Future<bool> setShellMode(String mode) => _bool('setShellMode', {'mode': mode});
+
+  /// 进阶模式下允许的命令名。
+  Future<bool> setAllowedCommands(List<String> commands) => _bool('setAllowedCommands', {'commands': commands});
+
+  Future<bool> setSdcardAllowed(bool on) => _bool('setSdcardAllowed', {'on': on});
+
   Future<bool> requestPrivilegedPermission(String provider) =>
       _bool('requestShizukuPermission', {'provider': provider});
 
@@ -1126,4 +1141,53 @@ class PhoneChannel {
       return PhoneResult(false, e.message ?? e.code);
     }
   }
+}
+
+// ── 终端权限 ─────────────────────────────────────────────────────────────────
+
+/// `status()['shell']`：档位、允许的命令、命令清单。
+class PhoneShellStatus {
+  const PhoneShellStatus({
+    this.mode = 'original',
+    this.allowed = const <String>[],
+    this.sdcardAllowed = false,
+    this.commands = const <PhoneShellCommand>[],
+  });
+
+  factory PhoneShellStatus.fromMap(Map<Object?, Object?> m) => PhoneShellStatus(
+    mode: (m['mode'] as String?) ?? 'original',
+    allowed: (m['allowed'] as List?)?.whereType<String>().toList(growable: false) ?? const <String>[],
+    sdcardAllowed: m['sdcardAllowed'] == true,
+    commands: (m['commands'] as List?)
+            ?.whereType<Map>()
+            .map((e) => PhoneShellCommand.fromMap(e))
+            .toList(growable: false) ??
+        const <PhoneShellCommand>[],
+  );
+
+  /// original / safe / full。
+  final String mode;
+  final List<String> allowed;
+  final bool sdcardAllowed;
+  final List<PhoneShellCommand> commands;
+
+  bool get isOriginal => mode == 'original';
+  bool get isFull => mode == 'full';
+  bool get isSafe => mode == 'safe';
+  bool isAllowed(String name) => allowed.contains(name);
+}
+
+/// 命令清单里的一条。
+class PhoneShellCommand {
+  const PhoneShellCommand(this.name, this.group, {this.desc = ''});
+
+  factory PhoneShellCommand.fromMap(Map m) => PhoneShellCommand(
+    (m['name'] as String?) ?? '',
+    (m['group'] as String?) ?? '',
+    desc: (m['desc'] as String?) ?? '',
+  );
+
+  final String name;
+  final String group;
+  final String desc;
 }

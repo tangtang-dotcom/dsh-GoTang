@@ -5489,5 +5489,15 @@
   "webTargetCordisMissing": "Couldn’t find the Cordis panel. The plugin may have been removed.",
   "webTargetNewChatFailed": "Couldn’t start a chat. You’re on the DSH Web home page.",
   "webTargetPageFailed": "Couldn’t open this page. You’re on the DSH Web home page.",
-  "webConnectHostFirst": "Connect to “{name}” to open DSH Web"
+  "webConnectHostFirst": "Connect to “{name}” to open DSH Web",
+  "phoneRootShellTitle": "Root commands",
+  "phoneRootShellHint": "Let the model run commands as root; when off, the tool refuses",
+  "toolchainTitle": "Reverse kit",
+  "toolchainHint": "jadx, apktool, radare2 and binutils under /root; app updates keep them",
+  "toolchainInstalled": "Installed",
+  "toolchainMissing": "Not installed",
+  "toolchainInstall": "Download and install",
+  "toolchainReinstall": "Reinstall",
+  "toolchainInstalling": "Installing…",
+  "toolchainNoRuntime": "The runtime is not installed yet; install it on the engine page first"
 }

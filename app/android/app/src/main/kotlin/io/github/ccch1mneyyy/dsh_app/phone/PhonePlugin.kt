@@ -160,6 +160,13 @@ class PhonePlugin : FlutterPlugin, ActivityAware, MethodChannel.MethodCallHandle
                 val live = stillWanted(privilegedActions.select())
                 async(result) { if (live()) control.background.prepareRoot(live) else cancelledSelection() }
             }
+            // 设置 → 终端权限: 档位、命令白名单、/sdcard 开关；这里什么都不执行。
+            "setShellMode" -> async(result) { control.setShellMode(call.argument<String>("mode") ?: "original") }
+            "setAllowedCommands" -> async(result) {
+                val list = call.argument<List<String>>("commands").orEmpty()
+                control.setAllowedCommands(list)
+            }
+            "setSdcardAllowed" -> async(result) { control.setSdcardAllowed(call.argument<Boolean>("on") == true) }
             "adbStartPairing" -> async(result) { control.background.adbStartPairing() }
             "adbPair" -> async(result) {
                 val code = call.argument<String>("code")?.trim().orEmpty()

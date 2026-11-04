@@ -170,7 +170,35 @@ class PhoneControl private constructor(private val app: Context) : PhoneEnv, Con
         return true
     }
 
+    // ── 终端权限 ──────────────────────────────────────────────────────────────
+
+    private val shellStore by lazy { ShellPolicyStore.of(app) }
+
+    override fun shellPolicy(): ShellPolicy = shellStore.snapshot()
+
+    override fun cacheDir(): File? = app.cacheDir
+
+    /** 设置 → 终端权限：档位、命令白名单、/sdcard 开关。 */
+    fun setShellMode(mode: String): Map<String, Any?> {
+        shellStore.setMode(ShellMode.of(mode))
+        emitStatus()
+        return mapOf("ok" to true, "mode" to shellStore.mode().key)
+    }
+
+    fun setAllowedCommands(commands: List<String>): Map<String, Any?> {
+        shellStore.setAllowed(commands.toSet())
+        emitStatus()
+        return mapOf("ok" to true, "allowed" to shellStore.allowed().sorted())
+    }
+
+    fun setSdcardAllowed(on: Boolean): Map<String, Any?> {
+        shellStore.setSdcardAllowed(on)
+        emitStatus()
+        return mapOf("ok" to true, "sdcardAllowed" to shellStore.sdcardAllowed())
+    }
+
     override fun policies(): PhonePolicies = policiesCache ?: run {
+
         val stored = prefs.getString(K_POLICIES, null)
         val p = try {
             PhonePolicies.fromMap(stored?.let { Json.parse(it) as? Map<*, *> })
@@ -441,6 +469,12 @@ class PhoneControl private constructor(private val app: Context) : PhoneEnv, Con
         "notifications" to nm.areNotificationsEnabled(),
         "confirmationNotifications" to notificationGate.available(),
         "background" to backgroundStatus(),
+        "shell" to linkedMapOf(
+            "mode" to shellPolicy().mode.key,
+            "allowed" to shellPolicy().allowed.sorted(),
+            "sdcardAllowed" to shellPolicy().sdcardAllowed,
+            "commands" to ShellCommands.CATALOG,
+        ),
         "a11yKeeper" to keeperStatus(),
         "task" to tasks.snapshot().toMap(),
         "device" to linkedMapOf(

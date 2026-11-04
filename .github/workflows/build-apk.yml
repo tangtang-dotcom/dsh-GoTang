@@ -1,0 +1,60 @@
+# Builds the arm64 APK on GitHub, so a change can be installed without a local
+# Flutter/Android toolchain. Same steps as a developer machine:
+# tooling/setup-toolchain.sh → runtime/build-runtime.sh → tooling/build-apk.sh.
+#
+# No signing key here: app/android/app/build.gradle.kts falls back to the debug
+# key when app/android/key.properties is absent, so the artifact installs over a
+# debug-key build and needs no secrets. Replace it with your own keystore once
+# you care about upgrades over a release-signed install.
+name: Build APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - 'feat/**'
+
+concurrency:
+  group: apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache runtime build
+        uses: actions/cache@v4
+        with:
+          path: runtime/out
+          key: runtime-${{ hashFiles('runtime/build-runtime.sh', 'runtime/locks/**', 'runtime/patches/pins.json', 'runtime/bridge/**') }}
+
+      - name: Toolchain (JDK 17, Flutter, Android SDK, NDK)
+        run: bash tooling/setup-toolchain.sh
+
+      - name: Runtime (rootfs, proot, Node)
+        run: |
+          set -euo pipefail
+          source tooling/env.sh
+          bash runtime/build-runtime.sh arm64-v8a
+
+      - name: APK
+        run: |
+          set -euo pipefail
+          source tooling/env.sh
+          # 官方源优先：国内镜像偶发 5xx 会让 Gradle 查不到动态版本范围的元数据
+          # （bcpkix → bcutil:[1.81,1.82)），整次构建就废了。
+          export FLUTTER_STORAGE_BASE_URL=https://storage.googleapis.com
+          export PUB_HOSTED_URL=https://pub.dev
+          bash tooling/build-apk.sh -f arm64
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: dsh-go-arm64-${{ github.sha }}
+          if-no-files-found: error
+          retention-days: 14
+          path: app/build/app/outputs/flutter-apk/*.apk

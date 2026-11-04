@@ -120,7 +120,7 @@ class _AssistantMessageState extends State<AssistantMessage> {
       // Long-press opens the menu; selecting text is one of its entries.
       // repairBareViews: a model that forgets the ```dsh-ui fence still gets
       // its view drawn instead of a wall of JSON.
-      _body = MarkdownBody(text: text, streaming: streaming, selectable: false, repairBareViews: true);
+      _body = MarkdownBody(text: text, streaming: streaming, selectable: !streaming, repairBareViews: true);
       _bodyText = text;
       _bodyStreaming = streaming;
     }
@@ -153,7 +153,8 @@ class _AssistantMessageState extends State<AssistantMessage> {
     final actions = widget.showActions && !streaming && text.isNotEmpty;
     final reply = GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onLongPress: streaming || text.isEmpty ? null : () => _menu(text),
+      // 长按交给系统选字（和 Rikka / Eta 一致）；没有页脚的旧消息仍保留长按菜单。
+      onLongPress: !streaming && !actions && text.isNotEmpty ? () => _menu(text) : null,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

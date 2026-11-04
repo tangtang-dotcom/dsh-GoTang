@@ -12,6 +12,7 @@ import '../media/media_format.dart' show mediaParamsLine;
 import '../mention/mention_chip.dart';
 import '../secret_mask.dart';
 import 'message_actions.dart';
+import 'tap_to_menu.dart';
 import 'quote_chip.dart';
 
 /// 用户消息:**右对齐的软气泡**,比页面深一档,像"按进去"的(Claude 式)。
@@ -95,7 +96,10 @@ class UserBubble extends StatelessWidget {
     // Selecting goes through the menu ("选择文字"): long-press is the menu.
     // `@` references draw as chips; text with a credential stays a plain
     // SecretText.
-    Widget content = ReferenceText(quote == null ? shown : body, style: style, interactive: interactive);
+    // 长按选中（和助手消息一致）：SelectionArea 让 Text.rich / SecretText 都可选。
+    Widget content = SelectionArea(
+      child: ReferenceText(quote == null ? shown : body, style: style, interactive: interactive),
+    );
     if (quote != null) {
       content = Column(
         mainAxisSize: MainAxisSize.min,
@@ -113,8 +117,10 @@ class UserBubble extends StatelessWidget {
       container: true,
       header: true,
       label: l10n.chatMe,
-      child: GestureDetector(
-        onLongPress: () => _menu(context),
+      child: TapToMenu(
+        // 长按交给 SelectionArea 选字；轻点打开消息菜单（指针事件在手势竞技场之前，
+        // 所以 SelectionArea 抢不走判定）。
+        onTap: () => _menu(context),
         child: DecoratedBox(
           decoration: ShapeDecoration(color: surfaces.userBubble, shape: AppShape.bubble),
           child: Padding(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8), child: content),

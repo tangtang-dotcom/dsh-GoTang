@@ -19,6 +19,7 @@ import '../../state/agents_state.dart' show subagentParentProvider;
 import '../../state/attachments.dart';
 import '../../state/balance_state.dart';
 import '../../state/chat_error_text.dart';
+import '../../state/chat_pill_prefs.dart';
 import '../../state/chat_state.dart';
 import '../../state/commands_state.dart';
 import '../../state/compose_inbox.dart';
@@ -75,7 +76,9 @@ import 'chat_list.dart';
 import 'composer.dart';
 import 'composer_toast.dart';
 import 'dock/chat_dock.dart';
+import 'dock/dock_pill.dart';
 import 'dock/dock_stack.dart';
+import 'dock/root_pill.dart';
 import 'empty_state.dart';
 import 'empty_actions.dart';
 import 'media/generate_mode.dart';
@@ -1792,6 +1795,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> with WidgetsBindingObse
                                     child: DockStack(
                                       cards: [
                                         if (sessionId != null) ...[
+                                          if (ref.watch(showRootPillProvider))
+                                            const DockSlot(key: ValueKey('root'), child: RootPill()),
                                           TodoDockSlot(sessionId: sessionId),
                                           GoalDockSlot(sessionId: sessionId),
                                           ActivityStripSlot(
@@ -1805,7 +1810,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> with WidgetsBindingObse
                                         if (!readOnly) ComposerStripSlot(sessionId: sessionId, visible: !running),
                                       ],
                                       accessory: pillsBesideStrip
-                                          ? _stripRisk(sessionId, autoApprove: chat?.autoApprove ?? false)
+                                          ? Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                if (ref.watch(showRootPillProvider)) const RootPill(compact: true),
+                                                const SizedBox(width: 6),
+                                                _stripRisk(sessionId, autoApprove: chat?.autoApprove ?? false) ??
+                                                    const SizedBox.shrink(),
+                                              ],
+                                            )
                                           : null,
                                     ),
                                   ),
@@ -1916,7 +1929,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> with WidgetsBindingObse
       // Beside the activity strip ([_stripRisk]).
     } else if (sessionId != null && autoApprove) {
       pill = AutoApprovePill(onDisable: () => ref.read(chatProvider(sessionId).notifier).setAutoApprove(false));
-    } else if (sessionId != null) {
+    } else if (sessionId != null && !ref.watch(hidePermissionPillProvider)) {
       final risky = ref.watch(sessionModesProvider(sessionId).select((m) => m.risky ? m.preset : null));
       if (risky != null) {
         // Beside the mode capsule it shrinks to its ⚠ (§4.2).
@@ -1941,6 +1954,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> with WidgetsBindingObse
 
   /// 「自动允许中」/「完全权限」 beside the activity strip while a reply generates.
   Widget? _stripRisk(String sessionId, {required bool autoApprove}) {
+    // 生成期间是徽标的第二条显示路径；隐藏开关也要管到这里。
+    if (ref.watch(hidePermissionPillProvider)) return null;
     if (autoApprove) {
       return StripRiskChip.autoApprove(
         context,

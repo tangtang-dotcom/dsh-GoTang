@@ -10,7 +10,8 @@ import java.io.OutputStream
 // it is reached: a Shizuku Binder (IPrivilegedDisplay) or an adb `app_process` stdin/
 // stdout stream (PrivilegedDisplayMain). Both carry the same [Bundle]; the engine
 // ([PrivilegedDisplayCore]) only ever sees a Bundle in and a Bundle out. The engine
-// accepts only this fixed verb set — no shell commands, paths or display ids from callers.
+// accepts only this fixed verb set — no paths or display ids from callers.
+
 
 object Proto {
     const val REVISION = "dsh-vdisplay-1"
@@ -64,6 +65,8 @@ object Proto {
     // response keys
     const val OK = "ok"
     const val ERROR = "error"
+    /** `exec` only: output hit the engine's cap and was cut. */
+    const val TRUNCATED = "truncated"
     const val DISPLAY_ID = "displayId"
     const val UID = "uid"
     const val SECURE = "secure"

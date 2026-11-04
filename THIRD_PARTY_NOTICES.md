@@ -125,7 +125,7 @@ DS Bot 的 NOTICE 原文附在文末。
 | 版权人 | Copyright (c) 2026 DSH Remote contributors |
 | 许可 | MIT（全文另见 `packages/dsh_remote/LICENSE-ds-harness-remote`） |
 | 用途 | 远程连接：协议、分帧、校验、加密信道、直连（WebRTC）与连接逻辑 |
-| 对应上游版本 | `7e387df`（Host 插件 0.6.0）；工作区上传协议参考 `479b94341c0d0de63846f21d0fcca26997d158d1`（Host 插件 0.6.2） |
+| 对应上游版本 | `7e387df`（Host 插件 0.6.0） |
 
 路径均相对 `packages/dsh_remote/`：
 
@@ -133,7 +133,7 @@ DS Bot 的 NOTICE 原文附在文末。
 |---|---|
 | `lib/src/server/server_api.dart` | `apps/android/src/services/api.ts`（`RemoteServerApi`，含 `turnCredentials`）、`docs/protocol.md`、`docs/plugin-integration.md` |
 | `lib/src/account/remote_account.dart` | `apps/android/src/services/server-session-manager.ts`、`device-directory.ts`、`connection.ts`（含直连失败后另开纯 Relay 连接）、`packages/plugin/src/cli.ts` |
-| `lib/src/carrier/tunnel_carrier.dart` | `packages/client-core/src/remote-gateway.ts`；白名单来自 `packages/plugin/src/harness-remote-bridge.ts`、`terminal-policy.ts`；工作区上传协议与文件名校验参考 `docs/protocol.md`、`packages/plugin/src/workspace-upload.ts`、`rpc-router.ts`（`479b943`），Dart 重写，遵守协议绝对上限，具体路径/版本限制以主机回复为准 |
+| `lib/src/carrier/tunnel_carrier.dart` | `packages/client-core/src/remote-gateway.ts`；白名单来自 `packages/plugin/src/harness-remote-bridge.ts`、`terminal-policy.ts` |
 | `lib/src/crypto/noise_ik.dart` | `packages/crypto/src/noise.ts`、`packages/crypto/src/index.ts`（会话封装）；Noise IK 状态机为本项目自行实现，经上游作者同意 |
 | `lib/src/channel/secure_channel.dart` | `packages/plugin/src/client-secure-transport.ts`、`packages/plugin/src/server-connection.ts` |
 | `lib/src/channel/rpc_client.dart` | `packages/client-core/src/index.ts`（`RemoteClientCore`） |
@@ -298,7 +298,7 @@ APK 内置的 Linux 运行时由 `runtime/build-runtime.sh` 构建，以下组�
 
 | 组件 | 版本 | 来源 | 许可 |
 |---|---|---|---|
-| proot | 5.1.107.98 | Termux（源码 https://github.com/termux/proot） | GPL-2.0（`licenses/proot-COPYING.txt`） |
+| proot | 5.1.107.102 | Termux（源码 https://github.com/termux/proot） | GPL-2.0（`licenses/proot-COPYING.txt`） |
 | libtalloc | 2.5.0 | Termux | LGPL-3.0-or-later（`licenses/libtalloc-notice.txt`） |
 | libandroid-shmem | 0.7 | Termux | BSD-3-Clause（`licenses/libandroid-shmem-copyright.txt`） |
 | Ubuntu Base 与软件包（tzdata、ca-certificates、git 及依赖） | 24.04.5 | Canonical / Ubuntu | 各包自带，见 `/usr/share/doc/` |
@@ -307,7 +307,7 @@ APK 内置的 Linux 运行时由 `runtime/build-runtime.sh` 构建，以下组�
 | pnpm | 11.28.5 | npm | MIT |
 | DeepSeek Harness 主包（`@deepseek-ai/dsh`） | 0.2.1-rc.4 | npm | MIT；构建补丁集合由 `runtime/patches/pins.json` 决定 |
 
-GPL / LGPL 组件的对应源码：proot、libtalloc、libandroid-shmem 的二进制取自 Termux 官方 apt 仓库（https://packages.termux.dev/apt/termux-main ），`runtime/build-runtime.sh` 固定了每个 .deb 的 SHA-256。源码分别在 https://github.com/termux/proot （tag `v5.1.107.98`，构建时一并下载并核对哈希）、https://www.samba.org/ftp/talloc/ （2.5.0）、https://github.com/termux/libandroid-shmem （0.7）；Termux 的构建配方在 https://github.com/termux/termux-packages 。本项目对这三个二进制的修改只有上面说的 DT_NEEDED / DT_SONAME 改名。
+GPL / LGPL 组件的对应源码：proot、libtalloc、libandroid-shmem 的二进制取自 Termux 官方 apt 仓库（https://packages.termux.dev/apt/termux-main ），`runtime/build-runtime.sh` 固定了每个 .deb 的 SHA-256。源码分别在 https://github.com/termux/proot （tag `v5.1.107.102`，构建时一并下载并核对哈希）、https://www.samba.org/ftp/talloc/ （2.5.0）、https://github.com/termux/libandroid-shmem （0.7）；Termux 的构建配方在 https://github.com/termux/termux-packages 。本项目对这三个二进制的修改只有上面说的 DT_NEEDED / DT_SONAME 改名。
 
 ### npm 传递依赖与发行核验
 
