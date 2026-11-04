@@ -356,6 +356,7 @@ void main() {
     final harness = ChatHarness(
       session: 's1',
       states: {'s1': const ChatState(running: true, autoApprove: true, loading: false)},
+      extra: [rootPillOff],
     );
     await pumpScreen(tester, harness);
     expect(find.byType(AutoApprovePill), findsNothing);

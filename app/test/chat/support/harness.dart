@@ -6,6 +6,7 @@ import 'package:dsh_app/runtime/runtime_bridge.dart';
 import 'package:dsh_app/runtime/runtime_state.dart';
 import 'package:dsh_app/state/attachments.dart';
 import 'package:dsh_app/state/balance_state.dart';
+import 'package:dsh_app/state/chat_pill_prefs.dart';
 import 'package:dsh_app/state/chat_state.dart';
 import 'package:dsh_app/state/commands_state.dart';
 import 'package:dsh_app/state/connection_state.dart';
@@ -26,6 +27,16 @@ import 'package:flutter_test/flutter_test.dart';
 import '../../support/test_fonts.dart';
 
 export '../../support/test_fonts.dart' show cjkFamily, loadTestFonts;
+
+/// Composer-geometry tests measure the composer column itself: the terminal
+/// pill (its own tests cover it) would sit between the strip and the composer's
+/// right edge and move every row up by its height.
+class _OffRootPill extends ShowRootPill {
+  @override
+  bool build() => false;
+}
+
+final rootPillOff = showRootPillProvider.overrideWith(_OffRootPill.new);
 
 ThemeData testTheme(Brightness brightness) {
   final base = brightness == Brightness.dark ? buildDarkTheme() : buildLightTheme();

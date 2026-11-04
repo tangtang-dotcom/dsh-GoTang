@@ -40,7 +40,10 @@ void main() {
   setUpAll(loadTestFonts);
 
   testWidgets('this conversation: at the caret, focused, confirmed', (tester) async {
-    final container = await _pump(tester, ChatHarness(session: 's1', states: {'s1': const ChatState(loading: false)}));
+    final container = await _pump(
+      tester,
+      ChatHarness(session: 's1', states: {'s1': const ChatState(loading: false)}, extra: [rootPillOff]),
+    );
     await tester.enterText(find.byType(TextField), '总结这个文件');
     _field(tester).selection = const TextSelection.collapsed(offset: 2);
     FocusManager.instance.primaryFocus?.unfocus();
@@ -71,7 +74,10 @@ void main() {
   });
 
   testWidgets('a skill that adds lines: the confirmation clears the grown composer', (tester) async {
-    final container = await _pump(tester, ChatHarness(session: 's1', states: {'s1': const ChatState(loading: false)}));
+    final container = await _pump(
+      tester,
+      ChatHarness(session: 's1', states: {'s1': const ChatState(loading: false)}, extra: [rootPillOff]),
+    );
     await tester.enterText(find.byType(TextField), '一段很长的话' * 12);
     await tester.pump();
     await pumpFrames(tester, 14);
@@ -90,7 +96,10 @@ void main() {
   });
 
   testWidgets('a new conversation: the open one keeps its draft', (tester) async {
-    final container = await _pump(tester, ChatHarness(session: 's1', states: {'s1': const ChatState(loading: false)}));
+    final container = await _pump(
+      tester,
+      ChatHarness(session: 's1', states: {'s1': const ChatState(loading: false)}, extra: [rootPillOff]),
+    );
     await tester.enterText(find.byType(TextField), '还没发的话');
     await tester.pump();
 
@@ -106,7 +115,11 @@ void main() {
 
   testWidgets('asked before the chat was built', (tester) async {
     usePhoneView(tester);
-    final harness = ChatHarness(session: 's1', states: {'s1': const ChatState(loading: false)});
+    final harness = ChatHarness(
+      session: 's1',
+      states: {'s1': const ChatState(loading: false)},
+      extra: [rootPillOff],
+    );
     final show = ValueNotifier(false);
     addTearDown(show.dispose);
     await tester.pumpWidget(

@@ -48,7 +48,7 @@ Future<FakeChatController> _open(WidgetTester tester, ChatState state) async {
   // Bottom-seam assertions require overflowing content. Short transcripts
   // intentionally align at the top, including while dock bars change height.
   tester.view.physicalSize = const Size(780, 1200);
-  final harness = ChatHarness(session: 's1', states: {'s1': state});
+  final harness = ChatHarness(session: 's1', states: {'s1': state}, extra: [rootPillOff]);
   final backend = FakeGoalBackend(canRead: false);
   addTearDown(backend.close);
   await tester.pumpWidget(
