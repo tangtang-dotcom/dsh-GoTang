@@ -1814,9 +1814,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> with WidgetsBindingObse
                                       accessory: switch (pillsBesideStrip) {
                                         // 有东西才占位：空的附件行也会把活动条挤窄 8。
                                         false => null,
+                                        // pillsBesideStrip 已保证会话存在。
                                         true => switch ((
                                           local && ref.watch(showRootPillProvider),
-                                          _stripRisk(sessionId, autoApprove: chat?.autoApprove ?? false),
+                                          _stripRisk(sessionId!, autoApprove: chat?.autoApprove ?? false),
                                         )) {
                                           (false, null) => null,
                                           (final pill, final risk) => Row(
