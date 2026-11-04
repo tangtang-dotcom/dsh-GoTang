@@ -343,43 +343,52 @@ class _Line extends StatelessWidget {
       theme.textTheme.labelSmall!.copyWith(fontSize: 12, color: a.waiting ? dsh.warning : dsh.textTertiary),
     );
 
-    return Row(
-      children: [
-        Expanded(
-          child: AnimatedSwitcher(
-            duration: AppMotion.of(context, AppMotion.quick),
-            layoutBuilder: (current, previous) =>
-                Stack(alignment: Alignment.centerLeft, children: [...previous, ?current]),
-            child: Row(
-              key: ValueKey('${a.title}\u0000$second'),
-              children: [
-                // 标题先让位：条被压缩到几十像素时（320dp × 1.3 字），连状态词都放不下。
-                Flexible(
-                  child: Text(
-                    a.title,
-                    style: titleStyle,
-                    maxLines: 1,
-                    softWrap: false,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                if (second.isNotEmpty) ...[
-                  const SizedBox(width: 6),
-                  Flexible(
-                    child: Text.rich(
-                      TextSpan(children: spans),
-                      maxLines: 1,
-                      softWrap: false,
-                      overflow: TextOverflow.ellipsis,
+    // 条被挤到几十像素时（320dp × 1.3 字 + 右侧胶囊），时钟既放不下也没意义：
+    // 先让它退出，标题再于自己的行里省略。
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final showClock = elapsed != null && constraints.maxWidth >= 110;
+        return Row(
+          children: [
+            Expanded(
+              child: AnimatedSwitcher(
+                duration: AppMotion.of(context, AppMotion.quick),
+                layoutBuilder: (current, previous) =>
+                    Stack(alignment: Alignment.centerLeft, children: [...previous, ?current]),
+                child: Row(
+                  key: ValueKey('${a.title}\u0000$second'),
+                  children: [
+                    Flexible(
+                      child: Text(
+                        a.title,
+                        style: titleStyle,
+                        maxLines: 1,
+                        softWrap: false,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                  ),
-                ],
-              ],
+                    if (second.isNotEmpty) ...[
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: Text.rich(
+                          TextSpan(children: spans),
+                          maxLines: 1,
+                          softWrap: false,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
             ),
-          ),
-        ),
-        if (elapsed != null) ...[const SizedBox(width: 8), Text(formatClock(elapsed!), style: clockStyle)],
-      ],
+            if (showClock) ...[
+              const SizedBox(width: 8),
+              Text(formatClock(elapsed!), style: clockStyle),
+            ],
+          ],
+        );
+      },
     );
   }
 }
