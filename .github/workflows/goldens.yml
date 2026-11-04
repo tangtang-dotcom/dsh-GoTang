@@ -34,31 +34,7 @@ jobs:
           sudo install -Dm644 "$RUNNER_TEMP/emoji.ttf" /usr/share/fonts/noto/NotoColorEmoji.ttf
       - run: flutter pub get --enforce-lockfile
       - name: Regenerate the goldens
-        run: |
-          flutter test --no-pub --concurrency=4 --update-goldens \
-            test/agents/lineage_test.dart \
-            test/chat/chat_features_test.dart \
-            test/chat/chat_screen_test.dart \
-            test/chat/chat_shell_test.dart \
-            test/chat/composer_insert_flow_test.dart \
-            test/chat/composer_mention_picker_test.dart \
-            test/chat/dock/dock_chat_screen_test.dart \
-            test/chat/fork_toast_test.dart \
-            test/chat/message_actions_test.dart \
-            test/chat/model_sheet_test.dart \
-            test/chat/plus_panel_test.dart \
-            test/chat/secret_mask_test.dart \
-            test/integration/wiring_test.dart \
-            test/media/generate_mode_test.dart \
-            test/media/media_golden_test.dart \
-            test/pets/pet_golden_test.dart \
-            test/phone/phone_golden_test.dart \
-            test/plugins/native/message_menu_plugins_test.dart \
-            test/plugins/native/native_slots_golden_test.dart \
-            test/plugins/view/plugin_card_fold_test.dart \
-            test/share/share_entries_test.dart \
-            test/shell/quick_panel_golden_test.dart \
-            test/wallpaper/wallpaper_screens_test.dart
+        run: flutter test --no-pub --concurrency=4 --update-goldens
       - name: Binary patch of what changed
         if: always()
         working-directory: .

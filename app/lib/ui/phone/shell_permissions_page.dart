@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../state/chat_pill_prefs.dart';
 import '../../state/phone_state.dart';
 import '../settings/settings_widgets.dart';
+import '../theme/app_icons.dart';
 import '../shell/page_frame.dart';
 
 const _prefShowCommands = 'shell_show_commands';
@@ -297,7 +298,7 @@ class _ShellPermissionsPageState extends ConsumerState<ShellPermissionsPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
-                open ? Icons.expand_less : Icons.expand_more,
+                open ? AppIcons.collapse : AppIcons.expand,
                 size: 20,
                 color: Theme.of(context).colorScheme.outline,
               ),
@@ -355,13 +356,13 @@ class _TierTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return SettingsTile(
-      icon: Icons.circle,
+      icon: AppIcons.radioOff,
       tint: 0,
       title: label,
       subtitle: summary,
       onTap: onTap,
       trailing: Icon(
-        selected ? Icons.check_circle : Icons.radio_button_unchecked,
+        selected ? AppIcons.completed : AppIcons.radioOff,
         color: selected ? tone : scheme.outlineVariant,
       ),
     );
@@ -407,7 +408,7 @@ class _RecentSectionState extends ConsumerState<_RecentSection> {
         if (_open)
           for (final e in entries.take(widget.limit))
             SettingsTile(
-              icon: Icons.chevron_right,
+              icon: AppIcons.disclosure,
               title: e.summary.isEmpty ? e.tool : e.summary,
               subtitle: [
                 e.tool,

@@ -113,7 +113,7 @@ void main() {
         ),
       ),
     );
-    final user = tester.getSemantics(find.bySemanticsLabel(RegExp(r'^我')));
+    final user = tester.getSemantics(find.bySemanticsLabel('我'));
     expect(user.flagsCollection.isHeader, isTrue);
     final heading = tester.getSemantics(find.bySemanticsLabel('步骤'));
     expect(heading.flagsCollection.isHeader, isTrue);

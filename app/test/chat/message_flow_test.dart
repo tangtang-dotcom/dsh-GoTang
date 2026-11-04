@@ -162,9 +162,9 @@ void main() {
       expect(find.byTooltip('从这里分叉'), findsOneWidget);
     });
 
-    testWidgets('also in the long-press menu, with the same result', (tester) async {
+    testWidgets('also in the ⋯ menu, with the same result', (tester) async {
       final harness = await _pump(tester);
-      await tester.longPress(find.textContaining('多发了一次请求', findRichText: true).first);
+      await tester.tap(find.byTooltip('更多').last);
       await pumpFrames(tester);
       await tester.tap(find.widgetWithText(SettingsTile, '重新回答'));
       await pumpFrames(tester);
@@ -201,7 +201,7 @@ void main() {
 
     testWidgets('✕ drops the quote; a quote alone does not send', (tester) async {
       final harness = await _pump(tester);
-      await tester.longPress(find.textContaining('多发了一次请求', findRichText: true).first);
+      await tester.tap(find.byTooltip('更多').last);
       await pumpFrames(tester);
       await tester.tap(find.widgetWithText(SettingsTile, '引用'));
       await pumpFrames(tester);
@@ -236,7 +236,7 @@ void main() {
       expect(find.text('第一次在 30 秒时超时'), findsOneWidget);
       expect(find.text('那为什么会重试？'), findsOneWidget);
 
-      await tester.longPress(find.text('那为什么会重试？'));
+      await tester.tap(find.text('那为什么会重试？'));
       await pumpFrames(tester);
       await tester.tap(find.widgetWithText(SettingsTile, '编辑后重发'));
       await pumpFrames(tester);

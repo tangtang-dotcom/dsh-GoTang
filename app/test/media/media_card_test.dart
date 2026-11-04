@@ -67,6 +67,9 @@ Future<ChatHarness> pumpConversation(
 }
 
 void main() {
+  // 语音与界面偏好都读 SharedPreferences；测试里给它一个空实现。
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+
   group('the v1 meta', () {
     test('a header request: two 3:4 pictures, the cost, the rewrite', () {
       final media = toolMedia(fixtureTool('synthetic_header_image'))!;

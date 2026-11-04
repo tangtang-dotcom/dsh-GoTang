@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../state/phone_state.dart';
 import '../../phone/shell_permissions_page.dart';
+import '../../theme/app_icons.dart';
 import '../../theme/theme.dart';
 import 'dock_pill.dart';
 
@@ -25,9 +26,9 @@ class RootPill extends ConsumerWidget {
     // 手机操控关着时引擎根本不挂 shell 工具，存储的档位不会生效：不显示成已启用。
     final mode = phone.enabled ? phone.shell.mode : 'off';
     final (label, color, icon) = switch (mode) {
-      'safe' => ('终端 · 进阶', Colors.amber.shade700, Icons.shield_outlined),
-      'full' => ('终端 · 高危', Colors.red.shade600, Icons.terminal),
-      _ => ('启用终端', theme.colorScheme.onSurfaceVariant, Icons.terminal_outlined),
+      'safe' => ('终端 · 进阶', Colors.amber.shade700, AppIcons.redacted),
+      'full' => ('终端 · 高危', Colors.red.shade600, AppIcons.command),
+      _ => ('启用终端', theme.colorScheme.onSurfaceVariant, AppIcons.command),
     };
     if (compact) {
       return Semantics(

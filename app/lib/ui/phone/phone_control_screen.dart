@@ -817,7 +817,7 @@ class _ToolchainSheetState extends ConsumerState<_ToolchainSheet> {
                   title: entry.value,
                   subtitle: installed[entry.key] == true ? l10n.toolchainInstalled : l10n.toolchainMissing,
                   trailing: Icon(
-                    installed[entry.key] == true ? Icons.check_circle : Icons.radio_button_unchecked,
+                    installed[entry.key] == true ? AppIcons.completed : AppIcons.radioOff,
                     size: 20,
                     color: installed[entry.key] == true ? theme.colorScheme.primary : theme.colorScheme.outline,
                   ),
@@ -834,7 +834,7 @@ class _ToolchainSheetState extends ConsumerState<_ToolchainSheet> {
                   width: double.infinity,
                   child: FilledButton.icon(
                     onPressed: (_starting || running) ? null : _install,
-                    icon: const Icon(Icons.download, size: 18),
+                    icon: const Icon(AppIcons.download, size: 18),
                     label: Text(running ? l10n.toolchainInstalling : (allInstalled ? l10n.toolchainReinstall : l10n.toolchainInstall)),
                   ),
                 ),

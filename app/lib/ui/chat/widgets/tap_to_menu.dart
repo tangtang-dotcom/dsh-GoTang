@@ -8,6 +8,10 @@ import 'package:flutter/widgets.dart';
 class TapToMenu extends StatefulWidget {
   const TapToMenu({super.key, required this.onTap, required this.child});
 
+  /// 这一下轻点已经被里面的控件用掉了（气泡里的眼睛）：别再开消息菜单。
+  static bool _suppressed = false;
+  static void suppressNextTap() => _suppressed = true;
+
   final VoidCallback onTap;
   final Widget child;
 
@@ -27,6 +31,12 @@ class _TapToMenuState extends State<TapToMenu> {
         _downMs = event.timeStamp.inMilliseconds;
       },
       onPointerUp: (event) {
+        if (TapToMenu._suppressed) {
+          TapToMenu._suppressed = false;
+          _downAt = null;
+          _downMs = null;
+          return;
+        }
         final down = _downAt;
         final downMs = _downMs;
         _downAt = null;
@@ -38,6 +48,7 @@ class _TapToMenuState extends State<TapToMenu> {
         if (moved <= 12 && held <= 400) widget.onTap();
       },
       onPointerCancel: (_) {
+        TapToMenu._suppressed = false;
         _downAt = null;
         _downMs = null;
       },
