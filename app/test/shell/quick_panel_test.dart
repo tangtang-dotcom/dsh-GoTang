@@ -193,7 +193,7 @@ void main() {
       expect(_drawer, findsNothing);
     });
 
-    testWidgets('the system taking the finger away is no fling: it goes by how far it came', (tester) async {
+    testWidgets('a cancel short of half stays closed: no fling to open it', (tester) async {
       await _pump(tester);
       // [TestGesture] stamps every event zero unless told: real times, or no speed to measure.
       var time = Duration.zero;
@@ -208,14 +208,21 @@ void main() {
         await pumpFrames(tester, 8);
       }
 
-      // Fast, and leftwards: it would have flung open.
+      // Fast, and leftwards: it would have flung open, but a cancel has no speed.
       await pull(3);
       expect(_panel, findsNothing);
-      // 上一根手指收起的那段动画要跑完，否则第二根手指量到的是它的残余。
-      await tester.pumpAndSettle();
+    });
 
-      // 拉过面板宽度:取消没有速度,能不能开只看拉到了哪儿。
-      await pull(12);
+    testWidgets('a cancel past the width opens: distance alone decides', (tester) async {
+      await _pump(tester);
+      var time = Duration.zero;
+      final finger = await tester.startGesture(_chatMiddle);
+      for (var i = 0; i < 12; i++) {
+        time += const Duration(milliseconds: 16);
+        await finger.moveBy(const Offset(-24, 0), timeStamp: time);
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+      await finger.cancel(timeStamp: time);
       await pumpFrames(tester, 20);
       expect(_panelIn(tester), QuickPanel.width);
     });
