@@ -307,7 +307,7 @@ void main() {
       expect(container.read(currentSessionProvider), 's1');
     });
 
-    testWidgets('long-press menu: copy, select text, share, branch', (tester) async {
+    testWidgets('reply menu: copy, select text, share, branch', (tester) async {
       final platform = _platform(tester);
       final harness = ChatHarness(session: 's1', states: {'s1': _conversation()});
       await _pump(tester, harness);
@@ -315,8 +315,9 @@ void main() {
       harness.controllers['s1']!.emit(_conversation());
       await pumpFrames(tester);
 
+      // 长按现在选中正文；回复菜单在操作行的 ⋯ 里。
       Future<void> menu() async {
-        await tester.longPress(find.textContaining('多发了一次请求', findRichText: true).first);
+        await tester.tap(find.byTooltip('更多').last);
         await pumpFrames(tester);
       }
 

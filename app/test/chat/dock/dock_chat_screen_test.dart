@@ -96,8 +96,10 @@ void main() {
     for (final r in [todo, goal, strip]) {
       expect(r.left, composer.left);
     }
+    // The fold button owns the composer's right edge; the bars stop before it and
+    // share that edge with the todo bar.
     for (final r in [goal, strip]) {
-      expect(r.right, composer.right);
+      expect(r.right, moreOrLessEquals(todo.right, epsilon: 0.5));
     }
     // The top bar makes room for the fold button, which ends where the composer does.
     final fold = tester.getRect(find.byKey(const ValueKey('dock-fold')));
@@ -132,7 +134,7 @@ void main() {
     expect(strip.top - goal.top, moreOrLessEquals(DockStackMetrics.peek, epsilon: 0.01));
     expect(goal.top - todo.top, moreOrLessEquals(DockStackMetrics.peek, epsilon: 0.01));
     expect(strip.left, composer.left);
-    expect(strip.right, composer.right);
+    expect(strip.right, moreOrLessEquals(todo.right, epsilon: 0.5));
     // The todo bar is behind: the strip says the count instead.
     expect(find.textContaining('进度 '), findsOneWidget);
     expect(_seam(tester), moreOrLessEquals(0, epsilon: 0.5));

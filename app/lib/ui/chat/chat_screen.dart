@@ -1815,8 +1815,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> with WidgetsBindingObse
                                           ? Row(
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
-                                                if (local && ref.watch(showRootPillProvider)) const RootPill(compact: true),
-                                                const SizedBox(width: 6),
+                                                if (local && ref.watch(showRootPillProvider)) ...[
+                                                  const RootPill(compact: true),
+                                                  const SizedBox(width: 6),
+                                                ],
                                                 _stripRisk(sessionId, autoApprove: chat?.autoApprove ?? false) ??
                                                     const SizedBox.shrink(),
                                               ],

@@ -59,6 +59,7 @@ jobs:
             test/shell/quick_panel_golden_test.dart \
             test/wallpaper/wallpaper_screens_test.dart
       - name: Binary patch of what changed
+        if: always()
         working-directory: .
         run: |
           rm -rf app/test/**/failures
@@ -67,6 +68,7 @@ jobs:
           git diff --cached --stat | tail -5
           wc -c "$RUNNER_TEMP/goldens.patch"
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: goldens-patch
           path: ${{ runner.temp }}/goldens.patch
