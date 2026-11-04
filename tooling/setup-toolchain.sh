@@ -41,9 +41,25 @@ install_jdk() {
 install_flutter() {
   if [ -x "$FLUTTER_DIR/bin/flutter" ]; then log "Flutter present"; return; fi
   local name="flutter_linux_${FLUTTER_VERSION}-stable.tar.xz"
-  local url="https://storage.flutter-io.cn/flutter_infra_release/releases/stable/linux/$name"
+  # The official host first (the CN mirror drops large transfers from time to time), then
+  # the mirror. A failed attempt writes .part, so a half file never looks downloaded.
+  local -a mirrors=(
+    "https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/$name"
+    "https://storage.flutter-io.cn/flutter_infra_release/releases/stable/linux/$name"
+  )
   log "Flutter: $name"
-  [ -f "$DL/$name" ] || curl -fL --retry 3 -o "$DL/$name" "$url"
+  if [ ! -f "$DL/$name" ]; then
+    local got=0 url
+    for url in "${mirrors[@]}"; do
+      if curl -fL --retry 5 --retry-all-errors --retry-delay 3 --connect-timeout 20 \
+          -o "$DL/$name.part" "$url"; then
+        mv "$DL/$name.part" "$DL/$name"; got=1; break
+      fi
+      rm -f "$DL/$name.part"
+      log "Flutter download failed from one host; trying the next"
+    done
+    [ "$got" = 1 ] || die "could not download $name"
+  fi
   echo "$FLUTTER_SHA256  $DL/$name" | sha256sum -c - || die "Flutter archive failed its checksum"
   df -h "$DEV_ROOT" | tail -1
   free -m | head -2
