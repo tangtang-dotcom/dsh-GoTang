@@ -47,6 +47,44 @@ class ShellGuardTest {
     }
 
     @Test
+    fun `the photo album is read only in safe mode`() {
+        assertTrue(allowed("ls /sdcard/DCIM", sdcardOn = true))
+        assertTrue(allowed("cat /sdcard/DCIM/a.jpg", sdcardOn = true))
+        assertTrue(denied("cp /sdcard/DCIM/a.jpg /sdcard/Download/", sdcardOn = true))
+        assertTrue(denied("mv /sdcard/DCIM/a.jpg /sdcard/Download/", sdcardOn = true))
+        assertTrue(denied("rm /sdcard/DCIM/a.jpg", sdcardOn = true))
+        assertTrue(denied("sort -o /sdcard/DCIM/x /sdcard/DCIM/y", sdcardOn = true))
+        assertTrue(denied("logcat -f /sdcard/DCIM/log.txt", sdcardOn = true))
+        assertTrue(denied("echo x > /sdcard/DCIM/x", sdcardOn = true))
+    }
+
+    @Test
+    fun `cd cannot enter the album`() {
+        assertTrue(denied("cd /sdcard/DCIM; rm *", sdcardOn = true))
+        assertTrue(denied("cd /sdcard/Pictures; ls", sdcardOn = true))
+        assertTrue(allowed("cd /sdcard/Download; ls", sdcardOn = true))
+    }
+
+    @Test
+    fun `write commands reject dot dot hops`() {
+        assertTrue(denied("rm /sdcard/Download/../DCIM/a.jpg", sdcardOn = true))
+        assertTrue(denied("cp /sdcard/Download/a /sdcard/Download/../x", sdcardOn = true))
+    }
+
+    @Test
+    fun `cp with a -t target directory is not treated as move`() {
+        assertTrue(allowed("cp -t /sdcard/Download /data/local/tmp/a", sdcardOn = true))
+        assertTrue(denied("cp -t /sdcard/DCIM /data/local/tmp/a", sdcardOn = true))
+    }
+
+    @Test
+    fun `the data root is closed except the app and tmp`() {
+        assertTrue(denied("cat /data/deepseek/x"))
+        assertTrue(denied("ls /data/misc"))
+        assertTrue(allowed("ls /data/local/tmp"))
+    }
+
+    @Test
     fun `find and pm escape hatches stay closed`() {
         assertTrue(denied("find /root -name x -exec rm {} ;"))
         assertTrue(denied("pm clear com.example"))

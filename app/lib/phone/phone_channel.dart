@@ -447,7 +447,7 @@ class PhoneStatus {
   final PhoneTaskStatus task;
   final PhoneDevice device;
 
-  PhoneStatus copyWith({bool? enabled}) => PhoneStatus(
+  PhoneStatus copyWith({bool? enabled, PhoneShellStatus? shell}) => PhoneStatus(
     ready: ready,
     error: error,
     enabled: enabled ?? this.enabled,
@@ -458,7 +458,7 @@ class PhoneStatus {
     notifications: notifications,
     confirmationNotifications: confirmationNotifications,
     background: background,
-    shell: shell,
+    shell: shell ?? this.shell,
     task: task,
     device: device,
   );

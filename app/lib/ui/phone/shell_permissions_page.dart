@@ -11,6 +11,7 @@ import '../theme/app_icons.dart';
 import '../shell/page_frame.dart';
 
 const _prefShowCommands = 'shell_show_commands';
+const _prefShowRecent = 'shell_show_recent';
 
 /// 终端权限：三档 + 分类命令开关 + 最近记录。
 ///
@@ -26,6 +27,9 @@ class ShellPermissionsPage extends ConsumerStatefulWidget {
 
 class _ShellPermissionsPageState extends ConsumerState<ShellPermissionsPage> {
   bool _showCommands = false;
+  // 最近记录的展开状态也要提到页面级：放在子组件的 State 里，滚出视口
+  // 被 Flutter 回收后就会重置成默认值，看起来像「开关自己又打开了」。
+  bool _showRecent = true;
   final Set<String> _expanded = <String>{};
   bool _loaded = false;
 
@@ -44,6 +48,7 @@ class _ShellPermissionsPageState extends ConsumerState<ShellPermissionsPage> {
       if (!mounted) return;
       setState(() {
         _showCommands = p.getBool(_prefShowCommands) ?? false;
+        _showRecent = p.getBool(_prefShowRecent) ?? true;
         _loaded = true;
       });
     });
@@ -61,6 +66,11 @@ class _ShellPermissionsPageState extends ConsumerState<ShellPermissionsPage> {
   void _setShowCommands(bool on) {
     setState(() => _showCommands = on);
     SharedPreferences.getInstance().then((p) => p.setBool(_prefShowCommands, on));
+  }
+
+  void _setShowRecent(bool on) {
+    setState(() => _showRecent = on);
+    SharedPreferences.getInstance().then((p) => p.setBool(_prefShowRecent, on));
   }
 
   /// 切档位：先改本地、立刻重建，再异步落盘。
@@ -224,7 +234,9 @@ class _ShellPermissionsPageState extends ConsumerState<ShellPermissionsPage> {
               if (!isFull)
                 SettingsSwitchTile(
                   title: '允许读写整个 /sdcard',
-                  subtitle: sdcard ? '已允许：包括照片和别的 App 的文件夹（相册只能读和新建，不能删）' : '未允许：只能写 Download',
+                  subtitle: sdcard
+                      ? '已允许：包括照片和别的 App 的文件夹（相册只能看，不能写也不能删）'
+                      : '未允许：只能写 Download',
                   value: sdcard,
                   onChanged: (v) => _toggleSdcard(shell, v),
                 ),
@@ -233,7 +245,7 @@ class _ShellPermissionsPageState extends ConsumerState<ShellPermissionsPage> {
           if (_showCommands)
             for (final group in _groups(shell))
               _groupSection(shell, group, allowed, isSafe),
-          _RecentSection(limit: 100),
+          _RecentSection(limit: 100, open: _showRecent, onOpenChanged: _setShowRecent),
         ],
       ],
     );
@@ -371,17 +383,17 @@ class _TierTile extends StatelessWidget {
 
 /// 最近记录：默认展开，显示真实命令。
 class _RecentSection extends ConsumerStatefulWidget {
-  const _RecentSection({required this.limit});
+  const _RecentSection({required this.limit, required this.open, required this.onOpenChanged});
 
   final int limit;
+  final bool open;
+  final ValueChanged<bool> onOpenChanged;
 
   @override
   ConsumerState<_RecentSection> createState() => _RecentSectionState();
 }
 
 class _RecentSectionState extends ConsumerState<_RecentSection> {
-  bool _open = true;
-
   @override
   void initState() {
     super.initState();
@@ -402,10 +414,10 @@ class _RecentSectionState extends ConsumerState<_RecentSection> {
           subtitle: entries.isEmpty
               ? '还没有记录'
               : '最近 ${entries.length} 条（最多 ${widget.limit}）',
-          value: _open,
-          onChanged: (v) => setState(() => _open = v),
+          value: widget.open,
+          onChanged: widget.onOpenChanged,
         ),
-        if (_open)
+        if (widget.open)
           for (final e in entries.take(widget.limit))
             SettingsTile(
               icon: AppIcons.disclosure,

@@ -86,7 +86,18 @@ object ShellGuard {
         "sed", "awk",
     )
 
-    /** 相册/视频目录：可读可写，但不可删、不可覆盖已有文件。 */
+    /**
+     * 相册里的路径只允许这些命令碰：它们没有「把内容写到指定文件」的参数。
+     * 只读组里 `sort -o`、`logcat -f`、`curl -o` 都能写文件，所以按命令白名单，
+     * 不按「只读组」——名单外的一律当「可能写」处理。
+     * 相册在进阶模式下是**纯只读**：连复制出去都不许（要复制请切高危）。
+     */
+    private val PHOTO_READ = setOf(
+        "ls", "cat", "head", "tail", "grep", "find", "file", "stat",
+        "du", "wc", "cut", "tr", "uniq",
+    )
+
+    /** 相册/视频目录：进阶模式纯只读，只能看，不能写、不能删、不能搬出去。 */
     private val PHOTO_DIRS = listOf(
         "/sdcard/DCIM/", "/storage/emulated/0/DCIM/",
         "/sdcard/Pictures/", "/storage/emulated/0/Pictures/",
@@ -174,12 +185,29 @@ object ShellGuard {
                 forbidden(next, sdcardOn)?.let { hit ->
                     return ShellVerdict.Deny("碰到受保护的位置：$hit，进阶模式下不允许。")
                 }
+                // 相册目录连 cd 都不许进：`cd 相册 && rm *` 里的 `*` 不是路径参数，
+                // 只能靠「不许进相册」这一条拦住。
+                if (inPhoto(next)) {
+                    return ShellVerdict.Deny("「cd」不能进相册/视频目录（$next）。")
+                }
                 cwd = next
                 continue
             }
 
             // 相对路径按当前目录解析成绝对路径再检查，否则 `cd /` 之后写相对路径就能绕过去。
             val paths = pathArgs(seg).map { raw -> resolve(raw, cwd) ?: raw }
+
+            // 相册路径 + 名单外的命令 → 一律拒。这条挡的是 `sort -o 相册/x`、
+            // `logcat -f 相册/x`、`curl -o 相册/x` 这类「只读组里能写」的命令。
+            paths.firstOrNull { inPhoto(it) }?.let { photoArg ->
+                if (word !in PHOTO_READ) {
+                    return ShellVerdict.Deny(
+                        "「$word」的参数里有相册里的路径（$photoArg）。进阶模式下相册只给读，" +
+                            "只允许 " + PHOTO_READ.joinToString("、") +
+                            " 这些命令。能写文件的命令（sort -o、logcat -f、curl -o 之类）一律不许。",
+                    )
+                }
+            }
             for (p in paths) {
                 forbidden(p, sdcardOn)?.let { hit ->
                     return ShellVerdict.Deny("碰到受保护的位置：$hit，进阶模式下不允许。")
@@ -203,15 +231,25 @@ object ShellGuard {
                 if (!inSafeRoot(p, sdcardOn)) {
                     return ShellVerdict.Deny(outOfScope(word, p, sdcardOn))
                 }
-                if (inPhoto(p) && java.io.File(p).exists()) {
+                if (inPhoto(p)) {
                     return ShellVerdict.Deny(
-                        "「$p」已经存在，覆盖它会毁掉原文件，进阶模式下不允许。",
+                        "相册是只读的（$p）。进阶模式下只能看，不能往里写、也不能删。",
                     )
                 }
             }
 
             if (word in WRITE_CMDS) {
-                val isMove = word == "cp" || word == "mv" || word == "ln"
+                // `cd /sdcard/Download && rm ../Pictures/x` 这种相对跳转能绕过路径检查
+                // （pathArgs 只看得到解析后的落点，而 `..` 在段里很扎眼），写类命令一律不许带。
+                if (Regex("""(^|[\s/])\.\.([\s/]|$)""").containsMatchIn(seg)) {
+                    return ShellVerdict.Deny(
+                        "「$word」的参数里有 `..`，进阶模式不支持用相对路径跳到别的目录。",
+                    )
+                }
+                // `cp -t 目录 源` 里 -t 后面那串才是目标，其余全是源；
+                // 按普通「最后一个参数是目标」处理会把 -t 的目录误判成源。
+                val hasTargetFlag = Regex("""(^|\s)-t(\s|$)""").containsMatchIn(seg)
+                val isMove = !hasTargetFlag && (word == "cp" || word == "mv" || word == "ln")
                 val targets = if (isMove) paths.takeLast(1) else paths
                 // 源也要查：`mv 相册/x Download/` 不看源就能把照片搬出相册，
                 // 搬出去等于从相册消失了——和删掉一个效果，必须拦在源上。
@@ -232,20 +270,9 @@ object ShellGuard {
                         return ShellVerdict.Deny(outOfScope(word, p, sdcardOn))
                     }
                     if (inPhoto(p)) {
-                        val f = java.io.File(p)
-                        val isDir = p.endsWith("/") || f.isDirectory
-                        if (word == "rm" || word == "rmdir") {
-                            return ShellVerdict.Deny(
-                                "「$p」在相册/视频目录里，删了就没有了，进阶模式下不允许。要删照片请直接在相册 App 里操作。",
-                            )
-                        }
-                        // 往相册里放新文件（目标是目录、或文件还不存在）放行；
-                        // 覆盖已有文件才拒。
-                        if (!isDir && word != "mkdir" && f.exists()) {
-                            return ShellVerdict.Deny(
-                                "「$p」已经存在，覆盖它会毁掉原文件，进阶模式下不允许。",
-                            )
-                        }
+                        return ShellVerdict.Deny(
+                            "相册是只读的（$p）。进阶模式下只能看，不能往里写、也不能删。要动它请切到高危模式。",
+                        )
                     }
                 }
             }
@@ -274,9 +301,23 @@ object ShellGuard {
 
     /** 系统分区 / 别的 App 数据：不管开没开 sdcard 都不许碰。 */
     private fun forbidden(p: String, sdcardOn: Boolean = false): String? {
-        val withSlash = if (p.endsWith("/")) p else "$p/"
+        // 先折掉 `..` 和 `//` 再判断：/data/local/tmp/../deepseek 实际是 /data/deepseek，
+        // 只看字符串开头会被骗过去。
+        val real = try {
+            java.nio.file.Paths.get(p).normalize().toString()
+        } catch (_: Exception) {
+            p
+        }
+        val withSlash = if (real.endsWith("/")) real else "$real/"
         // App 自己的私有目录永远放行（FORBIDDEN 里的 /data/data/ 不能一刀切到它头上）。
         if (APP_PRIVATE.any { withSlash.startsWith(it) }) return null
+        // /data/local/tmp 是约定的临时目录，也放行。
+        if (withSlash.startsWith("/data/local/tmp/")) return null
+        // /data 根目录整体当禁区：只留上面两个已知位置。
+        // 之前只列了 /data/adb、/data/data 这些子目录，根目录下放的文件反而漏过去了
+        //（拦了房间没拦走廊）。/sdcard 是 /storage/emulated/0 的另一个名字，
+        // 不会落到这里，所以不影响 Download。
+        if (withSlash.startsWith("/data/")) return p
         for (f in FORBIDDEN) {
             if (withSlash != f && !withSlash.startsWith(f)) continue
             // 开了「允许读写 sdcard」后，/sdcard 下的目录交给 inSafeRoot + 相册规则判断，
@@ -377,7 +418,7 @@ object ShellCommands {
         Triple("tail", "read", "看文件结尾几行"),
         Triple("grep", "read", "在文件或输出里搜文字"),
         Triple("wc", "read", "数行数、字数"),
-        Triple("sort", "read", "排序"),
+        Triple("sort", "system", "排序（带 -o 会写文件）"),
         Triple("uniq", "read", "去重"),
         Triple("cut", "read", "按列截取"),
         Triple("find", "read", "按名字/时间找文件"),
@@ -393,9 +434,9 @@ object ShellCommands {
         Triple("whoami", "read", "看当前用户名"),
         Triple("getprop", "read", "读系统属性：型号、Android 版本"),
         Triple("dumpsys", "read", "读系统服务状态：电池、显示、WiFi"),
-        Triple("logcat", "read", "读系统日志"),
+        Triple("logcat", "system", "读系统日志（带 -f 会写文件）"),
         Triple("screencap", "read", "截屏存成图片"),
-        Triple("date", "read", "看当前时间"),
+        Triple("date", "system", "看时间（带 -s 会改系统时间）"),
         Triple("echo", "read", "输出一段文字"),
         Triple("printf", "read", "格式化输出文字"),
         Triple("pwd", "read", "显示当前目录"),
@@ -464,6 +505,9 @@ object ShellCommands {
         "am", "pm", "input", "settings", "svc", "wm", "curl",
         // env 后面跟命令就是换一条命令执行，默认不开。
         "env",
+        // 这几条名字像只读，实际带写参数：sort -o / logcat -f 能写文件，
+        // date -s 能改系统时间。默认关，要用自己去清单里开。
+        "sort", "logcat", "date",
     )
 
     /** 进阶模式默认打开：只读全开，文件类只留只读性的，系统类关掉能改状态的。 */
