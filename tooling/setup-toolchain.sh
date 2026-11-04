@@ -72,13 +72,16 @@ export ANDROID_HOME="$SDK_DIR" ANDROID_SDK_ROOT="$SDK_DIR"
 export PATH="$JDK_DIR/bin:$FLUTTER_DIR/bin:$SDK_DIR/cmdline-tools/latest/bin:$SDK_DIR/platform-tools:$SDK_DIR/emulator:$PATH"
 export PUB_HOSTED_URL="https://pub.flutter-io.cn" FLUTTER_STORAGE_BASE_URL="https://storage.flutter-io.cn"
 
-# Versions Flutter's Gradle plugin defaults to (compileSdk / NDK).
-GRADLE_EXT=$(grep -rlE 'ndkVersion' "$FLUTTER_DIR/packages/flutter_tools/gradle/src/main" 2>/dev/null | head -1)
-[ -n "$GRADLE_EXT" ] || die "Flutter's Gradle plugin source was not found under $FLUTTER_DIR"
-NDK_VERSION=$(grep -oE 'ndkVersion[^"]*"[0-9.]+"' "$GRADLE_EXT" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
-COMPILE_SDK=$(grep -oE 'compileSdkVersion[^0-9]*[0-9]+' "$GRADLE_EXT" | grep -oE '[0-9]+$' | head -1)
-[ -n "$NDK_VERSION" ] || die "could not read Flutter's default NDK version from $GRADLE_EXT"
-[ -n "$COMPILE_SDK" ] || die "could not read Flutter's default compileSdk from $GRADLE_EXT"
+# Versions Flutter's Gradle plugin defaults to (compileSdk / NDK). Where the source no
+# longer spells them out, fall back to the pair this Flutter release is known to use; the
+# Android Gradle plugin downloads whatever else the project asks for, once licensed.
+GRADLE_DIR="$FLUTTER_DIR/packages/flutter_tools/gradle"
+NDK_VERSION=$(grep -rhoE 'ndkVersion[^"]*"[0-9.]+"' "$GRADLE_DIR" 2>/dev/null \
+  | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || true)
+COMPILE_SDK=$(grep -rhoE 'compileSdkVersion[^0-9]*[0-9]+' "$GRADLE_DIR" 2>/dev/null \
+  | grep -oE '[0-9]+$' | head -1 || true)
+NDK_VERSION="${NDK_VERSION:-28.2.13676358}"
+COMPILE_SDK="${COMPILE_SDK:-36}"
 log "Flutter defaults: compileSdk=$COMPILE_SDK ndk=$NDK_VERSION"
 
 # Building the app requires accepting the Android SDK licenses.
