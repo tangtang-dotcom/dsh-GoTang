@@ -9,6 +9,9 @@ FLUTTER_VERSION="${FLUTTER_VERSION:-3.47.7}"
 FLUTTER_SHA256="${FLUTTER_SHA256:-af7455f540df951184c7953fbe3cf884766e7541dacf8571f9f582db03dd6230}"
 CMDLINE_TOOLS_BUILD="${CMDLINE_TOOLS_BUILD:-13114758}"
 SYSTEM_IMAGE="${SYSTEM_IMAGE:-system-images;android-35;google_apis;x86_64}"
+# The emulator and its system image are for local device testing, not for building an APK:
+# a CI runner that only packages one needs ~2 GB less disk. Set INSTALL_EMULATOR=1 to keep them.
+INSTALL_EMULATOR="${INSTALL_EMULATOR:-1}"
 
 JDK_DIR="$DEV_ROOT/jdk-17"
 FLUTTER_DIR="$DEV_ROOT/flutter"
@@ -17,6 +20,7 @@ DL="$DEV_ROOT/.downloads"
 mkdir -p "$DEV_ROOT" "$DL"
 
 log() { printf '[toolchain %s] %s\n' "$(date +%H:%M:%S)" "$*"; }
+die() { printf '[toolchain %s] error: %s\n' "$(date +%H:%M:%S)" "$*" >&2; exit 1; }
 
 install_jdk() {
   if [ -x "$JDK_DIR/bin/java" ]; then log "JDK present"; return; fi
@@ -37,8 +41,10 @@ install_flutter() {
   local url="https://storage.flutter-io.cn/flutter_infra_release/releases/stable/linux/$name"
   log "Flutter: $name"
   [ -f "$DL/$name" ] || curl -fL --retry 3 -o "$DL/$name" "$url"
-  echo "$FLUTTER_SHA256  $DL/$name" | sha256sum -c -
-  tar -xJf "$DL/$name" -C "$DEV_ROOT"
+  echo "$FLUTTER_SHA256  $DL/$name" | sha256sum -c - || die "Flutter archive failed its checksum"
+  df -h "$DEV_ROOT" | tail -1
+  tar -xJf "$DL/$name" -C "$DEV_ROOT" || die "could not extract $name"
+  [ -x "$FLUTTER_DIR/bin/flutter" ] || die "$name extracted without bin/flutter"
 }
 
 install_cmdline_tools() {
@@ -63,16 +69,24 @@ export PATH="$JDK_DIR/bin:$FLUTTER_DIR/bin:$SDK_DIR/cmdline-tools/latest/bin:$SD
 export PUB_HOSTED_URL="https://pub.flutter-io.cn" FLUTTER_STORAGE_BASE_URL="https://storage.flutter-io.cn"
 
 # Versions Flutter's Gradle plugin defaults to (compileSdk / NDK).
-GRADLE_EXT=$(grep -rlE 'ndkVersion' "$FLUTTER_DIR/packages/flutter_tools/gradle/src/main" | head -1)
+GRADLE_EXT=$(grep -rlE 'ndkVersion' "$FLUTTER_DIR/packages/flutter_tools/gradle/src/main" 2>/dev/null | head -1)
+[ -n "$GRADLE_EXT" ] || die "Flutter's Gradle plugin source was not found under $FLUTTER_DIR"
 NDK_VERSION=$(grep -oE 'ndkVersion[^"]*"[0-9.]+"' "$GRADLE_EXT" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
 COMPILE_SDK=$(grep -oE 'compileSdkVersion[^0-9]*[0-9]+' "$GRADLE_EXT" | grep -oE '[0-9]+$' | head -1)
+[ -n "$NDK_VERSION" ] || die "could not read Flutter's default NDK version from $GRADLE_EXT"
+[ -n "$COMPILE_SDK" ] || die "could not read Flutter's default compileSdk from $GRADLE_EXT"
 log "Flutter defaults: compileSdk=$COMPILE_SDK ndk=$NDK_VERSION"
 
 # Building the app requires accepting the Android SDK licenses.
 yes | sdkmanager --sdk_root="$SDK_DIR" --licenses >/dev/null || true
-sdkmanager --sdk_root="$SDK_DIR" \
-  "platform-tools" "platforms;android-${COMPILE_SDK:-36}" "build-tools;${COMPILE_SDK:-36}.0.0" \
-  "ndk;${NDK_VERSION}" "cmake;3.22.1" "emulator" "$SYSTEM_IMAGE"
+SDK_PACKAGES=(
+  "platform-tools" "platforms;android-${COMPILE_SDK}" "build-tools;${COMPILE_SDK}.0.0"
+  "ndk;${NDK_VERSION}" "cmake;3.22.1"
+)
+if [[ "$INSTALL_EMULATOR" == 1 ]]; then
+  SDK_PACKAGES+=("emulator" "$SYSTEM_IMAGE")
+fi
+sdkmanager --sdk_root="$SDK_DIR" "${SDK_PACKAGES[@]}"
 
 flutter config --no-analytics --android-sdk "$SDK_DIR" --jdk-dir "$JDK_DIR" >/dev/null
 flutter precache --android
