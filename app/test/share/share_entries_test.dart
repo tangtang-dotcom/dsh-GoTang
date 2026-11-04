@@ -21,6 +21,7 @@ import 'package:dsh_app/ui/share/share_panel.dart';
 import 'package:dsh_app/ui/share/share_panel_pages.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../chat/support/harness.dart';
 import '../replay/support/rich_conversation.dart';
@@ -96,6 +97,9 @@ Future<void> _everyWayOut(WidgetTester tester, _Out out) async {
 }
 
 void main() {
+  // 语音与界面偏好都读 SharedPreferences；测试里给它一个空实现。
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+
   late Directory dir;
   setUp(() => dir = Directory.systemTemp.createTempSync('share-entries'));
   tearDown(() => dir.deleteSync(recursive: true));

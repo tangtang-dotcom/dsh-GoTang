@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'support/harness.dart';
 
@@ -157,6 +158,9 @@ List<String> _composerTexts(WidgetTester tester) => [
 }
 
 void main() {
+  // 语音与界面偏好都读 SharedPreferences；测试里给它一个空实现。
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+
   setUpAll(loadTestFonts);
 
   group('ChatController message actions', () {

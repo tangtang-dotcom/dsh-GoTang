@@ -7,6 +7,7 @@ import 'package:dsh_app/ui/chat/widgets/user_bubble.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'support/harness.dart';
 
@@ -29,6 +30,9 @@ const _jwt =
 final _ghp = 'ghp_${fill(36)}';
 
 void main() {
+  // 语音与界面偏好都读 SharedPreferences；测试里给它一个空实现。
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+
   group('prefixed keys keep their first eight characters', () {
     final keys = <String, String>{
       'sk- (DeepSeek)': _sk,
