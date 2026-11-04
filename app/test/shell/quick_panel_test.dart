@@ -212,7 +212,8 @@ void main() {
       await pull(3);
       expect(_panel, findsNothing);
 
-      await pull(8);
+      // 拉过面板宽度:取消没有速度,能不能开只看拉到了哪儿。
+      await pull(12);
       expect(_panelIn(tester), QuickPanel.width);
     });
 
