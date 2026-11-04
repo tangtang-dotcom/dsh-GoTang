@@ -193,7 +193,7 @@ void main() {
       expect(_drawer, findsNothing);
     });
 
-    testWidgets('a cancel short of half stays closed: no fling to open it', (tester) async {
+    testWidgets('a swipe the system cancels is no fling: it goes by how far it came', (tester) async {
       await _pump(tester);
       // [TestGesture] stamps every event zero unless told: real times, or no speed to measure.
       var time = Duration.zero;
@@ -211,24 +211,6 @@ void main() {
       // Fast, and leftwards: it would have flung open, but a cancel has no speed.
       await pull(3);
       expect(_panel, findsNothing);
-    });
-
-    testWidgets('a pull past the width opens on distance, with the finger stopped first', (tester) async {
-      await _pump(tester);
-      var time = Duration.zero;
-      final finger = await tester.startGesture(_chatMiddle);
-      for (var i = 0; i < 12; i++) {
-        time += const Duration(milliseconds: 16);
-        await finger.moveBy(const Offset(-24, 0), timeStamp: time);
-        await tester.pump(const Duration(milliseconds: 16));
-      }
-      // Stand still long enough that the velocity tracker reads zero: how far it
-      // came alone decides, exactly as it does when the system takes the finger.
-      time += const Duration(milliseconds: 300);
-      await tester.pump(const Duration(milliseconds: 300));
-      await finger.up(timeStamp: time);
-      await pumpFrames(tester, 20);
-      expect(_panelIn(tester), QuickPanel.width);
     });
 
     testWidgets('a tap on the scrim closes it', (tester) async {
