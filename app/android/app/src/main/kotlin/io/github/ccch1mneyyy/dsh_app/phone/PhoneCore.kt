@@ -206,10 +206,20 @@ class PhoneCore(
         val result = ShellRunner.execute(command, timeoutMs, env.cacheDir())
         result.failed?.let { return Out(it, error = true, summary = summary) }
         val prefix = if (result.timedOut) "（超时 ${timeoutMs}ms，已终止）\n" else ""
+        val code = result.exitCode
+        // 非零退出码是失败：模型和操作记录都不能把它当成成功。
+        val failed = !result.timedOut && code != null && code != 0
+        val tail = if (failed) "\n（退出码 $code）" else ""
+        val body = if (prefix.isEmpty() && result.output.isBlank()) "（没有输出）" else prefix + result.output
         return Out(
-            if (prefix.isEmpty() && result.output.isBlank()) "（没有输出）" else prefix + result.output,
+            body + tail,
+            error = failed,
             summary = summary,
-            decision = if (result.timedOut) "timeout" else null,
+            decision = when {
+                result.timedOut -> "timeout"
+                failed -> "failed"
+                else -> null
+            },
         )
     }
 

@@ -179,22 +179,22 @@ class PhoneControl private constructor(private val app: Context) : PhoneEnv, Con
     override fun cacheDir(): File? = app.cacheDir
 
     /** 设置 → 终端权限：档位、命令白名单、/sdcard 开关。 */
-    fun setShellMode(mode: String): Map<String, Any?> {
+    fun setShellMode(mode: String): Boolean {
         shellStore.setMode(ShellMode.of(mode))
         emitStatus()
-        return mapOf("ok" to true, "mode" to shellStore.mode().key)
+        return true
     }
 
-    fun setAllowedCommands(commands: List<String>): Map<String, Any?> {
+    fun setAllowedCommands(commands: List<String>): Boolean {
         shellStore.setAllowed(commands.toSet())
         emitStatus()
-        return mapOf("ok" to true, "allowed" to shellStore.allowed().sorted())
+        return true
     }
 
-    fun setSdcardAllowed(on: Boolean): Map<String, Any?> {
+    fun setSdcardAllowed(on: Boolean): Boolean {
         shellStore.setSdcardAllowed(on)
         emitStatus()
-        return mapOf("ok" to true, "sdcardAllowed" to shellStore.sdcardAllowed())
+        return true
     }
 
     override fun policies(): PhonePolicies = policiesCache ?: run {

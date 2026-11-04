@@ -1795,7 +1795,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> with WidgetsBindingObse
                                     child: DockStack(
                                       cards: [
                                         if (sessionId != null) ...[
-                                          if (ref.watch(showRootPillProvider))
+                                          // 终端权限只属于本机引擎；生成期间它缩成
+                                          // 活动条旁的紧凑图标，这里不再放第二份。
+                                          if (local && !pillsBesideStrip && ref.watch(showRootPillProvider))
                                             const DockSlot(key: ValueKey('root'), child: RootPill()),
                                           TodoDockSlot(sessionId: sessionId),
                                           GoalDockSlot(sessionId: sessionId),
@@ -1813,7 +1815,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> with WidgetsBindingObse
                                           ? Row(
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
-                                                if (ref.watch(showRootPillProvider)) const RootPill(compact: true),
+                                                if (local && ref.watch(showRootPillProvider)) const RootPill(compact: true),
                                                 const SizedBox(width: 6),
                                                 _stripRisk(sessionId, autoApprove: chat?.autoApprove ?? false) ??
                                                     const SizedBox.shrink(),
@@ -1954,15 +1956,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen> with WidgetsBindingObse
 
   /// 「自动允许中」/「完全权限」 beside the activity strip while a reply generates.
   Widget? _stripRisk(String sessionId, {required bool autoApprove}) {
-    // 生成期间这是徽标的另一条显示路径（贴在活动条旁边）；隐藏开关也要管到这里，
-    // 否则一回复就又冒出来。
-    if (ref.watch(hidePermissionPillProvider)) return null;
+    // 隐藏开关只关「完全权限」提醒；「自动允许中」是另一回事，必须一直显示。
     if (autoApprove) {
       return StripRiskChip.autoApprove(
         context,
         onDisable: () => ref.read(chatProvider(sessionId).notifier).setAutoApprove(false),
       );
     }
+    // 生成期间这是「完全权限」徽标的另一条显示路径（贴在活动条旁边），
+    // 隐藏开关也要管到这里，否则一回复就又冒出来。
+    if (ref.watch(hidePermissionPillProvider)) return null;
     final risky = ref.watch(sessionModesProvider(sessionId).select((m) => m.risky ? m.preset : null));
     if (risky == null) return null;
     return StripRiskChip.permission(

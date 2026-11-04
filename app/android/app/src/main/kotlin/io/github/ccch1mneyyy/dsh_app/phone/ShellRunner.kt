@@ -8,6 +8,8 @@ internal data class ShellResult(
     val output: String,
     val timedOut: Boolean,
     val failed: String? = null,
+    /** `su -c` 的退出码；超时被杀或起不来时为 null。 */
+    val exitCode: Int? = null,
 )
 
 /**
@@ -52,6 +54,7 @@ internal object ShellRunner {
             false
         }
         if (!finished) killTree(proc)
+        val exitCode = if (finished) runCatching { proc.exitValue() }.getOrNull() else null
 
         val raw = try {
             when {
@@ -74,7 +77,7 @@ internal object ShellRunner {
         } else {
             raw
         }
-        return ShellResult(body, !finished)
+        return ShellResult(body, !finished, exitCode = exitCode)
     }
 
     /** 超时后按 /proc 里的父子关系自底向上杀，避免留下孤儿进程。 */

@@ -69,6 +69,18 @@ object ShellGuard {
     /** 命令替换：$( )、${ }、反引号。能把任意命令藏进参数。 */
     private val SUBST = Regex("""\$\(|\$\{|`""")
 
+    /** 把另一条命令包起来执行的包装器：白名单看到的是包装器本身，看不见真正跑的东西。 */
+    private val WRAPPERS = setOf(
+        "nice", "nohup", "timeout", "watch", "setsid", "stdbuf", "busybox", "toybox",
+        "strace", "ltrace", "su", "sudo", "runuser",
+    )
+
+    /** awk 里能执行外部命令或读写文件的写法。 */
+    private val AWK_EXEC = Regex("""system\s*\(|\bgetline\b""")
+
+    /** sed 的 `s///e` 会把结果当命令执行。 */
+    private val SED_EXEC = Regex("""\bs/[^/\n]*/[^/\n]*/[a-zA-Z]*e[a-zA-Z]*\b""")
+
     private val WRITE_CMDS = setOf(
         "rm", "mv", "cp", "mkdir", "rmdir", "touch", "chmod", "chown", "ln", "tee", "truncate",
         "sed", "awk",
@@ -102,6 +114,10 @@ object ShellGuard {
             )
         }
 
+        // 同一条命令里的 `cd` 会改变后面各段的相对路径落点：从 `/` 起算，一律按
+        // 绝对路径解析后再检查，否则 `cd /; cat data/adb/x` 能绕开受保护目录。
+        var cwd = "/"
+
         for (seg in split(cmd)) {
             val word = firstWord(seg) ?: continue
 
@@ -123,7 +139,47 @@ object ShellGuard {
                 )
             }
 
-            val paths = pathArgs(seg)
+            // 包装器和内嵌执行：白名单只看得到外层命令名，真正跑的东西藏在参数里。
+            if (word in WRAPPERS) {
+                return ShellVerdict.Deny(
+                    "「$word」会把另一条命令包起来执行，绕开命令白名单，进阶模式下不允许。请切到高危模式。",
+                )
+            }
+            if (word == "env" && operands(seg).isNotEmpty()) {
+                return ShellVerdict.Deny(
+                    "「env」后面跟命令等于换一条命令执行，进阶模式下不允许。要跑它请切到高危模式。",
+                )
+            }
+            if (word == "awk" && AWK_EXEC.containsMatchIn(seg)) {
+                return ShellVerdict.Deny(
+                    "这个 awk 里有 system() 或 getline，可以在白名单外执行命令或读写文件，进阶模式下不允许。",
+                )
+            }
+            if (word == "sed" && SED_EXEC.containsMatchIn(seg)) {
+                return ShellVerdict.Deny(
+                    "这个 sed 的 s///e 会把替换结果当命令执行，进阶模式下不允许。",
+                )
+            }
+            if (word == "sort" && seg.contains("--compress-program")) {
+                return ShellVerdict.Deny(
+                    "「sort --compress-program」会执行外部程序，进阶模式下不允许。",
+                )
+            }
+
+            // `cd` 只切换目录，本身不读写；记下来给后面的相对路径用。
+            if (word == "cd") {
+                val arg = operands(seg).firstOrNull() ?: continue
+                val next = resolve(arg, cwd)
+                    ?: return ShellVerdict.Deny("「cd」的目标要写绝对路径，$arg 不是。")
+                forbidden(next, sdcardOn)?.let { hit ->
+                    return ShellVerdict.Deny("碰到受保护的位置：$hit，进阶模式下不允许。")
+                }
+                cwd = next
+                continue
+            }
+
+            // 相对路径按当前目录解析成绝对路径再检查，否则 `cd /` 之后写相对路径就能绕过去。
+            val paths = pathArgs(seg).map { raw -> resolve(raw, cwd) ?: raw }
             for (p in paths) {
                 forbidden(p, sdcardOn)?.let { hit ->
                     return ShellVerdict.Deny("碰到受保护的位置：$hit，进阶模式下不允许。")
@@ -139,8 +195,11 @@ object ShellGuard {
 
             // 重定向目标也是一次写入：`echo x > /path` 的 /path 必须过同样的检查，
             // 否则它能把相册覆盖保护、sdcard 开关全绕过去。
-            for (p in redirectTargets(seg)) {
-                if (!p.startsWith("/")) continue
+            for (raw in redirectTargets(seg)) {
+                val p = resolve(raw, cwd) ?: continue
+                forbidden(p, sdcardOn)?.let { hit ->
+                    return ShellVerdict.Deny("碰到受保护的位置：$hit，进阶模式下不允许。")
+                }
                 if (!inSafeRoot(p, sdcardOn)) {
                     return ShellVerdict.Deny(outOfScope(word, p, sdcardOn))
                 }
@@ -235,10 +294,30 @@ object ShellGuard {
             .map { it.groupValues[1].trim('\'', '"') }
             .toList()
 
+    /**
+     * 段里的路径参数：绝对路径和相对路径都算。相对路径的落点由调用方按当前目录
+     * 解析（[resolve]），不能因为“不是 / 开头”就跳过检查。
+     */
     private fun pathArgs(seg: String): List<String> =
-        Regex("""(?:^|[\s>])(/[^\s'"`()|;&<>]+)""").findAll(seg)
+        Regex("""(?:^|[\s>])([^\s'"`()|;&<>]+)""").findAll(seg)
             .map { it.groupValues[1] }
+            .filter { it.isNotEmpty() && it != ">" && it != ">>" && !it.startsWith("-") }
             .toList()
+
+    /** 段里命令名之后的参数（开关不算）。 */
+    private fun operands(seg: String): List<String> =
+        seg.trim().split(Regex("""\s+""")).drop(1)
+            .map { it.trim('\'', '"') }
+            .filter { it.isNotEmpty() && !it.startsWith("-") && !it.contains('>') }
+
+    /** 相对路径按 [cwd] 解析成绝对路径；失败返回 null。 */
+    private fun resolve(p: String, cwd: String): String? = try {
+        val path = java.nio.file.Paths.get(p)
+        val abs = if (path.isAbsolute) path else java.nio.file.Paths.get(cwd).resolve(path)
+        abs.normalize().toString()
+    } catch (_: Exception) {
+        null
+    }
 
     /** 规范化后是否落在允许写的位置。[sdcardOn] = 用户是否确认过「整个 /sdcard」。 */
     private fun inSafeRoot(p: String, sdcardOn: Boolean): Boolean {
@@ -383,6 +462,8 @@ object ShellCommands {
     private val SAFE_OFF: Set<String> = setOf(
         "rm", "rmdir", "chmod", "chown", "truncate", "ln", "mv",
         "am", "pm", "input", "settings", "svc", "wm", "curl",
+        // env 后面跟命令就是换一条命令执行，默认不开。
+        "env",
     )
 
     /** 进阶模式默认打开：只读全开，文件类只留只读性的，系统类关掉能改状态的。 */

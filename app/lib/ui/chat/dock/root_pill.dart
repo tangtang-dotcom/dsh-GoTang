@@ -20,10 +20,11 @@ class RootPill extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final shell = ref.watch(phoneProvider.select((s) => s.status.shell));
+    final phone = ref.watch(phoneProvider.select((s) => (enabled: s.status.enabled, shell: s.status.shell)));
     final theme = Theme.of(context);
-    final dsh = DshColors.of(context);
-    final (label, color, icon) = switch (shell.mode) {
+    // 手机操控关着时引擎根本不挂 shell 工具，存储的档位不会生效：不显示成已启用。
+    final mode = phone.enabled ? phone.shell.mode : 'off';
+    final (label, color, icon) = switch (mode) {
       'safe' => ('终端 · 进阶', Colors.amber.shade700, Icons.shield_outlined),
       'full' => ('终端 · 高危', Colors.red.shade600, Icons.terminal),
       _ => ('启用终端', theme.colorScheme.onSurfaceVariant, Icons.terminal_outlined),
