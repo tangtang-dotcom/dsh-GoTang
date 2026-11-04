@@ -2,7 +2,7 @@
 # Installs the Android build toolchain for dsh-app into $DEV_ROOT (user-level, no sudo):
 # Temurin JDK 17, Flutter stable, Android SDK (cmdline-tools, platform, build-tools, NDK,
 # emulator + x86_64 system image). Re-runnable: finished steps are skipped.
-set -euo pipefail
+set -Eeuo pipefail
 
 DEV_ROOT="${DEV_ROOT:-$HOME/dev}"
 FLUTTER_VERSION="${FLUTTER_VERSION:-3.47.7}"
@@ -21,6 +21,9 @@ mkdir -p "$DEV_ROOT" "$DL"
 
 log() { printf '[toolchain %s] %s\n' "$(date +%H:%M:%S)" "$*"; }
 die() { printf '[toolchain %s] error: %s\n' "$(date +%H:%M:%S)" "$*" >&2; exit 1; }
+# Any failure names itself, even when the command that failed says nothing (a bare exit 1
+# from a subshell in the background left the CI logs with no clue at all).
+trap 'rc=$?; printf "[toolchain %s] error: exit %s at %s:%s: %s\n" "$(date +%H:%M:%S)" "$rc" "${BASH_SOURCE[0]}" "$LINENO" "$BASH_COMMAND" >&2' ERR
 
 install_jdk() {
   if [ -x "$JDK_DIR/bin/java" ]; then log "JDK present"; return; fi
@@ -43,6 +46,7 @@ install_flutter() {
   [ -f "$DL/$name" ] || curl -fL --retry 3 -o "$DL/$name" "$url"
   echo "$FLUTTER_SHA256  $DL/$name" | sha256sum -c - || die "Flutter archive failed its checksum"
   df -h "$DEV_ROOT" | tail -1
+  free -m | head -2
   tar -xJf "$DL/$name" -C "$DEV_ROOT" || die "could not extract $name"
   [ -x "$FLUTTER_DIR/bin/flutter" ] || die "$name extracted without bin/flutter"
 }
