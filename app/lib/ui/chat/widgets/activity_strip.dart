@@ -353,7 +353,16 @@ class _Line extends StatelessWidget {
             child: Row(
               key: ValueKey('${a.title}\u0000$second'),
               children: [
-                Text(a.title, style: titleStyle),
+                // 标题先让位：条被压缩到几十像素时（320dp × 1.3 字），连状态词都放不下。
+                Flexible(
+                  child: Text(
+                    a.title,
+                    style: titleStyle,
+                    maxLines: 1,
+                    softWrap: false,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
                 if (second.isNotEmpty) ...[
                   const SizedBox(width: 6),
                   Flexible(
