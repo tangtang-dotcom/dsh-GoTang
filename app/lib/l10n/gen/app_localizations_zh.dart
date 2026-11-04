@@ -9057,6 +9057,36 @@ class L10nZh extends L10n {
   String get phoneControlAdvanced => '进阶';
 
   @override
+  String get phoneRootShellTitle => 'Root 命令';
+
+  @override
+  String get phoneRootShellHint => '让模型以 Root 身份执行命令；关闭时工具会直接拒绝';
+
+  @override
+  String get toolchainTitle => '逆向工具';
+
+  @override
+  String get toolchainHint => 'jadx、apktool、radare2、binutils，装在 /root，App 更新不会丢';
+
+  @override
+  String get toolchainInstalled => '已安装';
+
+  @override
+  String get toolchainMissing => '未安装';
+
+  @override
+  String get toolchainInstall => '下载并安装';
+
+  @override
+  String get toolchainReinstall => '重新安装';
+
+  @override
+  String get toolchainInstalling => '正在安装…';
+
+  @override
+  String get toolchainNoRuntime => '运行时还没装好，请先在引擎页安装运行时';
+
+  @override
   String get phoneControlKeepAliveHint => '防止系统关掉无障碍';
 
   @override
@@ -18206,14 +18236,4 @@ class L10nZh extends L10n {
   String webConnectHostFirst(String name) {
     return '还没连上「$name」，连上后再打开网页版';
   }
-  String get phoneRootShellTitle => 'Root 命令';
-  String get phoneRootShellHint => '让模型以 Root 身份执行命令；关闭时工具会直接拒绝';
-  String get toolchainTitle => '逆向工具';
-  String get toolchainHint => 'jadx、apktool、radare2、binutils，装在 /root，App 更新不会丢';
-  String get toolchainInstalled => '已安装';
-  String get toolchainMissing => '未安装';
-  String get toolchainInstall => '下载并安装';
-  String get toolchainReinstall => '重新安装';
-  String get toolchainInstalling => '正在安装…';
-  String get toolchainNoRuntime => '运行时还没装好，请先在引擎页安装运行时';
 }

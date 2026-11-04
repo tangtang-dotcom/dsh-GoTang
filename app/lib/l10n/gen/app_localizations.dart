@@ -16736,6 +16736,66 @@ abstract class L10n {
   /// **'进阶'**
   String get phoneControlAdvanced;
 
+  /// No description provided for @phoneRootShellTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'Root 命令'**
+  String get phoneRootShellTitle;
+
+  /// No description provided for @phoneRootShellHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'让模型以 Root 身份执行命令；关闭时工具会直接拒绝'**
+  String get phoneRootShellHint;
+
+  /// No description provided for @toolchainTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'逆向工具'**
+  String get toolchainTitle;
+
+  /// No description provided for @toolchainHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'jadx、apktool、radare2、binutils，装在 /root，App 更新不会丢'**
+  String get toolchainHint;
+
+  /// No description provided for @toolchainInstalled.
+  ///
+  /// In zh, this message translates to:
+  /// **'已安装'**
+  String get toolchainInstalled;
+
+  /// No description provided for @toolchainMissing.
+  ///
+  /// In zh, this message translates to:
+  /// **'未安装'**
+  String get toolchainMissing;
+
+  /// No description provided for @toolchainInstall.
+  ///
+  /// In zh, this message translates to:
+  /// **'下载并安装'**
+  String get toolchainInstall;
+
+  /// No description provided for @toolchainReinstall.
+  ///
+  /// In zh, this message translates to:
+  /// **'重新安装'**
+  String get toolchainReinstall;
+
+  /// No description provided for @toolchainInstalling.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在安装…'**
+  String get toolchainInstalling;
+
+  /// No description provided for @toolchainNoRuntime.
+  ///
+  /// In zh, this message translates to:
+  /// **'运行时还没装好，请先在引擎页安装运行时'**
+  String get toolchainNoRuntime;
+
   /// No description provided for @phoneControlKeepAliveHint.
   ///
   /// In zh, this message translates to:
@@ -33025,66 +33085,6 @@ abstract class L10n {
   /// In zh, this message translates to:
   /// **'没能直接打开这一页，已停在网页版首页'**
   String get webTargetPageFailed;
-
-  /// No description provided for @phoneRootShellTitle.
-  ///
-  /// In zh, this message translates to:
-  /// **'Root 命令'**
-  String get phoneRootShellTitle;
-
-  /// No description provided for @phoneRootShellHint.
-  ///
-  /// In zh, this message translates to:
-  /// **'让模型以 Root 身份执行命令；关闭时工具会直接拒绝'**
-  String get phoneRootShellHint;
-
-  /// No description provided for @toolchainTitle.
-  ///
-  /// In zh, this message translates to:
-  /// **'逆向工具'**
-  String get toolchainTitle;
-
-  /// No description provided for @toolchainHint.
-  ///
-  /// In zh, this message translates to:
-  /// **'jadx、apktool、radare2、binutils，装在 /root，App 更新不会丢'**
-  String get toolchainHint;
-
-  /// No description provided for @toolchainInstalled.
-  ///
-  /// In zh, this message translates to:
-  /// **'已安装'**
-  String get toolchainInstalled;
-
-  /// No description provided for @toolchainMissing.
-  ///
-  /// In zh, this message translates to:
-  /// **'未安装'**
-  String get toolchainMissing;
-
-  /// No description provided for @toolchainInstall.
-  ///
-  /// In zh, this message translates to:
-  /// **'下载并安装'**
-  String get toolchainInstall;
-
-  /// No description provided for @toolchainReinstall.
-  ///
-  /// In zh, this message translates to:
-  /// **'重新安装'**
-  String get toolchainReinstall;
-
-  /// No description provided for @toolchainInstalling.
-  ///
-  /// In zh, this message translates to:
-  /// **'正在安装…'**
-  String get toolchainInstalling;
-
-  /// No description provided for @toolchainNoRuntime.
-  ///
-  /// In zh, this message translates to:
-  /// **'运行时还没装好，请先在引擎页安装运行时'**
-  String get toolchainNoRuntime;
 
   /// No description provided for @webConnectHostFirst.
   ///
