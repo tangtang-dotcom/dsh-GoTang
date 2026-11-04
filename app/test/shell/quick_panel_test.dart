@@ -213,7 +213,7 @@ void main() {
       expect(_panel, findsNothing);
     });
 
-    testWidgets('a cancel past the width opens: distance alone decides', (tester) async {
+    testWidgets('a pull past the width opens on distance, with the finger stopped first', (tester) async {
       await _pump(tester);
       var time = Duration.zero;
       final finger = await tester.startGesture(_chatMiddle);
@@ -222,7 +222,11 @@ void main() {
         await finger.moveBy(const Offset(-24, 0), timeStamp: time);
         await tester.pump(const Duration(milliseconds: 16));
       }
-      await finger.cancel(timeStamp: time);
+      // Stand still long enough that the velocity tracker reads zero: how far it
+      // came alone decides, exactly as it does when the system takes the finger.
+      time += const Duration(milliseconds: 300);
+      await tester.pump(const Duration(milliseconds: 300));
+      await finger.up(timeStamp: time);
       await pumpFrames(tester, 20);
       expect(_panelIn(tester), QuickPanel.width);
     });
