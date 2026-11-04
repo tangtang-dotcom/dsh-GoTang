@@ -115,6 +115,10 @@ class ProcessLaunchGuardTest {
         // The explicit root channel's `su -c <fixed command>` (argv from RootCommands): also a
         // Java ProcessBuilder child, which closes inherited fds like DshProcess's launches.
         "app/android/app/src/main/kotlin/io/github/ccch1mneyyy/dsh_app/phone/background/RootProcess.kt",
+        // 进阶 → 逆向工具: the fixed /opt/dsh-app/install-tools.sh through the same PRoot the
+        // engine uses; argv is built from the manifest, never from UI input. Reviewed alongside
+        // the other two: it clears the environment and redirects all three streams.
+        "app/android/app/src/main/kotlin/io/github/ccch1mneyyy/dsh_app/runtime/ToolchainInstaller.kt",
     )
     private val localHelper = "app/lib/remote/ssh/remote_shell.dart"
 
