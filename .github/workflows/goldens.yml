@@ -51,6 +51,7 @@ jobs:
             test/integration/wiring_test.dart \
             test/media/generate_mode_test.dart \
             test/media/media_golden_test.dart \
+            test/pets/pet_golden_test.dart \
             test/phone/phone_golden_test.dart \
             test/plugins/native/message_menu_plugins_test.dart \
             test/plugins/native/native_slots_golden_test.dart \

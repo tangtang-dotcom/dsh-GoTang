@@ -743,6 +743,7 @@ class _EyeButton extends StatelessWidget {
       excludeSemantics: true,
       onTap: onTap,
       child: GestureDetector(
+        key: const ValueKey('secret-eye-toggle'),
         behavior: HitTestBehavior.opaque,
         onTap: onTap,
         child: Center(

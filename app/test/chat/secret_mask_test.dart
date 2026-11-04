@@ -254,21 +254,21 @@ void main() {
 
     testWidgets('a sent message masks the key; the eye shows and hides it', (tester) async {
       await pump(tester, UserBubble(text: text));
-      expect(find.bySemanticsLabel(display), findsOneWidget);
+      expect(find.bySemanticsLabel(RegExp(RegExp.escape(display))), findsWidgets);
       expect(find.bySemanticsLabel(RegExp(_sk)), findsNothing);
       expect(find.textContaining(_sk), findsNothing);
       final masked = tester.getSize(find.byType(SecretText));
 
-      await tester.tap(find.bySemanticsLabel('显示密钥'));
+      await tester.tap(find.byKey(const ValueKey('secret-eye-toggle')));
       await tester.pump();
-      expect(find.bySemanticsLabel(_sk), findsOneWidget);
+      expect(find.bySemanticsLabel(RegExp(RegExp.escape(_sk))), findsWidgets);
       expect(find.bySemanticsLabel('隐藏密钥'), findsOneWidget);
       // Monospace, same length: showing it moves nothing around it.
       expect(tester.getSize(find.byType(SecretText)), masked);
 
-      await tester.tap(find.bySemanticsLabel('隐藏密钥'));
+      await tester.tap(find.byKey(const ValueKey('secret-eye-toggle')));
       await tester.pump();
-      expect(find.bySemanticsLabel(display), findsOneWidget);
+      expect(find.bySemanticsLabel(RegExp(RegExp.escape(display))), findsWidgets);
     });
 
     testWidgets('copy and the menu use the original; the preview is masked', (tester) async {
@@ -290,25 +290,25 @@ void main() {
 
     testWidgets('an optimistic bubble masks without the eye', (tester) async {
       await pump(tester, UserBubble(text: text, pendingLabel: '排队中'));
-      expect(find.bySemanticsLabel(display), findsOneWidget);
+      expect(find.bySemanticsLabel(RegExp(RegExp.escape(display))), findsWidgets);
       expect(find.bySemanticsLabel('显示密钥'), findsNothing);
     });
 
     testWidgets('every mount, and every other value, starts masked', (tester) async {
       await pump(tester, UserBubble(text: text));
-      await tester.tap(find.bySemanticsLabel('显示密钥'));
+      await tester.tap(find.byKey(const ValueKey('secret-eye-toggle')));
       await tester.pump();
-      expect(find.bySemanticsLabel(_sk), findsOneWidget);
+      expect(find.bySemanticsLabel(RegExp(RegExp.escape(_sk))), findsWidgets);
 
       // Same place, another key: masked again.
       final other = 'sk-${fill(32, '0123456789abcdef')}';
       await pump(tester, UserBubble(text: '用这个 Key 跑一下:$other 谢谢'));
-      expect(find.bySemanticsLabel(keep8(other)), findsOneWidget);
+      expect(find.bySemanticsLabel(RegExp(RegExp.escape(keep8(other)))), findsWidgets);
 
       // Remounted: masked again.
       await pump(tester, const SizedBox());
       await pump(tester, UserBubble(text: text));
-      expect(find.bySemanticsLabel(display), findsOneWidget);
+      expect(find.bySemanticsLabel(RegExp(RegExp.escape(display))), findsWidgets);
     });
 
     testWidgets('the chat text size scales the value once', (tester) async {

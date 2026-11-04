@@ -1811,19 +1811,26 @@ class _ChatScreenState extends ConsumerState<ChatScreen> with WidgetsBindingObse
                                         // It gives the activity strip its place while a reply generates.
                                         if (!readOnly) ComposerStripSlot(sessionId: sessionId, visible: !running),
                                       ],
-                                      accessory: pillsBesideStrip
-                                          ? Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                if (local && ref.watch(showRootPillProvider)) ...[
-                                                  const RootPill(compact: true),
-                                                  const SizedBox(width: 6),
-                                                ],
-                                                _stripRisk(sessionId, autoApprove: chat?.autoApprove ?? false) ??
-                                                    const SizedBox.shrink(),
+                                      accessory: switch (pillsBesideStrip) {
+                                        // 有东西才占位：空的附件行也会把活动条挤窄 8。
+                                        false => null,
+                                        true => switch ((
+                                          local && ref.watch(showRootPillProvider),
+                                          _stripRisk(sessionId, autoApprove: chat?.autoApprove ?? false),
+                                        )) {
+                                          (false, null) => null,
+                                          (final pill, final risk) => Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              if (pill) ...[
+                                                const RootPill(compact: true),
+                                                const SizedBox(width: 6),
                                               ],
-                                            )
-                                          : null,
+                                              risk ?? const SizedBox.shrink(),
+                                            ],
+                                          ),
+                                        },
+                                      },
                                     ),
                                   ),
                                 ),
