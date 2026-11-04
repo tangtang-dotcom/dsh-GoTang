@@ -116,6 +116,8 @@ class UserBubble extends StatelessWidget {
     final bubble = Semantics(
       container: true,
       header: true,
+      // 「我」是这一条的名字，正文和按钮仍是它自己的节点（读屏和测试都按文本找得到）。
+      explicitChildNodes: true,
       label: l10n.chatMe,
       child: TapToMenu(
         // 长按交给 SelectionArea 选字；轻点打开消息菜单（指针事件在手势竞技场之前，

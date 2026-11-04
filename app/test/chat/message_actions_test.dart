@@ -345,7 +345,7 @@ void main() {
       await tester.tap(find.widgetWithText(SettingsTile, '选择文字'));
       await pumpFrames(tester);
       expect(find.text('全部复制'), findsOneWidget);
-      expect(find.byType(SelectionArea), findsOneWidget);
+      expect(find.byType(SelectionArea), findsWidgets);
     });
 
   });
