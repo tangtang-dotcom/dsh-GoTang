@@ -259,14 +259,14 @@ void main() {
       expect(find.textContaining(_sk), findsNothing);
       final masked = tester.getSize(find.byType(SecretText));
 
-      await tester.tap(find.byKey(const ValueKey('secret-eye-toggle')));
+      await tester.tap(find.byKey(const ValueKey('secret-eye-toggle')), warnIfMissed: false);
       await tester.pump();
       expect(find.bySemanticsLabel(RegExp(RegExp.escape(_sk))), findsWidgets);
       expect(find.bySemanticsLabel('隐藏密钥'), findsOneWidget);
       // Monospace, same length: showing it moves nothing around it.
       expect(tester.getSize(find.byType(SecretText)), masked);
 
-      await tester.tap(find.byKey(const ValueKey('secret-eye-toggle')));
+      await tester.tap(find.byKey(const ValueKey('secret-eye-toggle')), warnIfMissed: false);
       await tester.pump();
       expect(find.bySemanticsLabel(RegExp(RegExp.escape(display))), findsWidgets);
     });
@@ -296,7 +296,7 @@ void main() {
 
     testWidgets('every mount, and every other value, starts masked', (tester) async {
       await pump(tester, UserBubble(text: text));
-      await tester.tap(find.byKey(const ValueKey('secret-eye-toggle')));
+      await tester.tap(find.byKey(const ValueKey('secret-eye-toggle')), warnIfMissed: false);
       await tester.pump();
       expect(find.bySemanticsLabel(RegExp(RegExp.escape(_sk))), findsWidgets);
 
