@@ -10,6 +10,8 @@ import 'package:dsh_app/state/risk_notice_store.dart';
 import 'package:dsh_app/state/session_modes.dart';
 import 'package:dsh_app/ui/chat/chat_screen.dart';
 import 'package:dsh_app/ui/chat/composer.dart';
+import 'package:dsh_app/ui/chat/dock/dock_pill.dart';
+import 'package:dsh_app/ui/chat/dock/root_pill.dart';
 import 'package:dsh_app/ui/chat/widgets/permission_pill.dart';
 import 'package:dsh_app/ui/chat/widgets/plus_panel.dart';
 import 'package:dsh_app/ui/common/list_page_row.dart';
@@ -258,6 +260,7 @@ void main() {
           MediaQuery.withClampedTextScaling(minScaleFactor: scale, maxScaleFactor: scale, child: const ChatScreen()),
           overrides: [
             ...harness.overrides,
+            rootPillOff,
             ..._extra(modes: modes),
           ],
         ),
@@ -297,6 +300,28 @@ void main() {
         expect(trail.center.dy, moreOrLessEquals(pill.center.dy, epsilon: 0.01));
       });
     }
+
+    testWidgets('beside the terminal pill it squeezes into that row', (tester) async {
+      usePhoneView(tester);
+      final harness = ChatHarness(session: 's1');
+      await tester.pumpWidget(
+        testApp(
+          const ChatScreen(),
+          overrides: [
+            ...harness.overrides,
+            ..._extra(modes: const SessionModes(preset: 'danger-full-access')),
+          ],
+        ),
+      );
+      await pumpFrames(tester);
+      final bar = tester.getRect(find.byType(RootPill));
+      final pill = tester.getRect(find.byType(PermissionPill));
+      // One row: the ⚠ on the terminal bar's line, at its right end.
+      expect(pill.center.dy, moreOrLessEquals(bar.center.dy, epsilon: 0.01));
+      expect(pill.left - bar.right, moreOrLessEquals(DockMetrics.gap, epsilon: 0.01));
+      // Squeezed: no word left, just the round ⚠.
+      expect(pill.size, const Size.square(PermissionPillMetrics.height));
+    });
 
     testWidgets('a tap opens this chat\'s permissions', (tester) async {
       await pumpChat(tester, const SessionModes(preset: 'auto'));
@@ -362,12 +387,31 @@ void goldens() {
             brightness: brightness,
             overrides: [
               ...harness.overrides,
+              // 没有终端胶囊时它才在输入条边上。
+              rootPillOff,
               ..._extra(modes: const SessionModes(preset: 'danger-full-access')),
             ],
           ),
         );
         await pumpFrames(tester);
         await expectLater(find.byType(ChatScreen), matchesGoldenFile('goldens/permission_pill_$suffix.png'));
+      });
+
+      testWidgets('permission pill squeezed beside the terminal pill ($suffix)', (tester) async {
+        usePhoneView(tester);
+        final harness = ChatHarness(session: 's1');
+        await tester.pumpWidget(
+          testApp(
+            const ChatScreen(),
+            brightness: brightness,
+            overrides: [
+              ...harness.overrides,
+              ..._extra(modes: const SessionModes(preset: 'danger-full-access')),
+            ],
+          ),
+        );
+        await pumpFrames(tester);
+        await expectLater(find.byType(ChatScreen), matchesGoldenFile('goldens/permission_pill_terminal_$suffix.png'));
       });
     }
   });
