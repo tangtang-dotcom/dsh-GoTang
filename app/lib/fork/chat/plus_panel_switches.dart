@@ -1,4 +1,4 @@
-// fork 层的「这个对话」开关：完全权限提醒 / root 状态条。
+// fork 层的聊天胶囊开关：完全权限提醒 / root 状态条（Storage 是全局的）。
 // plus_panel 只留 `...forkChatPillSwitches(context, ref)` 一行。
 
 import 'dart:async';
@@ -13,7 +13,7 @@ List<Widget> forkChatPillSwitches(BuildContext context, WidgetRef ref) => [
   MergeSemantics(
     child: ListPageRow(
       title: '隐藏「完全权限」提醒',
-      subtitle: '只是不再提示，对话权限本身不变',
+      subtitle: '只是不再提示，所有对话都不再显示；权限本身不变',
       trailing: Switch(
         value: ref.watch(hidePermissionPillProvider),
         onChanged: (v) => unawaited(ref.read(hidePermissionPillProvider.notifier).set(v)),
@@ -23,7 +23,7 @@ List<Widget> forkChatPillSwitches(BuildContext context, WidgetRef ref) => [
   MergeSemantics(
     child: ListPageRow(
       title: '在输入框上方显示 root 状态',
-      subtitle: '关闭后不再显示终端档位条',
+      subtitle: '关闭后所有对话都不再显示终端档位条',
       trailing: Switch(
         value: ref.watch(showRootPillProvider),
         onChanged: (v) => unawaited(ref.read(showRootPillProvider.notifier).set(v)),
