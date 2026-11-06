@@ -38,17 +38,18 @@ class ForkRootDock extends ConsumerWidget {
         !ref.watch(uiHiddenProvider(UiHideItem.pluginCapsule)) &&
         ref.watch(chatPluginsHaveContentProvider(id));
     if (!showPermission && !showPlugin) return const RootPill();
+    final sid = id!;
     return LayoutBuilder(
       builder: (context, constraints) => Row(
         children: [
           const Expanded(child: RootPill()),
           if (showPlugin) ...[
             const SizedBox(width: DockMetrics.gap),
-            ChatPluginsPill(sessionId: id!, compact: constraints.maxWidth < 350),
+            ChatPluginsPill(sessionId: sid, compact: constraints.maxWidth < 350),
           ],
           if (showPermission) ...[
             const SizedBox(width: DockMetrics.gap),
-            PermissionPill(preset: risky!, compact: true, onTap: () => unawaited(showPermissionSheet(context, id!))),
+            PermissionPill(preset: risky, compact: true, onTap: () => unawaited(showPermissionSheet(context, sid))),
           ],
         ],
       ),
