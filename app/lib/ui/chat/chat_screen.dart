@@ -2008,7 +2008,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> with WidgetsBindingObse
       // Beside the activity strip ([_stripRisk]).
     } else if (sessionId != null && autoApprove) {
       pill = AutoApprovePill(onDisable: () => ref.read(chatProvider(sessionId).notifier).setAutoApprove(false));
-    } else if (sessionId != null && permission && !ref.watch(hidePermissionPillProvider)) {
+    } else if (sessionId != null && permission && ref.watch(showPermissionPillProvider)) {
       final risky = ref.watch(sessionModesProvider(sessionId).select((m) => m.risky ? m.preset : null));
       if (risky != null) {
         // Beside the mode capsule it shrinks to its ⚠ (§4.2).
@@ -2042,7 +2042,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> with WidgetsBindingObse
     }
     // 生成期间这是「完全权限」徽标的另一条显示路径（贴在活动条旁边），
     // 隐藏开关也要管到这里，否则一回复就又冒出来。
-    if (ref.watch(hidePermissionPillProvider)) return null;
+    if (!ref.watch(showPermissionPillProvider)) return null;
     final risky = ref.watch(sessionModesProvider(sessionId).select((m) => m.risky ? m.preset : null));
     if (risky == null) return null;
     return StripRiskChip.permission(

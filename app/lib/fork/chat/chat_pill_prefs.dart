@@ -1,22 +1,25 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// 是否隐藏输入条上方的「⚠ 完全权限」提醒。
+/// 是否显示输入条上方的「⚠ 完全权限」提醒。
 ///
-/// 默认显示：它提醒的是“这个对话比默认权限更宽”。用户明确关掉后不再出现，
+/// 默认显示：它提醒的是“这个对话比默认权限更宽”。关掉后不再出现，
 /// 权限本身不受影响。
-class HidePermissionPill extends Notifier<bool> {
-  static const _key = 'chat.hidePermissionPill';
+class ShowPermissionPill extends Notifier<bool> {
+  static const _key = 'chat.showPermissionPill';
+  static const _legacyKey = 'chat.hidePermissionPill';
 
   @override
   bool build() {
     _load();
-    return false;
+    return true;
   }
 
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
-    if (ref.mounted) state = prefs.getBool(_key) ?? false;
+    final stored = prefs.getBool(_key);
+    final value = stored ?? !(prefs.getBool(_legacyKey) ?? false);
+    if (ref.mounted) state = value;
   }
 
   Future<void> set(bool value) async {
@@ -26,7 +29,7 @@ class HidePermissionPill extends Notifier<bool> {
   }
 }
 
-final hidePermissionPillProvider = NotifierProvider<HidePermissionPill, bool>(HidePermissionPill.new);
+final showPermissionPillProvider = NotifierProvider<ShowPermissionPill, bool>(ShowPermissionPill.new);
 
 /// 是否在输入框上方显示 root 状态条（终端权限档位）。
 ///

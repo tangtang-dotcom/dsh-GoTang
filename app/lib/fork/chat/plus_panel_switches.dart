@@ -13,11 +13,11 @@ import 'chat_pill_prefs.dart';
 List<Widget> forkChatPillSwitches(BuildContext context, WidgetRef ref) => [
   MergeSemantics(
     child: ListPageRow(
-      title: ForkText.hidePermissionTitle,
-      subtitle: ForkText.hidePermissionSubtitle,
+      title: ForkText.showPermissionTitle,
+      subtitle: ForkText.showPermissionSubtitle,
       trailing: Switch(
-        value: ref.watch(hidePermissionPillProvider),
-        onChanged: (v) => unawaited(ref.read(hidePermissionPillProvider.notifier).set(v)),
+        value: ref.watch(showPermissionPillProvider),
+        onChanged: (v) => unawaited(ref.read(showPermissionPillProvider.notifier).set(v)),
       ),
     ),
   ),

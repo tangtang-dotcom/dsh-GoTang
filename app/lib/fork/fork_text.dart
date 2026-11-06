@@ -18,9 +18,9 @@ abstract final class ForkText {
   static String get rootSettings => _en ? 'Settings' : '点击设置';
 
   // Chat pill switches in the plus panel.
-  static String get hidePermissionTitle => _en ? 'Hide the full-permission notice' : '隐藏「完全权限」提醒';
-  static String get hidePermissionSubtitle =>
-      _en ? 'Only hides the notice in every chat; the permission itself is unchanged' : '只是不再提示，所有对话都不再显示；权限本身不变';
+  static String get showPermissionTitle => _en ? 'Show the full-permission notice' : '显示「完全权限」提醒';
+  static String get showPermissionSubtitle =>
+      _en ? 'Hides the notice in every chat when off; the permission itself is unchanged' : '关闭后所有对话都不再显示；权限本身不变';
   static String get showRootTitle => _en ? 'Show root status above the composer' : '在输入框上方显示 root 状态';
   static String get showRootSubtitle =>
       _en ? 'Hides the terminal tier bar in every chat when off' : '关闭后所有对话都不再显示终端档位条';

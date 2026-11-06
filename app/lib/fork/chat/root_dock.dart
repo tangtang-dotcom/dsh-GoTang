@@ -31,7 +31,7 @@ class ForkRootDock extends ConsumerWidget {
     final risky = id == null || autoApprove
         ? null
         : ref.watch(sessionModesProvider(id).select((m) => m.risky ? m.preset : null));
-    final showPermission = risky != null && !ref.watch(hidePermissionPillProvider);
+    final showPermission = risky != null && ref.watch(showPermissionPillProvider);
     final showPlugin =
         id != null &&
         ref.watch(showPluginPillProvider) &&
