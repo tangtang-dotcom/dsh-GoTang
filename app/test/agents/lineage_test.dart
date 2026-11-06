@@ -16,6 +16,7 @@ import 'package:dsh_app/ui/chat/chat_header.dart';
 import 'package:dsh_app/ui/chat/chat_screen.dart';
 import 'package:dsh_app/ui/chat/empty_state.dart';
 import 'package:dsh_app/ui/chat/model_sheet.dart';
+import 'package:dsh_app/ui/common/status_dot.dart';
 import 'package:dsh_app/ui/chat/widgets/live_clock.dart';
 import 'package:dsh_app/ui/session/session_detail_page.dart';
 import 'package:dsh_app/ui/theme/app_icons.dart';
@@ -173,6 +174,28 @@ void main() {
       expect(find.byType(HeaderBackKey), findsNothing);
       expect(find.byKey(const ValueKey('chat-new-chat')), findsOneWidget);
       expect(find.byIcon(AppIcons.menu), findsOneWidget);
+    });
+
+    testWidgets('idle subagents: the corner dot sleeps instead of breathing', (tester) async {
+      usePhoneView(tester);
+      final harness = ChatHarness(session: parentId, states: {parentId: _parentChat(), reviewerId: _childChat()});
+      await tester.pumpWidget(
+        testApp(
+          const ChatScreen(),
+          overrides: [
+            ...harness.overrides,
+            ...agentsOverrides(sampleAgentSessions(anyRunning: false)),
+            workspaceSourceProvider.overrideWith((ref, id) => null),
+            workspaceRootProvider.overrideWith((ref, id) => null),
+          ],
+        ),
+      );
+      await pumpFrames(tester, 6);
+      final key = find.byType(HeaderAgentsKey);
+      expect(key, findsOneWidget);
+      final dot = tester.widget<StatusDot>(find.descendant(of: key, matching: find.byType(StatusDot)));
+      // busy 的 StatusDot 会一直呼吸，哪怕 opacity 是 0 也会让整页每帧出图。
+      expect(dot.tone, StatusTone.idle);
     });
 
     testWidgets('geometry: one height, even gaps, symmetric insets', (tester) async {
