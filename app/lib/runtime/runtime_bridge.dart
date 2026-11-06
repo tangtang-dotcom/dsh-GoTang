@@ -612,15 +612,6 @@ class RuntimeBridge {
   /// Output around the last failure, tokens masked.
   Future<List<String>> failureLog() async => (await _methods.invokeListMethod<String>('failureLog')) ?? const [];
 
-  /// 进阶 → 逆向工具: what the optional jadx / apktool / radare2 / binutils kit has installed
-  /// under the rootfs' /root/opt, whether an install is running, and its last log line.
-  Future<Map<Object?, Object?>> toolchainStatus() async =>
-      await _methods.invokeMapMethod<Object?, Object?>('toolchainStatus') ?? const {};
-
-  /// Starts /root/install-tools.sh inside PRoot; the caller polls [toolchainStatus].
-  Future<Map<Object?, Object?>> installToolchain() async =>
-      await _methods.invokeMapMethod<Object?, Object?>('installToolchain') ?? const {};
-
   Future<StorageAccess> storageStatus() async =>
       StorageAccess.fromMap(await _methods.invokeMapMethod<Object?, Object?>('storageStatus') ?? const {});
 

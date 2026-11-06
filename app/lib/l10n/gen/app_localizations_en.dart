@@ -9549,29 +9549,13 @@ class L10nEn extends L10n {
   String get phoneRootShellHint => 'Let the model run commands as root; when off, the tool refuses';
 
   @override
-  String get toolchainTitle => 'Reverse kit';
-
   @override
-  String get toolchainHint => 'jadx, apktool, radare2 and binutils under /root; app updates keep them';
-
   @override
-  String get toolchainInstalled => 'Installed';
-
   @override
-  String get toolchainMissing => 'Not installed';
-
   @override
-  String get toolchainInstall => 'Download and install';
-
   @override
-  String get toolchainReinstall => 'Reinstall';
-
   @override
-  String get toolchainInstalling => 'Installing…';
-
   @override
-  String get toolchainNoRuntime => 'The runtime is not installed yet; install it on the engine page first';
-
   @override
   String get phoneControlKeepAliveHint => 'Prevent Android from turning off accessibility';
 

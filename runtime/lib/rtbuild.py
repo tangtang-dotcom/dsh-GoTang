@@ -32,11 +32,6 @@ DSH_GO_BRIDGE = "/opt/dsh-go/dsh-go-bridge"
 BOOT_CACHE = "/opt/dsh-go/boot-cache.mjs"
 BOOT_CACHE_SRC = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "boot", "boot-cache.mjs")
 DIRECT_SRC = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "direct")
-# runtime/toolchain/install-tools.sh: the optional reverse-tool installer, shipped immutable in
-# the image so it is always present (and current) after a runtime upgrade. It installs into
-# /root/opt, which the upgrade carries over.
-TOOLCHAIN_SRC = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "toolchain")
-TOOLCHAIN_SCRIPT = "/opt/dsh-app/install-tools.sh"
 PNPM_BINS = {"pnpm": "pnpm.mjs", "pnpx": "pnpx.mjs", "pn": "pnpm.mjs", "pnx": "pnpx.mjs"}
 ABI = {
     "arm64-v8a": {"machine": 183, "npm_cpu": "arm64", "node": "arm64", "ubuntu": "arm64", "termux": "aarch64"},
@@ -869,11 +864,6 @@ def overlay_entries(runtime_info, with_python=False, with_pnpm=False, with_bridg
         if name.endswith(".mjs"):
             with open(os.path.join(DIRECT_SRC, name), "rb") as src:
                 E["opt/dsh-go/direct/" + name] = Entry("file", 0o644, data=src.read(), origin="overlay")
-    # The installer the app runs through PRoot (`/bin/sh /opt/dsh-app/install-tools.sh`).
-    # Kept in the image, not in /root: an upgrade replaces /opt with the current script while
-    # /root/opt keeps whatever it installed.
-    with open(os.path.join(TOOLCHAIN_SRC, "install-tools.sh"), "rb") as src:
-        E[TOOLCHAIN_SCRIPT.lstrip("/")] = Entry("file", 0o755, data=src.read(), origin="overlay")
     f("usr/local/bin/dsh",
       "#!/bin/sh\n"
       "# dsh-app shim: run the bundled DeepSeek Harness CLI with the bundled Node.\n"

@@ -29,7 +29,6 @@ import '../theme/theme.dart';
 import 'action_log_page.dart';
 import 'a11y_restore_sheet.dart';
 import '../../fork/phone/shell/shell_permissions_page.dart';
-import '../../fork/phone/toolchain/toolchain_sheet.dart';
 import 'app_rules_page.dart';
 import 'dnd_mode_page.dart';
 import 'phone_disclosure_sheet.dart';
@@ -220,17 +219,6 @@ class _PhoneControlScreenState extends ConsumerState<PhoneControlScreen> {
     if (mounted && open) await _openAppDetails();
   }
 
-  /// 进阶 → 逆向工具: status + one install button. The sheet polls while it is open;
-  /// nothing is installed until the button is tapped.
-  void _openToolchain() {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => const ForkToolchainSheet(),
-    );
-  }
-
   Future<void> _offerBackgroundGuide() async {
     if (_backgroundGuideShown) return;
     try {
@@ -362,13 +350,6 @@ class _PhoneControlScreenState extends ConsumerState<PhoneControlScreen> {
                   },
                   subtitleMaxLines: 2,
                   onTap: () => _push(const ShellPermissionsPage()),
-                ),
-                ListPageRow(
-                  icon: AppIcons.code,
-                  title: l10n.toolchainTitle,
-                  subtitle: l10n.toolchainHint,
-                  subtitleMaxLines: 3,
-                  onTap: _openToolchain,
                 ),
                 ListPageRow(
                   icon: AppIcons.keepAlive,
