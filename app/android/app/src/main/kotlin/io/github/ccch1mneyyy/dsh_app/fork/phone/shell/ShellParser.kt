@@ -13,7 +13,7 @@ internal data class ForkPipeline(val commands: List<ForkCommand>) : ForkNode()
 internal data class ForkCommand(
     val argv: List<String>,
     val redirects: List<ForkRedirect>,
-) {
+) : ForkNode() {
     val name: String get() = argv.firstOrNull().orEmpty()
 }
 
