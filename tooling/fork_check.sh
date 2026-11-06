@@ -45,6 +45,8 @@ allowed_files=(
   app/lib/ui/chat/widgets/user_bubble.dart
   app/lib/ui/chat/secret_mask.dart
   app/lib/ui/chat/widgets/activity_strip.dart
+  app/lib/ui/plugins/native/composer_capsules.dart
+  app/lib/ui/plugins/native/native_composer_bar.dart
   app/lib/phone/phone_channel.dart
   app/lib/state/phone_state.dart
   app/lib/runtime/runtime_bridge.dart

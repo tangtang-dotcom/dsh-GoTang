@@ -36,6 +36,7 @@
 
 `app/lib/ui/chat/chat_screen.dart` 只保留 `ForkRootDock` 调用；
 `plus_panel.dart` 只保留 `forkChatPillSwitches` 调用；
+`composer_capsules.dart`/`native_composer_bar.dart` 只保留 `showChatPluginsCapsule` 开关；
 `assistant_message.dart`/`user_bubble.dart`/`secret_mask.dart` 保留选择与轻点钩子；
 `activity_strip.dart` 保留窄条时钟隐藏的布局修正。
 
