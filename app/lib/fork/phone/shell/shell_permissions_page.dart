@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../fork_text.dart';
 import '../../chat/chat_pill_prefs.dart';
 import '../../../state/phone_state.dart';
 import '../../../ui/settings/settings_widgets.dart';
@@ -97,19 +98,16 @@ class _ShellPermissionsPageState extends ConsumerState<ShellPermissionsPage> {
       showDialog<void>(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: const Text('切到高危模式？'),
-          content: const Text(
-            '这个档位里，AI 能在你的手机上执行任意命令，包括删文件、改系统设置。\n\n'
-            '所有操作都会留在对话和下面的记录里，但它不会每次问你。',
-          ),
+          title: Text(ForkText.highRiskTitle),
+          content: Text(ForkText.highRiskBody),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('取消')),
+            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(ForkText.cancel)),
             FilledButton(
               onPressed: () {
                 Navigator.pop(ctx);
                 apply();
               },
-              child: const Text('我知道了'),
+              child: Text(ForkText.confirmKnow),
             ),
           ],
         ),
@@ -155,15 +153,11 @@ class _ShellPermissionsPageState extends ConsumerState<ShellPermissionsPage> {
       final ok = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: const Text('允许读写整个 /sdcard？'),
-          content: const Text(
-            '/sdcard 里除了 Download，还有照片（DCIM）、别的 App 的文件夹。\n\n'
-            '打开之后 AI 就能动这些地方，删掉的东西没有回收站。\n'
-            '系统的 /system、/data/adb 和其他 App 的私有目录仍然碰不到。',
-          ),
+          title: Text(ForkText.sdcardTitle),
+          content: Text(ForkText.sdcardBody),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('取消')),
-            FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('仍然打开')),
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(ForkText.cancel)),
+            FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(ForkText.sdcardOpen)),
           ],
         ),
       );
@@ -197,55 +191,55 @@ class _ShellPermissionsPageState extends ConsumerState<ShellPermissionsPage> {
     }
 
     return AppPage.list(
-      title: '终端权限',
-      subtitle: const Text('决定 AI 能在这台手机上执行哪些命令'),
+      title: ForkText.terminalPermissions,
+      subtitle: Text(ForkText.permissionsSubtitle),
       children: [
         SettingsSection(
-          title: '档位',
+          title: ForkText.tiersTitle,
           children: [
             _TierTile(
-              label: '原版模式',
+              label: ForkText.originalMode,
               tone: Colors.green,
               selected: isOriginal,
-              summary: '和原版一样：只能看屏幕、点屏幕、打字、开 App，不能执行命令。',
+              summary: ForkText.originalSummary,
               onTap: () => _pickMode(shell, 'original'),
             ),
             _TierTile(
-              label: '进阶模式',
+              label: ForkText.safeMode,
               tone: Colors.amber,
               selected: isSafe,
-              summary: '只跑你勾选的命令：能读文件、看状态、复制；脚本和包管理锁死。',
+              summary: ForkText.safeSummary,
               onTap: () => _pickMode(shell, 'safe'),
             ),
             _TierTile(
-              label: '高危模式',
+              label: ForkText.fullMode,
               tone: Colors.red,
               selected: mode == 'full',
-              summary: '能执行任意命令，包括删文件、改系统设置。',
+              summary: ForkText.fullSummary,
               onTap: () => _pickMode(shell, 'full'),
             ),
           ],
         ),
         if (!isOriginal && _loaded) ...[
           SettingsSection(
-            title: '额外设置',
+            title: ForkText.extraSettings,
             children: [
               SettingsSwitchTile(
-                title: '展开命令清单',
-                subtitle: '展开后可以逐条开关；收起仍保留你的选择',
+                title: ForkText.showCommands,
+                subtitle: ForkText.showCommandsSubtitle,
                 value: _showCommands,
                 onChanged: _setShowCommands,
               ),
               SettingsSwitchTile(
-                title: '在输入框上方显示 root 状态条',
-                subtitle: '关掉只是不显示提示，终端能力不变',
+                title: ForkText.showRootBar,
+                subtitle: ForkText.showRootBarSubtitle,
                 value: ref.watch(showRootPillProvider),
                 onChanged: (v) => unawaited(ref.read(showRootPillProvider.notifier).set(v)),
               ),
               if (!isFull)
                 SettingsSwitchTile(
-                  title: '允许读写整个 /sdcard',
-                  subtitle: sdcard ? '已允许：包括照片和别的 App 的文件夹（相册只能看，不能写也不能删）' : '未允许：只能写 Download',
+                  title: ForkText.sdcardAllow,
+                  subtitle: sdcard ? ForkText.sdcardAllowedSummary : ForkText.sdcardDeniedSummary,
                   value: sdcard,
                   onChanged: (v) => _toggleSdcard(shell, v),
                 ),
@@ -285,11 +279,11 @@ class _ShellPermissionsPageState extends ConsumerState<ShellPermissionsPage> {
       title: group.title,
       children: [
         SettingsTile(
-          title: '整组开关',
+          title: ForkText.groupSwitch,
           subtitle: isFull
-              ? '高危模式全部放行，下面只是命令清单'
+              ? ForkText.groupFullSummary
               : locked
-              ? '进阶模式下这一组锁死，切到高危才能用'
+              ? ForkText.groupLockedSummary
               : group.desc,
           // 点整行 = 展开这一组；总开关在右边的 Switch 上，两个互不干扰。
           onTap: () => setState(() {
@@ -384,11 +378,11 @@ class _RecentSectionState extends ConsumerState<_RecentSection> {
   Widget build(BuildContext context) {
     final entries = ref.watch(phoneProvider.select((s) => s.log));
     return SettingsSection(
-      title: '最近记录',
+      title: ForkText.recentTitle,
       children: [
         SettingsSwitchTile(
-          title: '展开最近记录',
-          subtitle: entries.isEmpty ? '还没有记录' : '最近 ${entries.length} 条（最多 ${widget.limit}）',
+          title: ForkText.recentExpand,
+          subtitle: entries.isEmpty ? ForkText.recentEmpty : ForkText.recentCount(entries.length, widget.limit),
           value: widget.open,
           onChanged: widget.onOpenChanged,
         ),

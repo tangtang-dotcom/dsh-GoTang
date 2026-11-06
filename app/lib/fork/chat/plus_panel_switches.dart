@@ -6,14 +6,15 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../fork_text.dart';
 import '../../ui/common/list_page_row.dart';
 import 'chat_pill_prefs.dart';
 
 List<Widget> forkChatPillSwitches(BuildContext context, WidgetRef ref) => [
   MergeSemantics(
     child: ListPageRow(
-      title: '隐藏「完全权限」提醒',
-      subtitle: '只是不再提示，所有对话都不再显示；权限本身不变',
+      title: ForkText.hidePermissionTitle,
+      subtitle: ForkText.hidePermissionSubtitle,
       trailing: Switch(
         value: ref.watch(hidePermissionPillProvider),
         onChanged: (v) => unawaited(ref.read(hidePermissionPillProvider.notifier).set(v)),
@@ -22,8 +23,8 @@ List<Widget> forkChatPillSwitches(BuildContext context, WidgetRef ref) => [
   ),
   MergeSemantics(
     child: ListPageRow(
-      title: '在输入框上方显示 root 状态',
-      subtitle: '关闭后所有对话都不再显示终端档位条',
+      title: ForkText.showRootTitle,
+      subtitle: ForkText.showRootSubtitle,
       trailing: Switch(
         value: ref.watch(showRootPillProvider),
         onChanged: (v) => unawaited(ref.read(showRootPillProvider.notifier).set(v)),

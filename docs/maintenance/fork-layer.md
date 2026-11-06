@@ -17,6 +17,7 @@
 | `.../fork/phone/shell/ForkShell.kt` | `PhoneCore.shell` 的入口 |
 | `.../fork/phone/shell/ShellRunner.kt` | `su -c` 执行、超时、输出截断 |
 | `app/lib/fork/phone/shell/shell_permissions_page.dart` | 终端权限页面 |
+| `app/lib/fork/fork_text.dart` | fork 自有文案（中英），避免占用上游 l10n 键 |
 | `app/lib/fork/chat/root_pill.dart` | 输入框上方的终端档位胶囊 |
 | `app/lib/fork/chat/root_dock.dart` | 终端胶囊 + 完全权限同排 |
 

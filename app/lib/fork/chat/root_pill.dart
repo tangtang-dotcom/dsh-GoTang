@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../fork_text.dart';
 import '../../state/phone_state.dart';
 import '../phone/shell/shell_permissions_page.dart';
 import '../../ui/theme/app_icons.dart';
@@ -27,14 +28,14 @@ class RootPill extends ConsumerWidget {
     // 手机操控关着时引擎根本不挂 shell 工具，存储的档位不会生效：不显示成已启用。
     final mode = phone.enabled ? phone.shell.mode : 'off';
     final (label, color, icon) = switch (mode) {
-      'safe' => ('终端 · 进阶', Colors.amber.shade700, AppIcons.redacted),
-      'full' => ('终端 · 高危', Colors.red.shade600, AppIcons.command),
-      _ => ('启用终端', theme.colorScheme.onSurfaceVariant, AppIcons.command),
+      'safe' => (ForkText.rootTierSafe, Colors.amber.shade700, AppIcons.redacted),
+      'full' => (ForkText.rootTierFull, Colors.red.shade600, AppIcons.command),
+      _ => (ForkText.rootEnable, theme.colorScheme.onSurfaceVariant, AppIcons.command),
     };
     if (compact) {
       return Semantics(
         button: true,
-        label: '$label，点击设置终端权限',
+        label: ForkText.rootSemantics(label),
         onTap: () => _open(context, enabled: phone.enabled),
         excludeSemantics: true,
         child: GlassSurface(
@@ -52,7 +53,7 @@ class RootPill extends ConsumerWidget {
     }
     return Semantics(
       button: true,
-      label: '$label，点击设置终端权限',
+      label: ForkText.rootSemantics(label),
       onTap: () => _open(context, enabled: phone.enabled),
       excludeSemantics: true,
       child: GlassSurface(
@@ -63,7 +64,7 @@ class RootPill extends ConsumerWidget {
         child: DockRow(
           leading: DockGlyph.icon(icon, color: color),
           content: Text(label, style: DockText.title(context, color: color)),
-          accessory: Text('点击设置', style: DockText.detail(context)),
+          accessory: Text(ForkText.rootSettings, style: DockText.detail(context)),
         ),
       ),
     );

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../fork/fork_text.dart';
 import '../../l10n/l10n.dart';
 import '../../runtime/local_footprint.dart';
 import '../../runtime/runtime_bridge.dart';
@@ -342,11 +343,11 @@ class _PhoneControlScreenState extends ConsumerState<PhoneControlScreen> {
                 ),
                 ListPageRow(
                   icon: AppIcons.terminal,
-                  title: '终端权限',
+                  title: ForkText.terminalPermissions,
                   subtitle: switch (status.shell.mode) {
-                    'safe' => '进阶模式 · 已允许 ${status.shell.allowed.length} 条命令',
-                    'full' => '高危模式 · 任意命令',
-                    _ => '未开启',
+                    'safe' => ForkText.tierSafeCount(status.shell.allowed.length),
+                    'full' => ForkText.tierFullAny,
+                    _ => ForkText.tierOff,
                   },
                   subtitleMaxLines: 2,
                   onTap: () => _push(const ShellPermissionsPage()),
