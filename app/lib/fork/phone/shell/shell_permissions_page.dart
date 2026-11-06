@@ -276,8 +276,9 @@ class _ShellPermissionsPageState extends ConsumerState<ShellPermissionsPage> {
 
   Widget _groupSection(PhoneShellStatus shell, _CommandGroup group, Set<String> allowed, bool isSafe) {
     // 进阶模式：包管理和脚本整组锁死，不可勾选。
-    final locked = isSafe && (group.id == 'packages' || group.id == 'script');
-    final on = group.commands.every((c) => allowed.contains(c.name));
+    // 高危模式整档放行，逐条开关没有意义：全部显示为开、不可点，避免误导。
+    final locked = isFull || (isSafe && (group.id == 'packages' || group.id == 'script'));
+    final on = isFull || group.commands.every((c) => allowed.contains(c.name));
     final open = _expanded.contains(group.id);
 
     return SettingsSection(
@@ -285,7 +286,11 @@ class _ShellPermissionsPageState extends ConsumerState<ShellPermissionsPage> {
       children: [
         SettingsTile(
           title: '整组开关',
-          subtitle: locked ? '进阶模式下这一组锁死，切到高危才能用' : group.desc,
+          subtitle: isFull
+              ? '高危模式全部放行，下面只是命令清单'
+              : locked
+              ? '进阶模式下这一组锁死，切到高危才能用'
+              : group.desc,
           // 点整行 = 展开这一组；总开关在右边的 Switch 上，两个互不干扰。
           onTap: () => setState(() {
             if (open) {
@@ -298,7 +303,7 @@ class _ShellPermissionsPageState extends ConsumerState<ShellPermissionsPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(open ? AppIcons.collapse : AppIcons.expand, size: 20, color: Theme.of(context).colorScheme.outline),
-              Switch(value: locked ? false : on, onChanged: locked ? null : (v) => _toggleGroup(shell, group.id, v)),
+              Switch(value: on, onChanged: locked ? null : (v) => _toggleGroup(shell, group.id, v)),
             ],
           ),
         ),
@@ -307,7 +312,7 @@ class _ShellPermissionsPageState extends ConsumerState<ShellPermissionsPage> {
             SettingsSwitchTile(
               title: c.name,
               subtitle: c.desc,
-              value: locked ? false : allowed.contains(c.name),
+              value: locked ? true : allowed.contains(c.name),
               onChanged: locked ? null : (v) => _toggleCommand(shell, c.name, v),
             ),
       ],

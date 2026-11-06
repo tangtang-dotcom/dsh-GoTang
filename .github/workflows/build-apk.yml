@@ -40,7 +40,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: runtime/out
-          key: runtime-${{ hashFiles('runtime/build-runtime.sh', 'runtime/locks/**', 'runtime/patches/pins.json', 'runtime/bridge/**') }}
+          key: runtime-${{ hashFiles('runtime/build-runtime.sh', 'runtime/lib/**', 'runtime/locks/**', 'runtime/patches/pins.json', 'runtime/bridge/**', 'runtime/direct/**') }}
 
       - name: Toolchain (JDK 17, Flutter, Android SDK, NDK)
         # An APK build needs no emulator or system image; skipping them saves ~2 GB.

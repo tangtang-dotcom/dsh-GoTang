@@ -77,6 +77,7 @@ object ShellGuard {
     ): ShellVerdict {
         val cmd = command.trim()
         if (cmd.isEmpty()) return ShellVerdict.Deny("命令是空的。")
+        if (mode == ShellMode.ORIGINAL) return ShellVerdict.Deny("原版模式不执行 shell 命令。")
         if (mode == ShellMode.FULL) return ShellVerdict.Allow(cmd)
         val tokens = try {
             ForkLexer.lex(cmd)
@@ -139,6 +140,10 @@ object ShellGuard {
                     val body = args.joinToString(" ")
                     if (Regex("""system\s*\(|\bgetline\b""").containsMatchIn(body)) {
                         throw ForkSyntaxException("这个 awk 里有 system() 或 getline，可以在白名单外执行命令或读写文件，进阶模式下不允许。")
+                    }
+                    // awk 的 print > "file" 同样能绕过重定向检查；进阶模式只允许纯计算/打印。
+                    if (body.contains('>')) {
+                        throw ForkSyntaxException("这个 awk 里有输出重定向，进阶模式下不允许。")
                     }
                 }
                 "sed" -> {

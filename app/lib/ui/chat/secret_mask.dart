@@ -6,11 +6,9 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-
-import '../../fork/chat/tap_to_menu.dart';
-
 import 'package:flutter/rendering.dart';
 
+import '../../fork/chat/tap_to_menu.dart';
 import '../../l10n/l10n.dart';
 import '../theme/theme.dart';
 

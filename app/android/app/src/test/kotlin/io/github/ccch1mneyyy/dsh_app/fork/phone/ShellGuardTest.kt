@@ -44,6 +44,7 @@ class ShellGuardTest {
         assertTrue(denied("""awk '{while ((getline line) > 0) print line}' file""", allowed = safe + setOf("awk")))
         assertTrue(denied("""sed 's/x/setenforce 0/e' file""", allowed = safe + setOf("sed")))
         assertTrue(denied("""sed 's/x/y/e' file""", allowed = safe + setOf("sed")))
+        assertTrue(denied("""awk 'BEGIN{print "x" > "/sdcard/DCIM/y"}'""", allowed = safe + setOf("awk"), sdcardOn = true))
     }
 
     @Test
