@@ -323,6 +323,11 @@ void main() {
       expect(pill.size, const Size.square(PermissionPillMetrics.height));
     });
 
+    testWidgets('the plugins button switch is in this chat card', (tester) async {
+      await _openPanel(tester);
+      expect(find.text('显示「插件」按钮'), findsOneWidget);
+    });
+
     testWidgets('a tap opens this chat\'s permissions', (tester) async {
       await pumpChat(tester, const SessionModes(preset: 'auto'));
       expect(find.text('自动审查'), findsOneWidget);
