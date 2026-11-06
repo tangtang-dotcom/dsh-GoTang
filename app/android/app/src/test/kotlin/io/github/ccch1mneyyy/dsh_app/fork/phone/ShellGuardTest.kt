@@ -50,7 +50,7 @@ class ShellGuardTest {
     fun `quoted paths are still paths`() {
         assertTrue(denied("""rm "/sdcard/DCIM/x" """.trim(), allowed = safe + "rm", sdcardOn = true))
         assertTrue(denied("""cat '/data/adb/secret'"""))
-        assertTrue(denied("""ls "/data/data/io.github.ccch1mneyyy.dsh_app" """))
+        assertTrue(denied("""ls "/data/data/com.example.other" """))
         assertTrue(denied("""cp "/sdcard/DCIM/photo.jpg" /sdcard/Download/""", sdcardOn = true))
     }
 
@@ -72,7 +72,7 @@ class ShellGuardTest {
     fun `input redirection cannot read protected data`() {
         assertTrue(denied("cat </data/adb/secret"))
         assertTrue(denied("cat</data/adb/secret"))
-        assertTrue(denied("grep x </data/data/io.github.ccch1mneyyy.dsh_app/x"))
+        assertTrue(denied("grep x </data/data/com.example.other/x"))
     }
 
     @Test
