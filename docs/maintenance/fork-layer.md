@@ -44,7 +44,7 @@
 
 ## 合并检查
 
-1. `git diff upstream/main..HEAD --stat` 只应出现本文列出的路径和上游钩子。
+1. `tooling/fork_check.sh` 必须通过（差异只出现在本文列出的路径和上游钩子）。
 2. `python3 app/tool/l10n_merge.py --check` 必须通过。
 3. `dart format --output=none --page-width 120 app/lib app/test` 必须无改动。
 4. Android JVM 单测与 `flutter analyze --no-pub` 必须通过。
