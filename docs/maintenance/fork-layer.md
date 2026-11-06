@@ -19,7 +19,8 @@
 | `app/lib/fork/phone/shell/shell_permissions_page.dart` | 终端权限页面 |
 | `app/lib/fork/fork_text.dart` | fork 自有文案（中英），避免占用上游 l10n 键 |
 | `app/lib/fork/chat/root_pill.dart` | 输入框上方的终端档位胶囊 |
-| `app/lib/fork/chat/root_dock.dart` | 终端胶囊 + 完全权限同排 |
+| `app/lib/fork/chat/root_dock.dart` | 终端胶囊 + 完全权限 + 插件入口同排 |
+| `app/lib/fork/chat/plugins_pill.dart` | 「插件」入口胶囊（可收缩成方块） |
 
 `PhoneCore.kt` 的 `shell()`、`PhoneControl.kt` 的 `statusMap["shell"]`、
 `PhoneToolCatalog.kt` 的 `SHELL` 工具定义、`PhonePlugin.kt` 的三个 setter 是钩子。
@@ -28,7 +29,7 @@
 
 | 位置 | 作用 |
 | --- | --- |
-| `app/lib/fork/chat/chat_pill_prefs.dart` | 「这个对话」开关的持久化 |
+| `app/lib/fork/chat/chat_pill_prefs.dart` | 「这个对话」开关的持久化（完全权限提醒 / root 状态 / 插件按钮） |
 | `app/lib/fork/chat/plus_panel_switches.dart` | 开关 UI |
 | `app/lib/fork/chat/tap_to_menu.dart` | 消息轻点菜单 |
 | `app/lib/fork/chat/root_dock.dart` | 权限胶囊布局 |

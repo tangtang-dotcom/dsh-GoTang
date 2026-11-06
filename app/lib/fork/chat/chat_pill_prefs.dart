@@ -53,3 +53,29 @@ class ShowRootPill extends Notifier<bool> {
 }
 
 final showRootPillProvider = NotifierProvider<ShowRootPill, bool>(ShowRootPill.new);
+
+/// 是否显示输入条上方的「插件」按钮。
+///
+/// 默认显示；关掉后插件自己的动作胶囊还在，只是不再显示这个入口。
+class ShowPluginPill extends Notifier<bool> {
+  static const _key = 'chat.showPluginPill';
+
+  @override
+  bool build() {
+    _load();
+    return true;
+  }
+
+  Future<void> _load() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (ref.mounted) state = prefs.getBool(_key) ?? true;
+  }
+
+  Future<void> set(bool value) async {
+    state = value;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_key, value);
+  }
+}
+
+final showPluginPillProvider = NotifierProvider<ShowPluginPill, bool>(ShowPluginPill.new);

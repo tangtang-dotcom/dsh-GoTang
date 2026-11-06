@@ -25,6 +25,10 @@ abstract final class ForkText {
   static String get showRootSubtitle =>
       _en ? 'Hides the terminal tier bar in every chat when off' : '关闭后所有对话都不再显示终端档位条';
 
+  static String get showPluginTitle => _en ? 'Show the plugins button' : '显示「插件」按钮';
+  static String get showPluginSubtitle =>
+      _en ? 'Hides the plugins entry above the composer in every chat when off' : '关闭后所有对话都不再显示输入框上方的插件入口';
+
   // Phone settings entry.
   static String get terminalPermissions => _en ? 'Terminal permissions' : '终端权限';
   static String tierSafeCount(int n) => _en ? 'Advanced · $n commands allowed' : '进阶模式 · 已允许 $n 条命令';

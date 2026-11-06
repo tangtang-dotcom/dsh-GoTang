@@ -248,13 +248,22 @@ List<CapsuleItem> composerCapsules(
 /// The row on the chat screen. [visible] false (a reply generating, read
 /// only) folds it away; with no capsules and no [leading] it takes no room.
 class ComposerCapsuleBar extends ConsumerStatefulWidget {
-  const ComposerCapsuleBar({super.key, required this.sessionId, required this.visible, this.leading});
+  const ComposerCapsuleBar({
+    super.key,
+    required this.sessionId,
+    required this.visible,
+    this.leading,
+    this.showChatPluginsCapsule = true,
+  });
 
   final String? sessionId;
   final bool visible;
 
   /// See [ComposerCapsuleRow.leading].
   final Widget? leading;
+
+  /// False when another row already carries the plugins entry.
+  final bool showChatPluginsCapsule;
 
   @override
   ConsumerState<ComposerCapsuleBar> createState() => _ComposerCapsuleBarState();
@@ -273,7 +282,10 @@ class _ComposerCapsuleBarState extends ConsumerState<ComposerCapsuleBar> {
     final session = widget.sessionId;
     final items = [
       ...composerCapsules(context, ref, sessionId: session, quick: quick, plugins: plugins),
-      if (!hidePluginCapsule && session != null && ref.watch(chatPluginsHaveContentProvider(session)))
+      if (widget.showChatPluginsCapsule &&
+          !hidePluginCapsule &&
+          session != null &&
+          ref.watch(chatPluginsHaveContentProvider(session)))
         CapsuleItem(
           id: chatPluginsCapsuleId,
           label: context.l10n.plugslotsChatEntry,

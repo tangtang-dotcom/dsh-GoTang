@@ -1898,6 +1898,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> with WidgetsBindingObse
                                       visible: !running,
                                       leading: pillsInCapsules ? composerPills : null,
                                       strip: false,
+                                      showChatPluginsCapsule: !rootPillShown,
                                     ),
                                   ),
                                 if (readOnly)

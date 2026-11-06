@@ -17,6 +17,7 @@ class NativeComposerBar extends ConsumerStatefulWidget {
     required this.visible,
     this.leading,
     this.strip = true,
+    this.showChatPluginsCapsule = true,
   });
 
   /// The conversation on screen; null on the new-chat screen.
@@ -31,6 +32,9 @@ class NativeComposerBar extends ConsumerStatefulWidget {
   /// Draws the status line too; false where it is a card of the chat's dock
   /// deck instead (`DockStack`).
   final bool strip;
+
+  /// False when the chat's own row already carries the plugins entry.
+  final bool showChatPluginsCapsule;
 
   @override
   ConsumerState<NativeComposerBar> createState() => _NativeComposerBarState();
@@ -59,7 +63,12 @@ class _NativeComposerBarState extends ConsumerState<NativeComposerBar> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (widget.strip) ComposerStripSlot(sessionId: widget.sessionId, visible: widget.visible),
-          ComposerCapsuleBar(sessionId: widget.sessionId, visible: widget.visible, leading: widget.leading),
+          ComposerCapsuleBar(
+            sessionId: widget.sessionId,
+            visible: widget.visible,
+            leading: widget.leading,
+            showChatPluginsCapsule: widget.showChatPluginsCapsule,
+          ),
         ],
       ),
     );

@@ -31,4 +31,14 @@ List<Widget> forkChatPillSwitches(BuildContext context, WidgetRef ref) => [
       ),
     ),
   ),
+  MergeSemantics(
+    child: ListPageRow(
+      title: ForkText.showPluginTitle,
+      subtitle: ForkText.showPluginSubtitle,
+      trailing: Switch(
+        value: ref.watch(showPluginPillProvider),
+        onChanged: (v) => unawaited(ref.read(showPluginPillProvider.notifier).set(v)),
+      ),
+    ),
+  ),
 ];
