@@ -30,7 +30,7 @@ class ToolchainInstaller(unittest.TestCase):
 
     def test_app_invokes_that_exact_path(self):
         installer = (REPO / 'app/android/app/src/main/kotlin/io/github/ccch1mneyyy/'
-                            'dsh_app/runtime/ToolchainInstaller.kt').read_text()
+                            'dsh_app/fork/runtime/ToolchainInstaller.kt').read_text()
         self.assertIn('internal const val TOOLCHAIN_SCRIPT = "%s"' % rtbuild.TOOLCHAIN_SCRIPT, installer)
         self.assertNotIn('"/root/install-tools.sh"', installer)
 
