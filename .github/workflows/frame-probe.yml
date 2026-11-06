@@ -1,0 +1,55 @@
+name: Frame Probe
+
+on:
+  workflow_dispatch:
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Free disk space
+        run: |
+          df -h /
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android/sdk/emulator \
+                      /usr/local/lib/android/sdk/system-images /opt/ghc /opt/hostedtoolcache/CodeQL \
+                      /usr/local/.ghcup /usr/share/swift 2>/dev/null || true
+          docker image prune --all --force 2>/dev/null || true
+          df -h /
+
+      - name: Cache runtime build
+        uses: actions/cache@v4
+        with:
+          path: runtime/out
+          key: runtime-${{ hashFiles('runtime/build-runtime.sh', 'runtime/locks/**', 'runtime/patches/pins.json', 'runtime/bridge/**') }}
+
+      - name: Toolchain (JDK 17, Flutter, Android SDK, NDK)
+        env:
+          INSTALL_EMULATOR: 0
+        run: bash tooling/setup-toolchain.sh
+
+      - name: Runtime (rootfs, proot, Node)
+        run: |
+          set -euo pipefail
+          source tooling/env.sh
+          bash runtime/build-runtime.sh arm64-v8a
+
+      - name: APK (profile, frame probe)
+        run: |
+          set -euo pipefail
+          source tooling/env.sh
+          export FLUTTER_STORAGE_BASE_URL=https://storage.googleapis.com
+          export PUB_HOSTED_URL=https://pub.dev
+          bash tooling/build-apk.sh -f arm64 --profile -- \
+            --dart-define=DSH_FRAME_PROBE=true \
+            --dart-define=DSH_UI_TRACE=true
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: dsh-go-frame-probe-${{ github.sha }}
+          if-no-files-found: error
+          retention-days: 7
+          path: app/build/app/outputs/flutter-apk/*.apk
