@@ -246,7 +246,7 @@ class _ShellPermissionsPageState extends ConsumerState<ShellPermissionsPage> {
             ],
           ),
           if (_showCommands)
-            for (final group in _groups(shell)) _groupSection(shell, group, allowed, isSafe),
+            for (final group in _groups(shell)) _groupSection(shell, group, allowed, isSafe: isSafe, isFull: isFull),
           _RecentSection(limit: 100, open: _showRecent, onOpenChanged: _setShowRecent),
         ],
       ],
@@ -268,7 +268,13 @@ class _ShellPermissionsPageState extends ConsumerState<ShellPermissionsPage> {
     ];
   }
 
-  Widget _groupSection(PhoneShellStatus shell, _CommandGroup group, Set<String> allowed, bool isSafe) {
+  Widget _groupSection(
+    PhoneShellStatus shell,
+    _CommandGroup group,
+    Set<String> allowed, {
+    required bool isSafe,
+    required bool isFull,
+  }) {
     // 进阶模式：包管理和脚本整组锁死，不可勾选。
     // 高危模式整档放行，逐条开关没有意义：全部显示为开、不可点，避免误导。
     final locked = isFull || (isSafe && (group.id == 'packages' || group.id == 'script'));
