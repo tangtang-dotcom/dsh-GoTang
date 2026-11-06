@@ -205,7 +205,6 @@ class MainActivity : FlutterActivity() {
     private var framesActive = true
 
     companion object {
-
         private const val ENGINE_ID = "dsh-main"
 
         /** The app is on screen (resumed). */
