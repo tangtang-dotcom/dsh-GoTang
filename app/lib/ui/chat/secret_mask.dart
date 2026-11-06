@@ -7,7 +7,8 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
-import 'widgets/tap_to_menu.dart';
+import '../../fork/chat/tap_to_menu.dart';
+
 import 'package:flutter/rendering.dart';
 
 import '../../l10n/l10n.dart';

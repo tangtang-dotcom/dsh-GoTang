@@ -1152,17 +1152,19 @@ class PhoneShellStatus {
     this.allowed = const <String>[],
     this.sdcardAllowed = false,
     this.commands = const <PhoneShellCommand>[],
+    this.groups = const <PhoneShellGroup>[],
   });
 
   factory PhoneShellStatus.fromMap(Map<Object?, Object?> m) => PhoneShellStatus(
     mode: (m['mode'] as String?) ?? 'original',
     allowed: (m['allowed'] as List?)?.whereType<String>().toList(growable: false) ?? const <String>[],
     sdcardAllowed: m['sdcardAllowed'] == true,
-    commands: (m['commands'] as List?)
-            ?.whereType<Map>()
-            .map((e) => PhoneShellCommand.fromMap(e))
-            .toList(growable: false) ??
+    commands:
+        (m['commands'] as List?)?.whereType<Map>().map((e) => PhoneShellCommand.fromMap(e)).toList(growable: false) ??
         const <PhoneShellCommand>[],
+    groups:
+        (m['groups'] as List?)?.whereType<Map>().map((e) => PhoneShellGroup.fromMap(e)).toList(growable: false) ??
+        const <PhoneShellGroup>[],
   );
 
   /// original / safe / full。
@@ -1170,11 +1172,24 @@ class PhoneShellStatus {
   final List<String> allowed;
   final bool sdcardAllowed;
   final List<PhoneShellCommand> commands;
+  final List<PhoneShellGroup> groups;
 
   bool get isOriginal => mode == 'original';
   bool get isFull => mode == 'full';
   bool get isSafe => mode == 'safe';
   bool isAllowed(String name) => allowed.contains(name);
+}
+
+/// 命令分组：设置页按这个顺序和标题展示。
+class PhoneShellGroup {
+  const PhoneShellGroup(this.id, this.title, {this.desc = ''});
+
+  factory PhoneShellGroup.fromMap(Map m) =>
+      PhoneShellGroup((m['id'] as String?) ?? '', (m['title'] as String?) ?? '', desc: (m['desc'] as String?) ?? '');
+
+  final String id;
+  final String title;
+  final String desc;
 }
 
 /// 命令清单里的一条。

@@ -11,7 +11,7 @@ import 'package:dsh_app/state/session_modes.dart';
 import 'package:dsh_app/ui/chat/chat_screen.dart';
 import 'package:dsh_app/ui/chat/composer.dart';
 import 'package:dsh_app/ui/chat/dock/dock_pill.dart';
-import 'package:dsh_app/ui/chat/dock/root_pill.dart';
+import 'package:dsh_app/fork/chat/root_pill.dart';
 import 'package:dsh_app/ui/chat/widgets/permission_pill.dart';
 import 'package:dsh_app/ui/chat/widgets/plus_panel.dart';
 import 'package:dsh_app/ui/common/list_page_row.dart';

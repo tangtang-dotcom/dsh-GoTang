@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../state/chat_pill_prefs.dart';
-import '../../state/phone_state.dart';
-import '../settings/settings_widgets.dart';
-import '../theme/app_icons.dart';
-import '../shell/page_frame.dart';
+import '../../chat/chat_pill_prefs.dart';
+import '../../../state/phone_state.dart';
+import '../../../ui/settings/settings_widgets.dart';
+import '../../../ui/theme/app_icons.dart';
+import '../../../ui/shell/page_frame.dart';
 
 const _prefShowCommands = 'shell_show_commands';
 const _prefShowRecent = 'shell_show_recent';
@@ -234,17 +234,14 @@ class _ShellPermissionsPageState extends ConsumerState<ShellPermissionsPage> {
               if (!isFull)
                 SettingsSwitchTile(
                   title: '允许读写整个 /sdcard',
-                  subtitle: sdcard
-                      ? '已允许：包括照片和别的 App 的文件夹（相册只能看，不能写也不能删）'
-                      : '未允许：只能写 Download',
+                  subtitle: sdcard ? '已允许：包括照片和别的 App 的文件夹（相册只能看，不能写也不能删）' : '未允许：只能写 Download',
                   value: sdcard,
                   onChanged: (v) => _toggleSdcard(shell, v),
                 ),
             ],
           ),
           if (_showCommands)
-            for (final group in _groups(shell))
-              _groupSection(shell, group, allowed, isSafe),
+            for (final group in _groups(shell)) _groupSection(shell, group, allowed, isSafe),
           _RecentSection(limit: 100, open: _showRecent, onOpenChanged: _setShowRecent),
         ],
       ],
@@ -252,41 +249,21 @@ class _ShellPermissionsPageState extends ConsumerState<ShellPermissionsPage> {
   }
 
   List<_CommandGroup> _groups(PhoneShellStatus shell) {
-    final order = <String>['read', 'file', 'system', 'network', 'packages', 'script'];
-    final titles = <String, String>{
-      'read': '只读命令',
-      'file': '文件操作',
-      'system': '系统操作',
-      'network': '网络',
-      'packages': '包管理',
-      'script': '脚本执行',
-    };
-    final descs = <String, String>{
-      'read': '只看不改：读文件、看进程和系统状态',
-      'file': '复制、移动、删除；只能碰 Download、tmp、App 私有目录',
-      'system': '安卓层面的开关：装应用、模拟点击、改设置',
-      'network': '联网请求、测速、查 DNS',
-      'packages': 'apt / pip / npm / git，第一次用要联网',
-      'script': '把整段脚本交给解释器：内容不受白名单约束',
-    };
+    // 分组顺序和标题都来自原生 ShellCommands.GROUPS；这里不再维护第二份清单。
+    final groups = shell.groups.isEmpty ? const <PhoneShellGroup>[] : shell.groups;
     return [
-      for (final id in order)
-        if (shell.commands.any((c) => c.group == id))
+      for (final g in groups)
+        if (shell.commands.any((c) => c.group == g.id))
           _CommandGroup(
-            id: id,
-            title: titles[id] ?? id,
-            desc: descs[id] ?? '',
-            commands: shell.commands.where((c) => c.group == id).toList(growable: false),
+            id: g.id,
+            title: g.title,
+            desc: g.desc,
+            commands: shell.commands.where((c) => c.group == g.id).toList(growable: false),
           ),
     ];
   }
 
-  Widget _groupSection(
-    PhoneShellStatus shell,
-    _CommandGroup group,
-    Set<String> allowed,
-    bool isSafe,
-  ) {
+  Widget _groupSection(PhoneShellStatus shell, _CommandGroup group, Set<String> allowed, bool isSafe) {
     // 进阶模式：包管理和脚本整组锁死，不可勾选。
     final locked = isSafe && (group.id == 'packages' || group.id == 'script');
     final on = group.commands.every((c) => allowed.contains(c.name));
@@ -309,16 +286,8 @@ class _ShellPermissionsPageState extends ConsumerState<ShellPermissionsPage> {
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                open ? AppIcons.collapse : AppIcons.expand,
-                size: 20,
-                color: Theme.of(context).colorScheme.outline,
-              ),
-              Switch(
-                value: locked ? false : on,
-                onChanged: locked ? null : (v) => _toggleGroup(shell, group.id, v),
-              ),
-
+              Icon(open ? AppIcons.collapse : AppIcons.expand, size: 20, color: Theme.of(context).colorScheme.outline),
+              Switch(value: locked ? false : on, onChanged: locked ? null : (v) => _toggleGroup(shell, group.id, v)),
             ],
           ),
         ),
@@ -336,12 +305,7 @@ class _ShellPermissionsPageState extends ConsumerState<ShellPermissionsPage> {
 }
 
 class _CommandGroup {
-  const _CommandGroup({
-    required this.id,
-    required this.title,
-    required this.desc,
-    required this.commands,
-  });
+  const _CommandGroup({required this.id, required this.title, required this.desc, required this.commands});
 
   final String id;
   final String title;
@@ -373,10 +337,7 @@ class _TierTile extends StatelessWidget {
       title: label,
       subtitle: summary,
       onTap: onTap,
-      trailing: Icon(
-        selected ? AppIcons.completed : AppIcons.radioOff,
-        color: selected ? tone : scheme.outlineVariant,
-      ),
+      trailing: Icon(selected ? AppIcons.completed : AppIcons.radioOff, color: selected ? tone : scheme.outlineVariant),
     );
   }
 }
@@ -411,9 +372,7 @@ class _RecentSectionState extends ConsumerState<_RecentSection> {
       children: [
         SettingsSwitchTile(
           title: '展开最近记录',
-          subtitle: entries.isEmpty
-              ? '还没有记录'
-              : '最近 ${entries.length} 条（最多 ${widget.limit}）',
+          subtitle: entries.isEmpty ? '还没有记录' : '最近 ${entries.length} 条（最多 ${widget.limit}）',
           value: widget.open,
           onChanged: widget.onOpenChanged,
         ),

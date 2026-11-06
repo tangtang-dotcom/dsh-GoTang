@@ -25,7 +25,7 @@ import '../../../l10n/l10n.dart';
 import '../../../plugins/native/native_model.dart';
 import '../../../plugins/native/native_state.dart';
 import '../../../state/chat_state.dart';
-import '../../../state/chat_pill_prefs.dart';
+import '../../../fork/chat/plus_panel_switches.dart';
 import '../../../state/connection_state.dart';
 import '../../../state/features_state.dart';
 import '../../../state/hosts_state.dart';
@@ -294,26 +294,7 @@ class _ThisChatCardState extends ConsumerState<_ThisChatCard> {
             trailing: Switch(value: plan, onChanged: _busy ? null : (v) => unawaited(_togglePlan(v))),
           ),
         ),
-        MergeSemantics(
-          child: ListPageRow(
-            title: '隐藏「完全权限」提醒',
-            subtitle: '只是不再提示，对话权限本身不变',
-            trailing: Switch(
-              value: ref.watch(hidePermissionPillProvider),
-              onChanged: (v) => unawaited(ref.read(hidePermissionPillProvider.notifier).set(v)),
-            ),
-          ),
-        ),
-        MergeSemantics(
-          child: ListPageRow(
-            title: '在输入框上方显示 root 状态',
-            subtitle: '关闭后不再显示终端档位条',
-            trailing: Switch(
-              value: ref.watch(showRootPillProvider),
-              onChanged: (v) => unawaited(ref.read(showRootPillProvider.notifier).set(v)),
-            ),
-          ),
-        ),
+        ...forkChatPillSwitches(context, ref),
       ],
     );
   }

@@ -19,7 +19,8 @@ import '../../state/agents_state.dart' show subagentParentProvider;
 import '../../state/attachments.dart';
 import '../../state/balance_state.dart';
 import '../../state/chat_error_text.dart';
-import '../../state/chat_pill_prefs.dart';
+import '../../fork/chat/chat_pill_prefs.dart';
+import '../../fork/chat/root_dock.dart';
 import '../../state/chat_state.dart';
 import '../../state/commands_state.dart';
 import '../../state/compose_inbox.dart';
@@ -80,7 +81,7 @@ import 'composer_toast.dart';
 import 'dock/chat_dock.dart';
 import 'dock/dock_pill.dart';
 import 'dock/dock_stack.dart';
-import 'dock/root_pill.dart';
+import '../../fork/chat/root_pill.dart';
 import 'empty_state.dart';
 import 'empty_actions.dart';
 import 'media/generate_mode.dart';
@@ -1516,7 +1517,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> with WidgetsBindingObse
     final pillsBesideStrip = sessionId != null && running && !typing;
     final pillsInCapsules = !readOnly && !running && !typing;
     // 终端胶囊在上、完全权限在下时是两行；两者同开时合成一行，
-    // 完全权限收成右端的圆形 ⚠（见 [_rootDock]）。
+    // 完全权限收成右端的圆形 ⚠（见 [ForkRootDock]）。
     final rootPillShown = sessionId != null && local && !pillsBesideStrip && ref.watch(showRootPillProvider);
     final composerPills = _composerPills(
       sessionId,
@@ -1848,7 +1849,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> with WidgetsBindingObse
                                           if (rootPillShown)
                                             DockSlot(
                                               key: const ValueKey('root'),
-                                              child: _rootDock(sessionId, autoApprove: chat?.autoApprove ?? false),
+                                              child: ForkRootDock(
+                                                sessionId: sessionId,
+                                                autoApprove: chat?.autoApprove ?? false,
+                                              ),
                                             ),
                                           TodoDockSlot(sessionId: sessionId),
                                           GoalDockSlot(sessionId: sessionId),
@@ -1981,22 +1985,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> with WidgetsBindingObse
       ),
     );
     return UiTrace(scope: 'chat', child: screen);
-  }
-
-  /// 终端胶囊与「完全权限」合成的一行：终端胶囊占满，完全权限收成右端的
-  /// 圆形 ⚠，各点各的（终端进设置、⚠ 进会话权限）；没有 ⚠ 就只放终端胶囊。
-  Widget _rootDock(String? sessionId, {required bool autoApprove}) {
-    final risky = sessionId == null || autoApprove
-        ? null
-        : ref.watch(sessionModesProvider(sessionId).select((m) => m.risky ? m.preset : null));
-    if (risky == null || ref.watch(hidePermissionPillProvider)) return const RootPill();
-    return Row(
-      children: [
-        const Expanded(child: RootPill()),
-        const SizedBox(width: DockMetrics.gap),
-        PermissionPill(preset: risky, compact: true, onTap: () => unawaited(showPermissionSheet(context, sessionId!))),
-      ],
-    );
   }
 
   /// What sits on the composer's top-left edge: 「自动允许中 ×」 while this

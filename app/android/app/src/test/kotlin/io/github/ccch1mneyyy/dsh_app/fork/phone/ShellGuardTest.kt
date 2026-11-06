@@ -4,7 +4,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * 进阶模式（SAFE）的静态判定：白名单只看段首词，所以相对路径、包装器和内嵌执行都不能漏。
+ * 进阶模式（SAFE）的静态判定：词法 + 语法树，白名单之外还要检查路径、重定向和包装器。
  */
 class ShellGuardTest {
     private val safe = ShellCommands.SAFE_DEFAULT
@@ -40,10 +40,52 @@ class ShellGuardTest {
 
     @Test
     fun `embedded execution inside awk and sed is refused`() {
-        assertTrue(denied("""awk 'BEGIN{system("setenforce 0")}'"""))
-        assertTrue(denied("""awk '{while ((getline line) > 0) print line}' file"""))
-        assertTrue(denied("""sed 's/x/setenforce 0/e' file"""))
-        assertTrue(denied("""sed 's/x/y/e' file"""))
+        assertTrue(denied("""awk 'BEGIN{system("setenforce 0")}'""", allowed = safe + setOf("awk")))
+        assertTrue(denied("""awk '{while ((getline line) > 0) print line}' file""", allowed = safe + setOf("awk")))
+        assertTrue(denied("""sed 's/x/setenforce 0/e' file""", allowed = safe + setOf("sed")))
+        assertTrue(denied("""sed 's/x/y/e' file""", allowed = safe + setOf("sed")))
+    }
+
+    @Test
+    fun `quoted paths are still paths`() {
+        assertTrue(denied("""rm "/sdcard/DCIM/x" """.trim(), allowed = safe + "rm", sdcardOn = true))
+        assertTrue(denied("""cat '/data/adb/secret'"""))
+        assertTrue(denied("""ls "/data/data/io.github.ccch1mneyyy.dsh_app" """))
+        assertTrue(denied("""cp "/sdcard/DCIM/photo.jpg" /sdcard/Download/""", sdcardOn = true))
+    }
+
+    @Test
+    fun `long option values are checked like short ones`() {
+        assertTrue(denied("cp --target-directory=/sdcard/DCIM /sdcard/Download/a", sdcardOn = true))
+        assertTrue(denied("cp --target-directory /sdcard/DCIM /sdcard/Download/a", sdcardOn = true))
+    }
+
+    @Test
+    fun `single ampersand and subshells are rejected`() {
+        assertTrue(denied("echo x & reboot"))
+        assertTrue(denied("echo x |& reboot"))
+        assertTrue(denied("(reboot)"))
+        assertTrue(denied("echo x; (reboot)"))
+    }
+
+    @Test
+    fun `input redirection cannot read protected data`() {
+        assertTrue(denied("cat </data/adb/secret"))
+        assertTrue(denied("cat</data/adb/secret"))
+        assertTrue(denied("grep x </data/data/io.github.ccch1mneyyy.dsh_app/x"))
+    }
+
+    @Test
+    fun `find cannot write into the album`() {
+        assertTrue(denied("find /sdcard/DCIM -fprintf /sdcard/DCIM/log %p", sdcardOn = true))
+        assertTrue(denied("find /sdcard/DCIM -fls /sdcard/Download/list", sdcardOn = true))
+    }
+
+    @Test
+    fun `cmd cannot bypass the locked package group`() {
+        assertTrue(denied("cmd package clear com.example", allowed = safe + "cmd"))
+        assertTrue(denied("cmd settings put global x y", allowed = safe + "cmd"))
+        assertTrue(allowed("cmd battery get level", allowed = safe + "cmd"))
     }
 
     @Test
@@ -52,9 +94,9 @@ class ShellGuardTest {
         assertTrue(allowed("cat /sdcard/DCIM/a.jpg", sdcardOn = true))
         assertTrue(denied("cp /sdcard/DCIM/a.jpg /sdcard/Download/", sdcardOn = true))
         assertTrue(denied("mv /sdcard/DCIM/a.jpg /sdcard/Download/", sdcardOn = true))
-        assertTrue(denied("rm /sdcard/DCIM/a.jpg", sdcardOn = true))
-        assertTrue(denied("sort -o /sdcard/DCIM/x /sdcard/DCIM/y", sdcardOn = true))
-        assertTrue(denied("logcat -f /sdcard/DCIM/log.txt", sdcardOn = true))
+        assertTrue(denied("rm /sdcard/DCIM/a.jpg", allowed = safe + "rm", sdcardOn = true))
+        assertTrue(denied("sort -o /sdcard/DCIM/x /sdcard/DCIM/y", allowed = safe + "sort", sdcardOn = true))
+        assertTrue(denied("logcat -f /sdcard/DCIM/log.txt", allowed = safe + "logcat", sdcardOn = true))
         assertTrue(denied("echo x > /sdcard/DCIM/x", sdcardOn = true))
     }
 
@@ -67,12 +109,12 @@ class ShellGuardTest {
 
     @Test
     fun `write commands reject dot dot hops`() {
-        assertTrue(denied("rm /sdcard/Download/../DCIM/a.jpg", sdcardOn = true))
+        assertTrue(denied("rm /sdcard/Download/../DCIM/a.jpg", allowed = safe + "rm", sdcardOn = true))
         assertTrue(denied("cp /sdcard/Download/a /sdcard/Download/../x", sdcardOn = true))
     }
 
     @Test
-    fun `cp with a -t target directory is not treated as move`() {
+    fun `cp with a target directory is not treated as move`() {
         assertTrue(allowed("cp -t /sdcard/Download /data/local/tmp/a", sdcardOn = true))
         assertTrue(denied("cp -t /sdcard/DCIM /data/local/tmp/a", sdcardOn = true))
     }
@@ -96,8 +138,10 @@ class ShellGuardTest {
         assertTrue(allowed("cat /sdcard/Download/notes.txt"))
         assertTrue(allowed("ps -A"))
         assertTrue(allowed("echo hello"))
+        assertTrue(allowed("""echo "a;b""""))
         assertTrue(allowed("cd /root; cat env.sh"))
         assertTrue(allowed("grep -n foo /root/.bashrc"))
+        assertTrue(allowed("""cd "/sdcard/My Folder"; ls""", sdcardOn = true))
     }
 
     @Test

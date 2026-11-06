@@ -4,11 +4,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../state/phone_state.dart';
-import '../../phone/shell_permissions_page.dart';
-import '../../theme/app_icons.dart';
-import '../../theme/theme.dart';
-import 'dock_pill.dart';
+import '../../state/phone_state.dart';
+import '../phone/shell/shell_permissions_page.dart';
+import '../../ui/theme/app_icons.dart';
+import '../../ui/theme/theme.dart';
+import '../../ui/chat/dock/dock_pill.dart';
+import '../../ui/phone/phone_control_screen.dart';
 
 /// 「▣ 启用终端                  点击设置」
 /// 「▣ 终端 · 进阶               点击设置」
@@ -34,13 +35,13 @@ class RootPill extends ConsumerWidget {
       return Semantics(
         button: true,
         label: '$label，点击设置终端权限',
-        onTap: () => _open(context),
+        onTap: () => _open(context, enabled: phone.enabled),
         excludeSemantics: true,
         child: GlassSurface(
           tier: GlassTier.chrome,
           borderRadius: BorderRadius.circular(DockMetrics.radius),
           grouped: true,
-          onTap: () => _open(context),
+          onTap: () => _open(context, enabled: phone.enabled),
           child: SizedBox(
             width: DockMetrics.height,
             height: DockMetrics.height,
@@ -52,13 +53,13 @@ class RootPill extends ConsumerWidget {
     return Semantics(
       button: true,
       label: '$label，点击设置终端权限',
-      onTap: () => _open(context),
+      onTap: () => _open(context, enabled: phone.enabled),
       excludeSemantics: true,
       child: GlassSurface(
         tier: GlassTier.chrome,
         borderRadius: DockMetrics.shape,
         grouped: true,
-        onTap: () => _open(context),
+        onTap: () => _open(context, enabled: phone.enabled),
         child: DockRow(
           leading: DockGlyph.icon(icon, color: color),
           content: Text(label, style: DockText.title(context, color: color)),
@@ -68,9 +69,9 @@ class RootPill extends ConsumerWidget {
     );
   }
 
-  void _open(BuildContext context) {
+  void _open(BuildContext context, {required bool enabled}) {
     Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => const ShellPermissionsPage()),
+      MaterialPageRoute<void>(builder: (_) => enabled ? const ShellPermissionsPage() : const PhoneControlScreen()),
     );
   }
 }

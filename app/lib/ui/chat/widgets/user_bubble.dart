@@ -12,7 +12,7 @@ import '../media/media_format.dart' show mediaParamsLine;
 import '../mention/mention_chip.dart';
 import '../secret_mask.dart';
 import 'message_actions.dart';
-import 'tap_to_menu.dart';
+import '../../../fork/chat/tap_to_menu.dart';
 import 'quote_chip.dart';
 
 /// 用户消息:**右对齐的软气泡**,比页面深一档,像"按进去"的(Claude 式)。

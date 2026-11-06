@@ -173,54 +173,15 @@ class PhoneCore(
         }
     }
 
-    /** `shell`: 档位 → 守卫 → 执行，三步都过了才真跑。 */
+    /** `shell`: 全部逻辑在 fork 层（ForkShell），这里只做参数转换。 */
     private fun shell(a: Args): Out {
-        val policy = env.shellPolicy()
-        if (policy.mode == ShellMode.ORIGINAL) {
-            return Out(
-                "终端权限没开。请用户在 设置 → 终端权限 里切到「进阶模式」或「高危模式」。",
-                error = true,
-                summary = PhoneToolCatalog.SHELL,
-                decision = "refused:original",
-            )
-        }
-        val command = a.str("command").orEmpty().trim()
-        val summary = command.take(120).replace('\n', ' ')
-        if (command.isEmpty()) return Out("command 不能为空。", error = true, summary = summary)
-        when (val verdict = ShellGuard.judge(policy.mode, command, policy.allowed, policy.sdcardAllowed)) {
-            is ShellVerdict.Deny -> return Out(
-                verdict.reason,
-                error = true,
-                summary = summary,
-                decision = "refused:guard",
-            )
-            is ShellVerdict.Confirm -> return Out(
-                "这条命令会执行脚本，需要用户在弹窗里确认后再重试。",
-                error = true,
-                summary = summary,
-                decision = "needs-confirm",
-            )
-            ShellVerdict.Allow -> Unit
-        }
-        val timeoutMs = (a.int("timeoutMs")?.toLong() ?: 20_000L).coerceIn(1_000L, 120_000L)
-        val result = ShellRunner.execute(command, timeoutMs, env.cacheDir())
-        result.failed?.let { return Out(it, error = true, summary = summary) }
-        val prefix = if (result.timedOut) "（超时 ${timeoutMs}ms，已终止）\n" else ""
-        val code = result.exitCode
-        // 非零退出码是失败：模型和操作记录都不能把它当成成功。
-        val failed = !result.timedOut && code != null && code != 0
-        val tail = if (failed) "\n（退出码 $code）" else ""
-        val body = if (prefix.isEmpty() && result.output.isBlank()) "（没有输出）" else prefix + result.output
-        return Out(
-            body + tail,
-            error = failed,
-            summary = summary,
-            decision = when {
-                result.timedOut -> "timeout"
-                failed -> "failed"
-                else -> null
-            },
+        val result = ForkShell.run(
+            env.shellPolicy(),
+            a.str("command").orEmpty(),
+            (a.int("timeoutMs")?.toLong() ?: 20_000L).coerceIn(1_000L, 120_000L),
+            env.cacheDir(),
         )
+        return Out(result.text, error = result.error, summary = result.summary, decision = result.decision)
     }
 
     // ── System actions ──────────────────────────────────────────────────────────────

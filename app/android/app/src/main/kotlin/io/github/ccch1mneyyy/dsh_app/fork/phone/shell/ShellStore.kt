@@ -6,8 +6,7 @@ import android.content.SharedPreferences
 /**
  * 终端权限的偏好：档位、命令白名单、是否放开整个 /sdcard。
  *
- * 单独一个文件，是为了让 [PhoneControl] 只留几个转发方法 —— 上游改那个文件时
- * 我们几乎不会撞车。
+ * fork 层文件：`PhoneControl` 只留三个转发方法，合并上游时不会和它的业务代码纠缠。
  */
 internal class ShellPolicyStore private constructor(private val prefs: SharedPreferences) {
 
@@ -47,14 +46,13 @@ internal class ShellPolicyStore private constructor(private val prefs: SharedPre
     }
 }
 
-/** 一次 shell 调用看到的事实；[PhoneEnv.shellPolicy] 返回它。 */
-data class ShellPolicy(
-    val mode: ShellMode,
-    val allowed: Set<String>,
-    val sdcardAllowed: Boolean,
-) {
-    companion object {
-        /** 默认原版：没有终端能力。 */
-        val DISABLED = ShellPolicy(ShellMode.ORIGINAL, emptySet(), false)
-    }
+/** 设置页需要的完整状态；[PhoneControl.status] 把它放进 `shell` 字段。 */
+internal object ForkShellStatus {
+    fun map(policy: ShellPolicy): Map<String, Any?> = linkedMapOf(
+        "mode" to policy.mode.key,
+        "allowed" to policy.allowed.sorted(),
+        "sdcardAllowed" to policy.sdcardAllowed,
+        "commands" to ShellCommands.CATALOG,
+        "groups" to ShellCommands.GROUPS,
+    )
 }

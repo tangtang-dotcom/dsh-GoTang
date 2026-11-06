@@ -6,7 +6,7 @@ import 'package:dsh_app/runtime/runtime_bridge.dart';
 import 'package:dsh_app/runtime/runtime_state.dart';
 import 'package:dsh_app/state/attachments.dart';
 import 'package:dsh_app/state/balance_state.dart';
-import 'package:dsh_app/state/chat_pill_prefs.dart';
+import 'package:dsh_app/fork/chat/chat_pill_prefs.dart';
 import 'package:dsh_app/state/chat_state.dart';
 import 'package:dsh_app/state/commands_state.dart';
 import 'package:dsh_app/state/connection_state.dart';

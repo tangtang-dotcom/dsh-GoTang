@@ -3,7 +3,7 @@ package io.github.ccch1mneyyy.dsh_app.phone
 import java.io.File
 import java.util.concurrent.TimeUnit
 
-/** 一次命令的结果；[PhoneCore] 只负责把它变成给模型的文字。 */
+/** 一次命令的结果；[ForkShell] 只负责把它变成给模型的文字。 */
 internal data class ShellResult(
     val output: String,
     val timedOut: Boolean,
@@ -15,9 +15,8 @@ internal data class ShellResult(
 /**
  * `su -c` 直连执行一条命令。
  *
- * 和虚拟屏那套特权进程分开：终端不需要不打扰模式，只要手机有 su。输出写临时文件
- * 而不是走管道 —— 管道 64 KiB 塞满时子进程会卡住（`logcat -d`、`dumpsys`、`find /`
- * 都会越线）。
+ * 输出写临时文件而不是走管道 —— 管道 64 KiB 塞满时子进程会卡住（`logcat -d`、`dumpsys`、
+ * `find /` 都会越线）。超时后按 /proc 里的父子关系自底向上杀，避免留下孤儿进程。
  */
 internal object ShellRunner {
     private const val MAX_COMMAND_CHARS = 4_000
@@ -41,11 +40,7 @@ internal object ShellRunner {
                 .redirectInput(ProcessBuilder.Redirect.from(File("/dev/null")))
                 .start()
         } catch (e: Exception) {
-            return ShellResult(
-                "",
-                false,
-                "跑不起来：${e.javaClass.simpleName}。这台手机可能没有 root。",
-            )
+            return ShellResult("", false, "跑不起来：${e.javaClass.simpleName}。这台手机可能没有 root。")
         }
         val finished = try {
             proc.waitFor(timeoutMs.coerceIn(1_000L, 120_000L), TimeUnit.MILLISECONDS)
@@ -80,7 +75,6 @@ internal object ShellRunner {
         return ShellResult(body, !finished, exitCode = exitCode)
     }
 
-    /** 超时后按 /proc 里的父子关系自底向上杀，避免留下孤儿进程。 */
     private fun killTree(p: java.lang.Process) {
         val pid = pidOf(p)
         if (pid == null) {
@@ -109,7 +103,6 @@ internal object ShellRunner {
                 }
                 depth++
             }
-            // 用系统 kill 而不是 android.os.Process.sendSignal：后者不是稳定的公开 API。
             val victims = order.asReversed().joinToString(" ")
             runCatching {
                 ProcessBuilder("/system/bin/sh", "-c", "kill -9 $victims").start().waitFor()

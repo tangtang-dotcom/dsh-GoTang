@@ -118,10 +118,10 @@ class ProcessLaunchGuardTest {
         // 进阶 → 逆向工具: the fixed /opt/dsh-app/install-tools.sh through the same PRoot the
         // engine uses; argv is built from the manifest, never from UI input. Reviewed alongside
         // the other two: it clears the environment and redirects all three streams.
-        "app/android/app/src/main/kotlin/io/github/ccch1mneyyy/dsh_app/runtime/ToolchainInstaller.kt",
+        "app/android/app/src/main/kotlin/io/github/ccch1mneyyy/dsh_app/fork/runtime/ToolchainInstaller.kt",
         // 终端权限的 `su -c <command>`: one fixed shell, all three streams redirected, output
         // to a temp file. The command itself is the feature; the launch site is reviewed here.
-        "app/android/app/src/main/kotlin/io/github/ccch1mneyyy/dsh_app/phone/ShellRunner.kt",
+        "app/android/app/src/main/kotlin/io/github/ccch1mneyyy/dsh_app/fork/phone/shell/ShellRunner.kt",
     )
     private val localHelper = "app/lib/remote/ssh/remote_shell.dart"
 

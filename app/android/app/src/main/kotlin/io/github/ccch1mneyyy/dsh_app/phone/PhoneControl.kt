@@ -472,12 +472,7 @@ class PhoneControl private constructor(private val app: Context) : PhoneEnv, Con
         "notifications" to nm.areNotificationsEnabled(),
         "confirmationNotifications" to notificationGate.available(),
         "background" to backgroundStatus(),
-        "shell" to linkedMapOf(
-            "mode" to shellPolicy().mode.key,
-            "allowed" to shellPolicy().allowed.sorted(),
-            "sdcardAllowed" to shellPolicy().sdcardAllowed,
-            "commands" to ShellCommands.CATALOG,
-        ),
+        "shell" to ForkShellStatus.map(shellPolicy()),
         "a11yKeeper" to keeperStatus(),
         "task" to tasks.snapshot().toMap(),
         "device" to linkedMapOf(
