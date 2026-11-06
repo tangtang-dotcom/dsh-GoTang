@@ -9075,14 +9075,6 @@ class L10nZh extends L10n {
   String get phoneRootShellHint => '让模型以 Root 身份执行命令；关闭时工具会直接拒绝';
 
   @override
-  @override
-  @override
-  @override
-  @override
-  @override
-  @override
-  @override
-  @override
   String get phoneControlKeepAliveHint => '防止系统关掉无障碍';
 
   @override

@@ -38,6 +38,7 @@ class _ShellPermissionsPageState extends ConsumerState<ShellPermissionsPage> {
   Set<String>? _allowed;
   bool? _sdcard;
   Future<void>? _flush;
+  Timer? _flushTimer;
   late final PhoneController _controller;
 
   @override
@@ -57,7 +58,8 @@ class _ShellPermissionsPageState extends ConsumerState<ShellPermissionsPage> {
   @override
   void dispose() {
     // 页面一关就立刻把还没落盘的勾选写掉，别等 300ms 的合并窗口。
-    if (_flush != null && _allowed != null) {
+    _flushTimer?.cancel();
+    if (_allowed != null) {
       _controller.setAllowedCommands(_allowed!.toList());
     }
     super.dispose();
@@ -79,7 +81,14 @@ class _ShellPermissionsPageState extends ConsumerState<ShellPermissionsPage> {
     final controller = ref.read(phoneProvider.notifier);
 
     Future<void> apply() async {
-      setState(() => _mode = mode);
+      // 切档时本地白名单属于旧档位，立刻作废；否则退出页面的 dispose
+      // 会把旧档位的集合写进新档位的 prefs key。
+      _flushTimer?.cancel();
+      setState(() {
+        _mode = mode;
+        _allowed = null;
+        _sdcard = null;
+      });
       final ok = await controller.setShellMode(mode);
       if (!mounted) return;
       if (!ok) setState(() => _mode = null);
@@ -136,7 +145,10 @@ class _ShellPermissionsPageState extends ConsumerState<ShellPermissionsPage> {
 
   /// 300ms 内的连续点击合并成一次写入。
   void _scheduleFlush(Future<void> Function() run) {
-    _flush = run();
+    _flushTimer?.cancel();
+    _flushTimer = Timer(const Duration(milliseconds: 300), () {
+      if (mounted) _flush = run();
+    });
   }
 
   Future<void> _toggleSdcard(PhoneShellStatus shell, bool on) async {
