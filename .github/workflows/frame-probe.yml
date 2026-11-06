@@ -2,6 +2,9 @@ name: Frame Probe
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - tmp/frameprobe
 
 jobs:
   apk:
