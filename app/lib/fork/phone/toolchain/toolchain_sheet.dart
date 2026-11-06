@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../l10n/l10n.dart';
-import '../../../runtime/runtime_bridge.dart';
 import '../../../runtime/runtime_state.dart';
 import '../../../ui/common/list_page_row.dart';
 import '../../../ui/theme/app_icons.dart';
