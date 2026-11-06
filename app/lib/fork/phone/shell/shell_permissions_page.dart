@@ -37,7 +37,6 @@ class _ShellPermissionsPageState extends ConsumerState<ShellPermissionsPage> {
   String? _mode;
   Set<String>? _allowed;
   bool? _sdcard;
-  Future<void>? _flush;
   Timer? _flushTimer;
   late final PhoneController _controller;
 
@@ -147,7 +146,7 @@ class _ShellPermissionsPageState extends ConsumerState<ShellPermissionsPage> {
   void _scheduleFlush(Future<void> Function() run) {
     _flushTimer?.cancel();
     _flushTimer = Timer(const Duration(milliseconds: 300), () {
-      if (mounted) _flush = run();
+      if (mounted) unawaited(run());
     });
   }
 
