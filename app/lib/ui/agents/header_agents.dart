@@ -182,7 +182,9 @@ class HeaderAgentsKey extends StatelessWidget {
             child: AnimatedOpacity(
               opacity: running ? 1 : 0,
               duration: AppMotion.of(context, AppMotion.quick),
-              child: const StatusDot(tone: StatusTone.busy, size: 7),
+              // 不跑的时候必须是 idle：busy 的 StatusDot 会一直呼吸，
+              // 即使被 AnimatedOpacity 藏在 0 里，也会让整页按屏幕刷新率出帧。
+              child: StatusDot(tone: running ? StatusTone.busy : StatusTone.idle, size: 7),
             ),
           ),
         ],
