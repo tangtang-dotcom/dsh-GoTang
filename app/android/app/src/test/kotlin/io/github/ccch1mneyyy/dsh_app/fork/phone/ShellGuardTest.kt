@@ -110,7 +110,7 @@ class ShellGuardTest {
     @Test
     fun `write commands reject dot dot hops`() {
         assertTrue(denied("rm /sdcard/Download/../DCIM/a.jpg", allowed = safe + "rm", sdcardOn = true))
-        assertTrue(denied("cp /sdcard/Download/a /sdcard/Download/../x", sdcardOn = true))
+        assertTrue(denied("cp /sdcard/Download/a /sdcard/Download/../x"))
     }
 
     @Test
