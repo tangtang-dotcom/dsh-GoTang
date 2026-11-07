@@ -43,7 +43,7 @@ NODE_VERSION="${NODE_VERSION:-24.22.1}"
 PNPM_VERSION="${PNPM_VERSION:-11.28.5}"
 # dist.integrity of pnpm-$PNPM_VERSION.tgz, identical on registry.npmjs.org and npmmirror
 PNPM_INTEGRITY="${PNPM_INTEGRITY:-sha512-SEVj0wtMKtJ8tIqpT/KzAtvOvI/2vyiBbCWJiG4UbOf3bzVPO8GkOOb16XaMMCqgpvet2CMpA81M+BQmy8FNng==}"
-UBUNTU_VERSION="${UBUNTU_VERSION:-24.04.5}"
+UBUNTU_VERSION="${UBUNTU_VERSION:-24.04.4}"
 PROOT_VERSION="5.1.107.102"
 TALLOC_VERSION="2.5.0"
 SHMEM_VERSION="0.7"
@@ -68,8 +68,8 @@ PBS_MIRROR="https://registry.npmmirror.com/-/binary/python-build-standalone"
 # sha256 pins, cross-checked against cdimage.ubuntu.com / nodejs.org / the Termux Packages
 # index. The mirror's SHA256SUMS / SHASUMS256.txt are verified as well.
 declare -A PIN=(
-  [ubuntu-base-24.04.5-base-arm64.tar.gz]=a91d5a93010193712d346d761372b7c9db6dfcf093893161c64ca107f05914f2
-  [ubuntu-base-24.04.5-base-amd64.tar.gz]=e77b6f10c2590cef872b33ee9f635a0e3fd1f57fb074c0e52b5c7f56147a0c86
+  [ubuntu-base-24.04.4-base-arm64.tar.gz]=04207713ece899c3740823d33690441ad3a7f0ded1101aca744e2b0f37ac7ff2
+  [ubuntu-base-24.04.4-base-amd64.tar.gz]=c1e67ef7b17a6300e136118bd1dc04725009cb376c1aad10abcf8cd453628d58
   [node-v24.22.1-linux-arm64.tar.xz]=dbabf7a1cbf947e6059ffad2c27b80041db97dea1e553b62afdee7f13fca336e
   [node-v24.22.1-linux-x64.tar.xz]=6c172a9ab6718f7b801fb5a7bd486af2ee5e32758086a04b84fcce2aa77095e6
   [proot_5.1.107.102_aarch64.deb]=10a394b585c2fc2b2c8502544f4e5f1be581dc8bfff79e8ba62f16207423e030
