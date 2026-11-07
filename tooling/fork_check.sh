@@ -23,6 +23,7 @@ allowed_prefixes=(
   .github/workflows/build-apk.yml
   runtime/build-runtime.sh
   runtime/lib/rtbuild.py
+  runtime/locks/
   tooling/setup-toolchain.sh
   tooling/fork_check.sh
   THIRD_PARTY_NOTICES.md

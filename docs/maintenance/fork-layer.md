@@ -53,3 +53,6 @@
 2. `python3 app/tool/l10n_merge.py --check` 必须通过。
 3. `dart format --output=none --page-width 120 app/lib app/test` 必须无改动。
 4. Android JVM 单测与 `flutter analyze --no-pub` 必须通过。
+
+构建侧另有 `runtime/build-runtime.sh`、`runtime/locks/`、`runtime/lib/rtbuild.py`、
+`tooling/setup-toolchain.sh` 的版本 pin；它们属于 fork 的运行环境，不随上游 UI 改动。
