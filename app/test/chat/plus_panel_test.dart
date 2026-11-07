@@ -323,6 +323,11 @@ void main() {
       expect(pill.size, const Size.square(PermissionPillMetrics.height));
     });
 
+    testWidgets('the permission notice switch reads forward', (tester) async {
+      await _openPanel(tester);
+      expect(find.text('显示「完全权限」提醒'), findsOneWidget);
+    });
+
     testWidgets('the plugins button switch is in this chat card', (tester) async {
       await _openPanel(tester);
       expect(find.text('显示「插件」按钮'), findsOneWidget);

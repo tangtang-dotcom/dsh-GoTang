@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gpt_markdown/gpt_markdown.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../fork/chat/tap_to_menu.dart';
 import '../../../l10n/l10n.dart';
 import '../../../links/page_links.dart' show openReplyPageLink;
 import '../../../state/artifacts.dart';
@@ -224,6 +225,8 @@ class MarkdownBody extends StatefulWidget {
   // onLinkTap identity; its cached spans may retain this context-only callback.
   static void _onLinkTap(BuildContext context, String url, String title) {
     if (!context.mounted) return;
+    // 链接自己处理这一下，别让外层的轻点菜单也弹出来。
+    TapToMenu.suppressNextTap();
     // `dshgo://open/<page>`: the guide's links to the app's own pages.
     if (openReplyPageLink(context, url)) return;
     final uri = linkToOpen(url);
@@ -460,11 +463,15 @@ class MarkdownBody extends StatefulWidget {
         trailing: code.contains(_cursorSentinel) ? _cursorSpan(style) : null,
       );
     }
-    return CodeBlock(
-      code: code.replaceAll(_cursorSentinel, ''),
-      // 围栏信息串可能带属性(```json title="…"),只取第一个 token。
-      language: language,
-      replyActions: true,
+    return Listener(
+      // 代码块里的复制/换行/预览按钮自己处理点击，别再弹消息菜单。
+      onPointerDown: (_) => TapToMenu.suppressNextTap(),
+      child: CodeBlock(
+        code: code.replaceAll(_cursorSentinel, ''),
+        // 围栏信息串可能带属性(```json title="…"),只取第一个 token。
+        language: language,
+        replyActions: true,
+      ),
     );
   }
 

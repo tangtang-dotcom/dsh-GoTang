@@ -43,6 +43,8 @@ allowed_files=(
   app/lib/ui/chat/widgets/plus_panel.dart
   app/lib/ui/chat/widgets/assistant_message.dart
   app/lib/ui/chat/widgets/user_bubble.dart
+  app/lib/ui/chat/chat_list.dart
+  app/lib/ui/chat/render/markdown_body.dart
   app/lib/ui/chat/secret_mask.dart
   app/lib/ui/chat/widgets/activity_strip.dart
   app/lib/ui/plugins/native/composer_capsules.dart

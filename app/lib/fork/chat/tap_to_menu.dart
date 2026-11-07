@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/widgets.dart';
 
 /// 轻点回调，绕开手势竞技场。
@@ -8,7 +10,8 @@ import 'package:flutter/widgets.dart';
 class TapToMenu extends StatefulWidget {
   const TapToMenu({super.key, required this.onTap, required this.child});
 
-  /// 这一下轻点已经被里面的控件用掉了（气泡里的眼睛）：别再开消息菜单。
+  /// 这一下轻点已经被里面的控件用掉了（气泡里的眼睛、正文里的链接/代码块）：
+  /// 别再开消息菜单。
   static bool _suppressed = false;
   static void suppressNextTap() => _suppressed = true;
 
@@ -45,7 +48,16 @@ class _TapToMenuState extends State<TapToMenu> {
         final moved = (event.position - down).distance;
         final held = event.timeStamp.inMilliseconds - downMs;
         // 手指几乎没动且很快抬起：轻点。拖动选字会超出这个阈值，不会误触。
-        if (moved <= 12 && held <= 400) widget.onTap();
+        // 延后一个微任务，让正文里的链接/按钮先跑完自己的 onTap 并登记抑制。
+        if (moved <= 12 && held <= 400) {
+          scheduleMicrotask(() {
+            if (TapToMenu._suppressed) {
+              TapToMenu._suppressed = false;
+              return;
+            }
+            widget.onTap();
+          });
+        }
       },
       onPointerCancel: (_) {
         TapToMenu._suppressed = false;

@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:dsh_client/dsh_client.dart';
 import 'package:flutter/material.dart';
 
+import '../../../fork/chat/tap_to_menu.dart';
 import '../../../l10n/l10n.dart';
 import '../../common/expand_reveal.dart';
 import '../../common/typing_indicator.dart';
@@ -137,8 +138,8 @@ class _AssistantMessageState extends State<AssistantMessage> {
         text: text,
         streaming: streaming,
         reveal: reveal,
-        // 流式期间不选字；fluid 揭示动画期间也不能选（动画子树会让选择区抖动）。
-        selectable: !streaming && !reveal,
+        // 选区由聊天列表统一提供，消息自己不再套 SelectionArea。
+        selectable: false,
         repairBareViews: true,
       );
       _bodyText = text;
@@ -185,50 +186,45 @@ class _AssistantMessageState extends State<AssistantMessage> {
     }
 
     final actions = widget.showActions && !streaming && text.isNotEmpty;
-    // 长按正文交给系统的文本选择（和 Rikka / Eta 一样），消息菜单改由右下角 ⋯
-    // 和页脚按钮打开。只有「没有页脚」的旧消息（一轮里非最后一条）仍保留长按菜单，
-    // 否则那些消息就没有任何菜单入口了。流式期间两者都不响应。
-    final reply = GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onLongPress: !streaming && !actions && text.isNotEmpty ? () => _menu(text) : null,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (reasoning.isNotEmpty) ...[
-            ThinkingPill(
-              reasoning: reasoning,
-              active: streaming && text.isEmpty,
-              streaming: streaming,
-              growIn: _waited,
-            ),
-            if (text.isNotEmpty && !_textAfterThinking) const SizedBox(height: 8),
-          ],
-          if (text.isNotEmpty)
-            _textAfterThinking ? _FirstTextIn(child: _markdown(text, streaming)) : _markdown(text, streaming),
-          if (item.interrupted) const _InterruptedMark(),
-          // 一轮结束时和输入条上的胶囊同一节奏展开:胶囊收回多少,这里长出
-          // 多少,回答不会先被顶上去再落回来。打开对话时已结束的轮直接展开。
-          ExpandReveal(
-            open: actions,
-            duration: AppMotion.standard,
-            curve: AppMotion.std,
-            child: actions
-                ? ReplyActionRow(
-                    // Copy / share carry a one-line summary of each visual
-                    // reply, never its raw JSON.
-                    text: dshUiPlainText(text),
-                    onBranch: widget.onBranch,
-                    branching: widget.branching,
-                    onShare: () => shareReply(context, widget.item),
-                    onRegenerate: widget.onRegenerate,
-                    regenerating: widget.regenerating,
-                    onMore: () => _menu(text),
-                    trailing: widget.footnote,
-                  )
-                : const SizedBox.shrink(),
-          ),
+    // 正文轻点打开消息菜单；长按交给聊天列表统一的 SelectionArea 选字。
+    // 思考条和底部操作行不套 TapToMenu，避免和它们自己的点击冲突。
+    final reply = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (reasoning.isNotEmpty) ...[
+          ThinkingPill(reasoning: reasoning, active: streaming && text.isEmpty, streaming: streaming, growIn: _waited),
+          if (text.isNotEmpty && !_textAfterThinking) const SizedBox(height: 8),
         ],
-      ),
+        if (text.isNotEmpty)
+          TapToMenu(
+            onTap: () {
+              if (!streaming) unawaited(_menu(text));
+            },
+            child: _textAfterThinking ? _FirstTextIn(child: _markdown(text, streaming)) : _markdown(text, streaming),
+          ),
+        if (item.interrupted) const _InterruptedMark(),
+        // 一轮结束时和输入条上的胶囊同一节奏展开:胶囊收回多少,这里长出
+        // 多少,回答不会先被顶上去再落回来。打开对话时已结束的轮直接展开。
+        ExpandReveal(
+          open: actions,
+          duration: AppMotion.standard,
+          curve: AppMotion.std,
+          child: actions
+              ? ReplyActionRow(
+                  // Copy / share carry a one-line summary of each visual
+                  // reply, never its raw JSON.
+                  text: dshUiPlainText(text),
+                  onBranch: widget.onBranch,
+                  branching: widget.branching,
+                  onShare: () => shareReply(context, widget.item),
+                  onRegenerate: widget.onRegenerate,
+                  regenerating: widget.regenerating,
+                  onMore: () => _menu(text),
+                  trailing: widget.footnote,
+                )
+              : const SizedBox.shrink(),
+        ),
+      ],
     );
     // 一条回复是读屏里的一个分组,里面的段落、标题照常逐个读。
     final message = Semantics(key: const ValueKey('reply'), container: true, explicitChildNodes: true, child: reply);

@@ -96,10 +96,8 @@ class UserBubble extends StatelessWidget {
     // Selecting goes through the menu ("选择文字"): long-press is the menu.
     // `@` references draw as chips; text with a credential stays a plain
     // SecretText.
-    // 长按选中（和助手消息一致）：SelectionArea 让 Text.rich / SecretText 都可选。
-    Widget content = SelectionArea(
-      child: ReferenceText(quote == null ? shown : body, style: style, interactive: interactive),
-    );
+    // 选区由聊天列表统一提供，气泡自己不再套 SelectionArea。
+    Widget content = ReferenceText(quote == null ? shown : body, style: style, interactive: interactive);
     if (quote != null) {
       content = Column(
         mainAxisSize: MainAxisSize.min,
