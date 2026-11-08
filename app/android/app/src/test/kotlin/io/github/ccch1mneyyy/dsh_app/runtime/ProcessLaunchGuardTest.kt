@@ -110,6 +110,7 @@ class ProcessLaunchGuardTest {
     )
     private val cLanguages = setOf("c", "cc", "cpp", "cxx", "h", "hpp")
     private val nativeLanguages = cLanguages + setOf("kt", "java")
+    private val diagnosticJavaOwner = "app/android/app/src/main/kotlin/io/github/ccch1mneyyy/dsh_app/diagnostics/SystemImeLogcat.kt"
     private val allowedNative = setOf(
         "app/android/app/src/main/kotlin/io/github/ccch1mneyyy/dsh_app/runtime/DshProcess.kt",
         // The explicit root channel's `su -c <fixed command>` (argv from RootCommands): also a
@@ -118,6 +119,9 @@ class ProcessLaunchGuardTest {
         // 终端权限的 `su -c <command>`: one fixed shell, all three streams redirected, output
         // to a temp file. The command itself is the feature; the launch site is reviewed here.
         "app/android/app/src/main/kotlin/io/github/ccch1mneyyy/dsh_app/fork/phone/shell/ShellRunner.kt",
+        // The bounded privileged logcat reader also uses Java's fd-closing launcher.
+        // The test below restricts this owner to one fixed-command ProcessBuilder.
+        diagnosticJavaOwner,
     )
     private val localHelper = "app/lib/remote/ssh/remote_shell.dart"
 
@@ -235,6 +239,16 @@ class ProcessLaunchGuardTest {
         }
         assertEquals("New launch sites may inherit API 26 configuration fds; use a reviewed Java owner.\n" +
             violations.joinToString("\n"), emptyList<String>(), violations)
+    }
+
+    @Test fun diagnosticOwnerHasOnlyTheFixedJavaLogcatLaunch() {
+        val source = File(repository(), diagnosticJavaOwner).readText()
+        val calls = nativeCalls(source, "kt")
+        assertEquals(listOf("ProcessBuilder"), calls.map { it.text })
+        val expected = listOf("ProcessBuilder", "(", "SystemImeEvidence", ".", "command", ")",
+            ".", "redirectErrorStream", "(", "true", ")", ".", "start", "(", ")")
+        val actual = Code(source.substring(calls.single().offset), "kt").read().take(expected.size).map { it.text }
+        assertEquals(expected, actual)
     }
 
     @Test fun productionDartCannotLaunchOrConstructTheLocalTestShell() {

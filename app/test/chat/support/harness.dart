@@ -10,6 +10,7 @@ import 'package:dsh_app/fork/chat/chat_pill_prefs.dart';
 import 'package:dsh_app/state/chat_state.dart';
 import 'package:dsh_app/state/commands_state.dart';
 import 'package:dsh_app/state/connection_state.dart';
+import 'package:dsh_app/state/features_state.dart' show agentPresetsProvider, permissionStateProvider;
 import 'package:dsh_app/state/models_state.dart';
 import 'package:dsh_app/state/sessions_state.dart';
 import 'package:dsh_app/state/settings_state.dart';
@@ -391,6 +392,7 @@ class ChatHarness {
     this.catalog,
     this.runtime,
     this.extra = const [],
+    this.newChatCatalogs = false,
     FakePicker? picker,
   }) : sessions = FakeSessions(created: created),
        picker = picker ?? FakePicker();
@@ -408,6 +410,11 @@ class ChatHarness {
   /// Overrides of providers the harness leaves alone (the active host, updates).
   final List<Override> extra;
   final FakePicker picker;
+
+  /// Let the new-chat preset/permission chips read the Host's catalogs.
+  /// Off by default: suites that script their Host's traffic must not leave
+  /// catalog requests in flight (test/chat/new_chat_options_test.dart opts in).
+  final bool newChatCatalogs;
   final controllers = <String, FakeChatController>{};
   final balanceRequests = <String>[];
 
@@ -436,6 +443,10 @@ class ChatHarness {
       return balance;
     }),
     hostCommandsProvider.overrideWith((ref, sessionId) async => testHostCommands),
+    if (!newChatCatalogs) ...[
+      agentPresetsProvider.overrideWith((ref) async => null),
+      permissionStateProvider.overrideWith((ref, sessionId) async => null),
+    ],
     sessionUsageProvider.overrideWith2((id) => FakeUsage(id, usage[id] ?? SessionUsage.empty)),
     sessionsProvider.overrideWith(() => sessions),
     currentSessionProvider.overrideWith(() => FixedSession(session)),
