@@ -111,7 +111,7 @@ void main() {
     });
 
     test('protocols round-trip their wire names', () {
-      expect(ProviderApi.values.map((a) => a.wire), ['openai-completions', 'openai-responses', 'anthropic-messages']);
+      expect(ProviderApi.values.map((a) => a.wire), ['openai-completions', 'openai-responses', 'anthropic-messages', 'google-generative-ai']);
       expect(ProviderApi.fromWire('anthropic-messages'), ProviderApi.anthropicMessages);
       expect(ProviderApi.fromWire('bedrock'), isNull);
     });

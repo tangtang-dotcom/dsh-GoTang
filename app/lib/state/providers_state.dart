@@ -41,6 +41,7 @@ String protocolLabel(ProviderApi api) => switch (api) {
   ProviderApi.openaiCompletions => appL10n.stateProviderOpenAi,
   ProviderApi.anthropicMessages => appL10n.stateProviderAnthropic,
   ProviderApi.openaiResponses => 'Responses',
+  ProviderApi.googleGenerativeAi => 'Gemini',
 };
 
 /// A custom provider (自定义渠道) as the app shows it: one `llm-pi-ai` route

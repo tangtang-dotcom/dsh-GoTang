@@ -25,6 +25,7 @@ String _protocolShort(ProviderApi? api) => switch (api) {
   ProviderApi.openaiCompletions => 'OpenAI',
   ProviderApi.anthropicMessages => 'Anthropic',
   ProviderApi.openaiResponses => 'Responses',
+  ProviderApi.googleGenerativeAi => 'Gemini',
   null => '—',
 };
 

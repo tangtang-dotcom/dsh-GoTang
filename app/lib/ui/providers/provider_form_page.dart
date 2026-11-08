@@ -29,6 +29,7 @@ const _protocols = [
   PillSegment(ProviderApi.openaiCompletions, 'OpenAI'),
   PillSegment(ProviderApi.anthropicMessages, 'Anthropic'),
   PillSegment(ProviderApi.openaiResponses, 'Responses'),
+  PillSegment(ProviderApi.googleGenerativeAi, 'Gemini'),
 ];
 
 /// Pops with the provider id once saved.
@@ -315,7 +316,14 @@ class _ProviderFormPageState extends ConsumerState<ProviderFormPage> {
                       child: SegmentedPill<ProviderApi>(
                         segments: _protocols,
                         selected: _api,
-                        onChanged: busy ? null : (v) => setState(() => _api = v),
+                        onChanged: busy
+                            ? null
+                            : (v) => setState(() {
+                                _api = v;
+                                if (v == ProviderApi.googleGenerativeAi && _baseUrl.text.trim().isEmpty) {
+                                  _baseUrl.text = 'https://generativelanguage.googleapis.com/v1beta';
+                                }
+                              }),
                       ),
                     ),
                   ],
