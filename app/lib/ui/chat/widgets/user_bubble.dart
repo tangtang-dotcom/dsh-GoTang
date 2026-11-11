@@ -82,6 +82,7 @@ class UserBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final surfaces = DshSurfaces.of(context);
     final style = AppType.chatBody(context, color: surfaces.onUserBubble);
     // A generation request (generation mode's parameter header on the first
