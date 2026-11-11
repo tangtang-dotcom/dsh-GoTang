@@ -28,6 +28,7 @@ import '../shell/page_frame.dart';
 import '../theme/app_icons.dart';
 import '../theme/theme.dart';
 import 'action_log_page.dart';
+import 'android_shell_page.dart';
 import 'a11y_restore_sheet.dart';
 import '../../fork/phone/shell/shell_permissions_page.dart';
 import 'app_rules_page.dart';
@@ -483,6 +484,19 @@ class _PhoneControlScreenState extends ConsumerState<PhoneControlScreen> {
               gap,
               PhoneSkillSection(status: status.skills),
             ],
+            gap,
+            ListPageCard(
+              children: [
+                ListPageRow(
+                  key: const ValueKey('android-shell-entry'),
+                  icon: AppIcons.terminal,
+                  spot: SettingsIndex.entry(SettingsPageId.phoneAndroidShell),
+                  subtitle: l10n.androidShellEntryHint,
+                  subtitleMaxLines: 2,
+                  onTap: () => _push(const AndroidShellPage()),
+                ),
+              ],
+            ),
             if (status.enabled) ...[
               gap,
               ListPageCard(

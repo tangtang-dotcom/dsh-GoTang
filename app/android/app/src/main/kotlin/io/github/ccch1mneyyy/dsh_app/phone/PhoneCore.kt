@@ -25,6 +25,7 @@ interface PhoneEnv {
     /** Why the background display can't be used, as a sentence for the model. */
     fun backgroundUnavailable(): String
     fun system(): SystemApi
+    fun androidShell(): PhoneShellExecutor? = null
     fun uiText(): PhoneUiText = PhoneUiText.DEFAULT
     fun zone(): ZoneId
     /** Tells the person what to fix (accessibility off, …); at most once per task and kind. */
@@ -373,6 +374,7 @@ class PhoneCore(
             if (!current(owner)) return stoppedOut(name)
             if (call.replay != null) return replay(call, scope, owner)
             return when (name) {
+                PhoneToolCatalog.ANDROID_SHELL -> androidShell(a, scope, owner)
                 PhoneToolCatalog.APPS -> apps(a, owner)
                 PhoneToolCatalog.OPEN -> open(call, scope, owner)
                 PhoneToolCatalog.INTENT -> intent(call, scope, owner)
@@ -406,6 +408,24 @@ private fun current(owner: PhoneTasks.Owner): Boolean =
             env.cacheDir(),
         )
         return Out(result.text, error = result.error, summary = result.summary, decision = result.decision)
+    }
+
+    private fun androidShell(a: Args, scope: SerialWorker.Scope, owner: PhoneTasks.Owner): Out {
+        val request = PhoneAndroidShell.parse(a) ?: return Out(
+            Json.write(PhoneAndroidShell.failure("invalidArguments")), error = true)
+        // Arbitrary system effects cannot become an implicitly verified UI replay route.
+        skillTrace.markIncomplete(owner, PhoneTaskTrace.Gap.UNCERTAIN_RESULT)
+        val result = PhoneAndroidShell.run(request, owner, tasks, scope, env.androidShell(),
+            env::enabled, env::isLocked, env::gate, ui)
+        val successfulExit = when (val code = result["exitCode"]) {
+            is Int -> code == 0
+            is Long -> code == 0L
+            else -> false
+        }
+        val failed = result["started"] != true || result["errorCode"] != null ||
+            !successfulExit || result["timedOut"] == true || result["cancelled"] == true
+        return Out(Json.write(result), error = failed, summary = "Android Shell",
+            decision = (result["errorCode"] as? String) ?: if (failed) "failed" else "ok")
     }
 
     // ── System actions ──────────────────────────────────────────────────────────────
@@ -449,6 +469,12 @@ private fun current(owner: PhoneTasks.Owner): Boolean =
         var launch: SystemLaunch? = null
         var shareSubject: AppEntry? = null
         when (name) {
+            PhoneToolCatalog.ANDROID_SHELL -> {
+                if (PhoneAndroidShell.parse(a) == null) return Either.Left(Out(
+                    Json.write(PhoneAndroidShell.failure("invalidArguments")), error = true))
+                if (env.isLocked()) return Either.Left(Out(
+                    Json.write(PhoneAndroidShell.failure("locked")), error = true))
+            }
             PhoneToolCatalog.OPEN -> {
                 val appQ = a.str("app")
                 val url = a.str("url")
@@ -788,7 +814,8 @@ private fun current(owner: PhoneTasks.Owner): Boolean =
             PhoneToolCatalog.OPEN -> Either.Right(if (a.bool("background") == true)
                 listOf(PhoneScreen.MAIN, PhoneScreen.BACKGROUND) else listOf(PhoneScreen.MAIN))
             PhoneToolCatalog.SCREEN -> Either.Right(listOf(if (a.bool("background") == true) PhoneScreen.BACKGROUND else PhoneScreen.MAIN))
-            PhoneToolCatalog.INTENT -> Either.Right(listOf(PhoneScreen.MAIN))
+            // Arbitrary system commands take the main/global unknown-app lease, without reading a screen.
+            PhoneToolCatalog.INTENT, PhoneToolCatalog.ANDROID_SHELL -> Either.Right(listOf(PhoneScreen.MAIN))
             PhoneToolCatalog.HANDOFF -> Either.Right(if (lastScreen == PhoneScreen.BACKGROUND)
                 listOf(PhoneScreen.MAIN, PhoneScreen.BACKGROUND) else listOf(PhoneScreen.MAIN))
             PhoneToolCatalog.TAP, PhoneToolCatalog.TYPE, PhoneToolCatalog.SCROLL, PhoneToolCatalog.TAP_XY,
@@ -1340,6 +1367,7 @@ private fun current(owner: PhoneTasks.Owner): Boolean =
 
         /** The call's own time, not counting waits for the person. */
         fun budgetMs(tool: String): Long = when (tool) {
+            PhoneToolCatalog.ANDROID_SHELL -> 120_000L
             PhoneToolCatalog.APPS -> 15_000L
             PhoneToolCatalog.NOTIFY, PhoneToolCatalog.CLIPBOARD -> 10_000L
             PhoneToolCatalog.OPEN, PhoneToolCatalog.INTENT -> 25_000L
