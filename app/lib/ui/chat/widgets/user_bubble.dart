@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../../../l10n/l10n.dart';
 import '../../../state/composer_quote.dart' show splitQuote;
 import '../../common/expand_reveal.dart';
 import '../../theme/app_icons.dart';
