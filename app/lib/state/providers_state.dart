@@ -265,8 +265,11 @@ String normalizeBaseUrl(String raw, ProviderApi api) {
     ProviderApi.openaiCompletions => r'/chat/completions$',
     ProviderApi.openaiResponses => r'/responses$',
     ProviderApi.anthropicMessages => r'/(?:v1/)?messages$',
+    // GeminiSDK appends `/v1beta/models/...` to the base URL; there is no
+    // endpoint to strip from what the user types.
+    ProviderApi.googleGenerativeAi => null,
   };
-  final endpoint = RegExp(pattern, caseSensitive: false).firstMatch(uri.path)?.group(0);
+  final endpoint = pattern == null ? null : RegExp(pattern, caseSensitive: false).firstMatch(uri.path)?.group(0);
   // Match the path, never the authority; retain the original escaped prefix.
   if (endpoint != null && url.toLowerCase().endsWith(endpoint.toLowerCase())) {
     return url.substring(0, url.length - endpoint.length);
