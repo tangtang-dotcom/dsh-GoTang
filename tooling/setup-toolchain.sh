@@ -109,17 +109,23 @@ export ANDROID_HOME="$SDK_DIR" ANDROID_SDK_ROOT="$SDK_DIR"
 export PATH="$JDK_DIR/bin:$FLUTTER_DIR/bin:$SDK_DIR/cmdline-tools/latest/bin:$SDK_DIR/platform-tools:$SDK_DIR/emulator:$PATH"
 export PUB_HOSTED_URL="https://pub.flutter-io.cn" FLUTTER_STORAGE_BASE_URL="https://storage.flutter-io.cn"
 
-# Versions Flutter's Gradle plugin defaults to (compileSdk / NDK). Where the source no
-# longer spells them out, fall back to the pair this Flutter release is known to use; the
-# Android Gradle plugin downloads whatever else the project asks for, once licensed.
-GRADLE_DIR="$FLUTTER_DIR/packages/flutter_tools/gradle"
-NDK_VERSION=$(grep -rhoE 'ndkVersion[^"]*"[0-9.]+"' "$GRADLE_DIR" 2>/dev/null \
-  | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || true)
-COMPILE_SDK=$(grep -rhoE 'compileSdkVersion[^0-9]*[0-9]+' "$GRADLE_DIR" 2>/dev/null \
-  | grep -oE '[0-9]+$' | head -1 || true)
+# Versions Flutter's Gradle plugin defaults to (compileSdk / NDK). Read them from the
+# FlutterExtension declaration itself (a whole-tree grep also hits stale pins in other
+# files and picks the wrong NDK); fall back to the pair this Flutter release ships.
+GRADLE_EXT=$(find "$FLUTTER_DIR/packages/flutter_tools/gradle/src/main" -name 'FlutterExtension.*' -print -quit 2>/dev/null || true)
+if [ -n "$GRADLE_EXT" ]; then
+  NDK_VERSION=$(grep -oE 'ndkVersion[^"]*"[0-9.]+"' "$GRADLE_EXT" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || true)
+  COMPILE_SDK=$(grep -oE 'compileSdkVersion[^0-9]*[0-9]+' "$GRADLE_EXT" | grep -oE '[0-9]+$' | head -1 || true)
+fi
 NDK_VERSION="${NDK_VERSION:-28.2.13676358}"
 COMPILE_SDK="${COMPILE_SDK:-36}"
 log "Flutter defaults: compileSdk=$COMPILE_SDK ndk=$NDK_VERSION"
+
+# libtawcroot.so is built against the NDK pinned in runtime/tawcroot/source.json, which can
+# differ from Flutter's default; install that one too or the tawcroot build (and a release
+# APK) fails with "needs NDK <version>".
+TAWCROOT_NDK=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["ndkVersion"])' \
+  "$(dirname "$0")/../runtime/tawcroot/source.json" 2>/dev/null || true)
 
 # Building the app requires accepting the Android SDK licenses.
 yes | sdkmanager --sdk_root="$SDK_DIR" --licenses >/dev/null || true
@@ -127,6 +133,9 @@ SDK_PACKAGES=(
   "platform-tools" "platforms;android-${COMPILE_SDK}" "build-tools;${COMPILE_SDK}.0.0"
   "ndk;${NDK_VERSION}" "cmake;3.22.1"
 )
+if [ -n "$TAWCROOT_NDK" ] && [ "$TAWCROOT_NDK" != "$NDK_VERSION" ]; then
+  SDK_PACKAGES+=("ndk;${TAWCROOT_NDK}")
+fi
 if [[ "$INSTALL_EMULATOR" == 1 ]]; then
   SDK_PACKAGES+=("emulator" "$SYSTEM_IMAGE")
 fi
