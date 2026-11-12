@@ -41,7 +41,6 @@ String protocolLabel(ProviderApi api) => switch (api) {
   ProviderApi.openaiCompletions => appL10n.stateProviderOpenAi,
   ProviderApi.anthropicMessages => appL10n.stateProviderAnthropic,
   ProviderApi.openaiResponses => 'Responses',
-  ProviderApi.googleGenerativeAi => 'Gemini',
 };
 
 /// A custom provider (自定义渠道) as the app shows it: one `llm-pi-ai` route
@@ -265,11 +264,8 @@ String normalizeBaseUrl(String raw, ProviderApi api) {
     ProviderApi.openaiCompletions => r'/chat/completions$',
     ProviderApi.openaiResponses => r'/responses$',
     ProviderApi.anthropicMessages => r'/(?:v1/)?messages$',
-    // GeminiSDK appends `/v1beta/models/...` to the base URL; there is no
-    // endpoint to strip from what the user types.
-    ProviderApi.googleGenerativeAi => null,
   };
-  final endpoint = pattern == null ? null : RegExp(pattern, caseSensitive: false).firstMatch(uri.path)?.group(0);
+  final endpoint = RegExp(pattern, caseSensitive: false).firstMatch(uri.path)?.group(0);
   // Match the path, never the authority; retain the original escaped prefix.
   if (endpoint != null && url.toLowerCase().endsWith(endpoint.toLowerCase())) {
     return url.substring(0, url.length - endpoint.length);

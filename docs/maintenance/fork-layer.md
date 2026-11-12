@@ -47,21 +47,6 @@
 `notify/LiveContent.kt` 的 `headline`/`detail` 与 `LiveActivity.kt`、
 `XiaomiFocus.kt` 的调用是 fork 行为；`LiveContentTest.kt` 有对应断言。
 
-## Gemini API Key 协议
-
-dsh 的 `llm-pi-ai` 只暴露 OpenAI/Anthropic 三种协议，而 pi-ai 自带的
-`google-generative-ai` 适配器（Google 官方 SDK 的 `generateContent` 流式）没有被注册。
-
-- `runtime/patches/zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-piai-google-protocol.diff`
-  把它加进 `PROTOCOLS`/`LISTABLE_PROTOCOLS`，并补 Google 的模型发现
-  （`GET {base}/models?pageSize=1000`、`x-goog-api-key`、`supportedGenerationMethods` 过滤）。
-- `packages/dsh_client/lib/src/providers_api.dart` 的 `ProviderApi.googleGenerativeAi` 是协议名；
-  `app/lib/state/providers_state.dart`、`app/lib/ui/providers/provider_detail_page.dart`、
-  `app/lib/ui/providers/provider_form_page.dart` 只是标签与默认 Base URL 的钩子。
-
-补丁文件名用最多的 `z` 开头，保证排在所有上游补丁之后（同一文件 `dsh-llm-pi-ai/lib/index.js`
-还有 `piai-developer-tools`、`piai-credential-wait-cancel` 两个补丁，顺序不能变）。
-
 ## 合并检查
 
 1. `tooling/fork_check.sh` 必须通过（差异只出现在本文列出的路径和上游钩子）。

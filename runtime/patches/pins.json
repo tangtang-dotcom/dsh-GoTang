@@ -1769,14 +1769,6 @@
           "before": "a1ad048cbbb7caefe5471c583f076aa8e393f534efbc5b11b625308096efdace"
         }
       }
-    },
-    "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-piai-google-protocol.diff": {
-      "0.2.2-rc.1": {
-        "node_modules/@deepseek-ai/dsh-llm-pi-ai/lib/index.js": {
-          "after": "4a01e9a9440f323f91b9ac3f5b9c514fb29db295219d57736c5b5cd7eee37fb3",
-          "before": "71bef2194ebc72d9d86a0ce3a0fe24345b808208a4752fb077f71cf6603b04aa"
-        }
-      }
     }
   },
   "schema": 1

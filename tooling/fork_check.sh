@@ -24,7 +24,6 @@ allowed_prefixes=(
   runtime/build-runtime.sh
   runtime/lib/rtbuild.py
   runtime/locks/
-  runtime/patches/
   tooling/setup-toolchain.sh
   tooling/fork_check.sh
   THIRD_PARTY_NOTICES.md
@@ -58,11 +57,6 @@ allowed_files=(
   app/android/app/src/main/kotlin/io/github/ccch1mneyyy/dsh_app/notify/LiveContent.kt
   app/android/app/src/main/kotlin/io/github/ccch1mneyyy/dsh_app/notify/XiaomiFocus.kt
   app/android/app/src/test/kotlin/io/github/ccch1mneyyy/dsh_app/notify/LiveContentTest.kt
-  app/lib/state/providers_state.dart
-  app/lib/ui/providers/provider_detail_page.dart
-  app/lib/ui/providers/provider_form_page.dart
-  packages/dsh_client/lib/src/providers_api.dart
-  packages/dsh_client/test/providers_api_test.dart
 )
 
 unknown=()

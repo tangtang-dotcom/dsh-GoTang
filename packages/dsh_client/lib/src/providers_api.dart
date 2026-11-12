@@ -31,8 +31,7 @@ const String piAiSettingsNs = 'llm-pi-ai';
 enum ProviderApi {
   openaiCompletions('openai-completions'),
   openaiResponses('openai-responses'),
-  anthropicMessages('anthropic-messages'),
-  googleGenerativeAi('google-generative-ai');
+  anthropicMessages('anthropic-messages');
 
   const ProviderApi(this.wire);
 
