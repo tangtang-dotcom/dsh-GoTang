@@ -5,6 +5,7 @@ import 'package:dsh_app/state/draft_store.dart';
 import 'package:dsh_app/state/connection_state.dart';
 import 'package:dsh_app/state/sessions_state.dart';
 import 'package:dsh_app/ui/chat/chat_screen.dart';
+import 'package:dsh_app/ui/chat/dsh_ui/dsh_ui_model.dart' show dshUiPlainText;
 import 'package:dsh_app/ui/common/segmented_pill.dart';
 import 'package:dsh_app/ui/settings/settings_widgets.dart' show SettingsTile;
 import 'package:dsh_app/ui/share/share_panel.dart';
@@ -270,7 +271,6 @@ void main() {
       expect(await chat().forkBeforePrompt(prompt(8)), isNull);
       expect(state().error, '分叉失败：这里不能分叉');
     });
-
   });
 
   group('reply actions', () {
@@ -307,6 +307,24 @@ void main() {
       expect(container.read(currentSessionProvider), 's1');
     });
 
+    testWidgets('copy carries a visual reply as its plain summary', (tester) async {
+      final platform = _platform(tester);
+      const reply = '先看这个：\n\n```dsh-ui\n{"type": "text", "text": "第一行"}\n```\n\n就这样。';
+      final harness = ChatHarness(
+        session: 's1',
+        states: {
+          's1': ChatState(items: [_user(1, '画给我看'), _assistant(2, reply)], loading: false),
+        },
+      );
+      await _pump(tester, harness);
+      await tester.tap(find.byTooltip('复制'));
+      await pumpFrames(tester, 2);
+      expect(platform.copied, [dshUiPlainText(reply)]);
+      expect(platform.copied.single, isNot(contains('{')));
+      // The key shows 「已复制」 for a moment.
+      await tester.pump(const Duration(seconds: 2));
+    });
+
     testWidgets('reply menu: copy, select text, share, branch', (tester) async {
       final platform = _platform(tester);
       final harness = ChatHarness(session: 's1', states: {'s1': _conversation()});
@@ -336,7 +354,10 @@ void main() {
       await tester.tap(find.widgetWithText(SettingsTile, '分享'));
       await pumpFrames(tester);
       expect(find.byType(SharePanel), findsOneWidget);
-      expect(tester.widget<SegmentedPill<ShareScope>>(find.byType(SegmentedPill<ShareScope>)).selected, ShareScope.reply);
+      expect(
+        tester.widget<SegmentedPill<ShareScope>>(find.byType(SegmentedPill<ShareScope>)).selected,
+        ShareScope.reply,
+      );
       expect(platform.shared, isEmpty);
       Navigator.of(tester.element(find.byType(SharePanel))).pop();
       await pumpFrames(tester);
@@ -347,7 +368,6 @@ void main() {
       expect(find.text('全部复制'), findsOneWidget);
       expect(find.byType(SelectionArea), findsWidgets);
     });
-
   });
 
   group('prompt actions', () {
