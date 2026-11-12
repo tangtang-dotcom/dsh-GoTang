@@ -151,6 +151,9 @@ cat > "$(dirname "$0")/env.sh" <<EOF
 export JAVA_HOME="$JDK_DIR"
 export ANDROID_HOME="$SDK_DIR"
 export ANDROID_SDK_ROOT="$SDK_DIR"
+# A CI image may preship ANDROID_NDK_HOME pointing at another NDK; tawcroot verifies the
+# exact revision, so pin it to the one installed here.
+export ANDROID_NDK_HOME="$SDK_DIR/ndk/${TAWCROOT_NDK:-$NDK_VERSION}"
 export PUB_HOSTED_URL="https://pub.flutter-io.cn"
 export FLUTTER_STORAGE_BASE_URL="https://storage.flutter-io.cn"
 export PATH="$JDK_DIR/bin:$FLUTTER_DIR/bin:$SDK_DIR/cmdline-tools/latest/bin:$SDK_DIR/platform-tools:$SDK_DIR/emulator:\$PATH"
