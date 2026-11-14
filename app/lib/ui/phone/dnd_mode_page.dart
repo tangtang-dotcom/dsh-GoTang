@@ -324,6 +324,9 @@ class _PhoneDndPageState extends ConsumerState<PhoneDndPage> {
             title: l10n.phoneDndChangeChannel,
             children: choices,
           ),
+        // Two folds stacked: each card carries no vertical margin of its own,
+        // so without this the change-channel and options headers touch.
+        if (using != PhonePrivilegedMode.off) const SizedBox(height: 12),
         PhoneOptionsFold(
           key: const ValueKey('phone-dnd-options'),
           title: l10n.phoneControlAdvanced,
