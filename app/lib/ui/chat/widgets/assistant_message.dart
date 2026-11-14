@@ -4,9 +4,12 @@ import 'dart:async';
 
 import 'package:dsh_client/dsh_client.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../fork/chat/tap_to_menu.dart';
 import '../../../l10n/l10n.dart';
+import '../../../speech/read_aloud.dart';
+import '../../speech/speech_ui.dart';
 import '../../common/expand_reveal.dart';
 import '../../common/typing_indicator.dart';
 import '../../theme/app_icons.dart';
@@ -210,17 +213,21 @@ class _AssistantMessageState extends State<AssistantMessage> {
           duration: AppMotion.standard,
           curve: AppMotion.std,
           child: actions
-              ? ReplyActionRow(
-                  // Copy / share carry a one-line summary of each visual
-                  // reply, never its raw JSON.
-                  text: () => dshUiPlainText(text),
-                  onBranch: widget.onBranch,
-                  branching: widget.branching,
-                  onShare: () => shareReply(context, widget.item),
-                  onRegenerate: widget.onRegenerate,
-                  regenerating: widget.regenerating,
-                  onMore: () => _menu(text),
-                  trailing: widget.footnote,
+              ? Consumer(
+                  builder: (context, ref, _) => ReplyActionRow(
+                    // Copy / share carry a one-line summary of each visual
+                    // reply, never its raw JSON.
+                    text: () => dshUiPlainText(text),
+                    onBranch: widget.onBranch,
+                    branching: widget.branching,
+                    onShare: () => shareReply(context, widget.item),
+                    onReadAloud: () => readAloudReply(context, widget.item.key, dshUiPlainText(text)),
+                    reading: ref.watch(readAloudProvider.select((s) => s.phaseOf(widget.item.key))),
+                    onRegenerate: widget.onRegenerate,
+                    regenerating: widget.regenerating,
+                    onMore: () => _menu(text),
+                    trailing: widget.footnote,
+                  ),
                 )
               : const SizedBox.shrink(),
         ),
@@ -246,6 +253,7 @@ class _AssistantMessageState extends State<AssistantMessage> {
         MessageAction.selectText,
         if (onQuote != null) MessageAction.quote,
         MessageAction.share,
+        MessageAction.readAloud,
         if (onRegenerate != null && !widget.regenerating) MessageAction.regenerate,
         if (onBranch != null && !widget.branching) MessageAction.branch,
       ],
@@ -260,6 +268,8 @@ class _AssistantMessageState extends State<AssistantMessage> {
         onQuote?.call(text);
       case MessageAction.share:
         await shareReply(context, widget.item);
+      case MessageAction.readAloud:
+        readAloudReply(context, widget.item.key, text);
       case MessageAction.regenerate:
         onRegenerate?.call();
       case MessageAction.branch:

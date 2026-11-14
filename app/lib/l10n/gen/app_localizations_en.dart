@@ -1720,11 +1720,10 @@ class L10nEn extends L10n {
 
   @override
   String get androidShellConfirmationNote =>
-      'Every command needs native confirmation on the phone. Screen-control confirmation exemptions do not apply. Shell permissions differ from screen control; app rules cannot block every command.';
+      'Every command needs confirmation and may change system settings and files.';
 
   @override
-  String get androidShellMasterOff =>
-      'Turn on Phone control on the previous page before enabling Android Shell. Authorization and pairing guidance remain available here.';
+  String get androidShellMasterOff => 'Turn on Phone control on the previous page first.';
 
   @override
   String get androidShellRiskTitle => 'Allow Android system commands?';
@@ -1737,7 +1736,13 @@ class L10nEn extends L10n {
   String get androidShellRiskAction => 'Allow Android Shell';
 
   @override
-  String get androidShellBackend => 'Execution channel';
+  String get androidShellBackend => 'Connection method';
+
+  @override
+  String get androidShellDetails => 'Details';
+
+  @override
+  String get androidShellReady => 'Connected';
 
   @override
   String get androidShellShizukuHint =>
@@ -10911,7 +10916,7 @@ class L10nEn extends L10n {
   String get phoneDndDirectAdb => 'Direct ADB';
 
   @override
-  String get phoneDndChannels => 'Channel';
+  String get phoneDndChannels => 'Connection';
 
   @override
   String get phoneDndShizukuFor => 'Phones with the Shizuku app';
@@ -10973,7 +10978,7 @@ class L10nEn extends L10n {
       'The Sui interface isn’t available. Check that the Sui module is enabled, restart the phone and try again.';
 
   @override
-  String get phoneDndSuiAllSet => 'Sui is ready.';
+  String get phoneDndSuiAllSet => 'Sui is running and authorized. Connect the background screen next.';
 
   @override
   String get phoneDndSuiPermissionFailed =>
@@ -10984,7 +10989,7 @@ class L10nEn extends L10n {
 
   @override
   String get phoneDndRootConnected =>
-      'Root is connected. If it drops, choose it here again; DSH Go asks for root on its own only with “Keep root channel” on above.';
+      'Root is connected. If it drops, choose it here again; DSH Go asks for root on its own only with “Keep root channel” enabled under More settings.';
 
   @override
   String get phoneDndRootConnectedKept =>
@@ -10994,8 +10999,7 @@ class L10nEn extends L10n {
   String get phoneDndRootRetry => 'Ask for root again';
 
   @override
-  String get phoneDndInstallShizuku =>
-      'Install Shizuku first (free and open source). If you use tools like Ice Box or Brevent, you may already have it.';
+  String get phoneDndInstallShizuku => 'Install Shizuku first (free and open source).';
 
   @override
   String get phoneDndOpenShizukuSite => 'Open Shizuku website';
@@ -11011,7 +11015,7 @@ class L10nEn extends L10n {
   String get phoneDndGrantShizuku => 'Allow DSH Go';
 
   @override
-  String get phoneDndShizukuAllSet => 'Shizuku is ready.';
+  String get phoneDndShizukuAllSet => 'Shizuku is running and authorized. Connect the background screen next.';
 
   @override
   String get phoneDndShizukuInstalled => 'Shizuku installed';
@@ -11156,13 +11160,23 @@ class L10nEn extends L10n {
   String get phoneControlFloatingBarHint => 'Pause or stop from the floating bar';
 
   @override
-  String get phoneControlAdvanced => 'Advanced';
+  String get phoneControlAdvanced => 'More settings';
 
   @override
-  String get phoneRootShellTitle => 'Root commands';
+  String get phoneDndMoreChannels => 'More connections (Root / Sui)';
 
   @override
-  String get phoneRootShellHint => 'Let the model run commands as root; when off, the tool refuses';
+  String get phoneDndChangeChannel => 'Change connection';
+
+  @override
+  String get phoneDndPairingHelp => 'Pairing help / manual entry';
+
+  @override
+  String get phoneDndConnectHelp => 'Cannot connect?';
+
+  @override
+  String get phoneDndPairNext =>
+      'Enable Wireless debugging in Developer options, then start pairing and enter the pairing code in the notification.';
 
   @override
   String get phoneControlKeepAliveHint => 'Prevent Android from turning off accessibility';
@@ -12113,7 +12127,17 @@ class L10nEn extends L10n {
       'The previous background screen is still unconfirmed. Its screen access remains reserved.';
 
   @override
-  String get phoneSelfCheckTitle => 'Local phone self-check';
+  String get phoneSelfCheckTitle => 'Check phone control';
+
+  @override
+  String get phoneSelfCheckTechnicalDetails => 'Technical details';
+
+  @override
+  String get phoneLocalOcrSummary =>
+      'On-device recognition; results may go to your model. The SDK collects usage statistics.';
+
+  @override
+  String get phoneLocalOcrPrivacyDetails => 'Privacy details';
 
   @override
   String get phoneSelfCheckPartial => 'Partial check — only observed items have results';
@@ -12123,13 +12147,10 @@ class L10nEn extends L10n {
       'Uses the selected connected channel and a temporary presentation display. App launch, text input, screenshots, OCR and MAIN disturbance are not tested. Cleanup alone does not prove a display was created.';
 
   @override
-  String get phoneSelfCheckStart => 'Start partial check';
+  String get phoneSelfCheckStart => 'Start check';
 
   @override
   String get phoneSelfCheckCancel => 'Request cancellation';
-
-  @override
-  String get phoneSelfCheckRetry => 'Retry cleanup only';
 
   @override
   String get phoneSelfCheckRefresh => 'Refresh status';
@@ -12156,9 +12177,8 @@ class L10nEn extends L10n {
       'idle': 'Not started',
       'running': 'Running partial check',
       'cleaning': 'Cleaning up; cancellation does not undo sent input',
-      'done': 'Execution and cleanup ended; inspect each result below',
+      'done': 'Check ended; see Technical details for results',
       'cancelled': 'Cancelled; observed actions remain recorded',
-      'cleanup_pending': 'Cleanup unconfirmed — resources remain reserved',
       'other': 'Status unavailable',
     });
     return '$_temp0';
@@ -12323,7 +12343,7 @@ class L10nEn extends L10n {
   String get phoneInterruptionActionFailed => 'Task records are not confirmed yet. Please retry.';
 
   @override
-  String get phoneLocalOcrTitle => 'On-device text recognition (ML Kit)';
+  String get phoneLocalOcrTitle => 'Text recognition';
 
   @override
   String get phoneLocalOcrUnknown => 'This setting could not be read. Refresh and try again.';
@@ -12367,12 +12387,7 @@ class L10nEn extends L10n {
       'The background channel is being prepared or maintained. New tasks cannot start yet.';
 
   @override
-  String get phoneBackgroundParallelRecovery =>
-      'Resolve unfinished background resource recovery before starting new tasks.';
-
-  @override
-  String get phoneBackgroundParallelPeer =>
-      'The connected service does not support the required background capabilities.';
+  String get phoneGateRetest => 'Check this channel again';
 
   @override
   String get phoneBackgroundParallelSerial =>
@@ -12501,26 +12516,6 @@ class L10nEn extends L10n {
       'Your root manager (Magisk, KernelSU or APatch) will ask you. If you allow it, DSH Go runs its own background service as root. It asks again on its own after a disconnect or restart only with “Keep root channel” on.';
 
   @override
-  String get phoneGateCleanupTitle => 'Probe cleanup not confirmed';
-
-  @override
-  String get phoneGateCleanupUnknown =>
-      'New background resources are blocked. Retry only the original cleanup if its channel is still available. This does not rerun the probe.';
-
-  @override
-  String get phoneGateCleanupRunning =>
-      'Waiting for the original probe and its cleanup. The channel stays pinned until cleanup is confirmed.';
-
-  @override
-  String get phoneGateCleanupRetry => 'Retry cleanup only';
-
-  @override
-  String get phoneGateCleanupDone => 'Cleanup confirmed. Choose the channel again explicitly to run a fresh check.';
-
-  @override
-  String get phoneGateRetest => 'Check this channel again';
-
-  @override
   String phoneKeepTitle(String mode) {
     String _temp0 = intl.Intl.selectLogic(mode, {
       'shizuku': 'Keep Shizuku channel',
@@ -12564,24 +12559,6 @@ class L10nEn extends L10n {
 
   @override
   String get phoneKeepFailed => 'Couldn’t reconnect. Tries again when you open the app or start a task.';
-
-  @override
-  String get phoneResourceRecoveryTitle => 'Background resources need verification';
-
-  @override
-  String get phoneResourceRecoveryRunning =>
-      'Checking the original resource records. New phone tasks will wait until this finishes.';
-
-  @override
-  String get phoneResourceRecoveryStorage =>
-      'The resource record could not be read or saved. Retry saving or reading it. A confirmed release is not repeated, and past actions are not replayed.';
-
-  @override
-  String get phoneResourceRecoveryPending =>
-      'Old background resources have not been verified. New phone tasks are blocked. Choose the original authorized channel and retry; if verification remains unavailable, restart the device and check again. Past actions may already have happened. Reading the task interruption notice does not clear these resources.';
-
-  @override
-  String get phoneResourceRecoveryRetry => 'Retry resource verification';
 
   @override
   String get phoneSkillSectionTitle => 'Completed tasks and skills';
@@ -16848,7 +16825,10 @@ class L10nEn extends L10n {
   String get searchKwPerformance => 'battery,smooth,lag,lite,full,speed';
 
   @override
-  String get searchKwVoice => 'speech recognition,dictation,microphone,mic,voice';
+  String get searchKwVoice => 'speech recognition,dictation,microphone,mic,voice,read aloud,voice call,call,TTS,speech';
+
+  @override
+  String get searchKwVoiceReading => 'read aloud,reading voice,TTS,voice,Stella,Tide,speech';
 
   @override
   String get searchKwNotifications => 'alerts,push,banner,sound';
@@ -18380,6 +18360,225 @@ class L10nEn extends L10n {
   String shellQuickPanelHint(String path) {
     return 'Change these in $path';
   }
+
+  @override
+  String get speechReadAloud => 'Read aloud';
+
+  @override
+  String get speechReadAloudStop => 'Stop reading';
+
+  @override
+  String get speechReadSection => 'Read aloud';
+
+  @override
+  String get speechReadFooter => 'Used by the read-aloud key under replies, the companion room and voice calls.';
+
+  @override
+  String get speechVoiceTitle => 'Reading voice';
+
+  @override
+  String get speechVoiceHello => 'Hello, this is the reading voice.';
+
+  @override
+  String get speechVoiceDeepseek => 'DeepSeek';
+
+  @override
+  String get speechVoiceDeepseekHint =>
+      'Paid by your signed-in DeepSeek account; the API key in Settings when signed out or when the account can\'t pay for speech. Nothing to set up';
+
+  @override
+  String get speechVoiceDeepseekFooter =>
+      'Billed by the number of characters read; see the DeepSeek platform for prices. Code blocks, tables and link addresses are left out.';
+
+  @override
+  String get speechVoiceStella => 'Stella (female)';
+
+  @override
+  String get speechVoiceTide => 'Tide (male)';
+
+  @override
+  String get speechVoiceStellaShort => 'Stella';
+
+  @override
+  String get speechVoiceTideShort => 'Tide';
+
+  @override
+  String get speechVoiceFollow => 'Same as read aloud';
+
+  @override
+  String get speechVoiceFollowHint => 'The reading voice in Settings › Voice';
+
+  @override
+  String get speechNotSetUp => 'The reading voice isn\'t set up yet. See Settings › Voice';
+
+  @override
+  String get speechNoCredential => 'Sign in to DeepSeek or add an API key in Settings first';
+
+  @override
+  String get speechSignIn =>
+      'Your DeepSeek account can\'t pay for speech (sign-in expired, or speech takes only an API key). Sign in again, or add an API key in Settings';
+
+  @override
+  String get speechUnauthorized => 'The DeepSeek API key was refused. Check it in Settings';
+
+  @override
+  String get speechBalance => 'Not enough DeepSeek balance';
+
+  @override
+  String get speechRateLimited => 'Too many requests. Try again shortly';
+
+  @override
+  String get speechNothingToRead => 'This reply has no text to read';
+
+  @override
+  String get speechNotHeard => 'Didn\'t catch that. Say it again';
+
+  @override
+  String get speechTooLong => 'That recording is too long. Try shorter parts';
+
+  @override
+  String get speechBusy => 'The speech service is busy. Try again shortly';
+
+  @override
+  String get speechNetwork => 'Can\'t reach the speech service. Check the network';
+
+  @override
+  String get speechReadFailed => 'Couldn\'t read it aloud';
+
+  @override
+  String get speechListenFailed => 'Couldn\'t recognize it';
+
+  @override
+  String get speechCloudNotice =>
+      'Your voice is sent to DeepSeek to be recognized. To recognize on the phone, switch to the voice model.';
+
+  @override
+  String get speechCloudNotSetUp => 'No cloud recognition service is set up';
+
+  @override
+  String get speechCallTile => 'Voice call';
+
+  @override
+  String get speechCallSection => 'Voice calls';
+
+  @override
+  String get speechCallFooter =>
+      'In a call, pause after you speak and it is sent; the answer is read while it is written.';
+
+  @override
+  String get speechCallBargeIn => 'Interrupt by speaking';
+
+  @override
+  String get speechCallBargeInHint => 'Start talking while the AI speaks and it stops to listen';
+
+  @override
+  String get speechCallSpoken => 'Spoken answers';
+
+  @override
+  String get speechCallSpokenHint => 'The call\'s first message asks for short, conversational answers';
+
+  @override
+  String get speechCallSpeaker => 'Speakerphone by default';
+
+  @override
+  String get speechCallSpeakerHint => 'Headphones always win when connected';
+
+  @override
+  String get speechCallHint =>
+      '(This is a voice call; what I say comes through speech recognition. Please answer briefly and conversationally, without Markdown, lists, tables or code blocks.)';
+
+  @override
+  String get speechCallStarting => 'Connecting';
+
+  @override
+  String get speechCallListening => 'Listening';
+
+  @override
+  String get speechCallHearing => 'You\'re speaking';
+
+  @override
+  String get speechCallThinking => 'Thinking';
+
+  @override
+  String get speechCallSpeaking => 'Speaking. Tap the light to skip';
+
+  @override
+  String get speechCallMuted => 'Muted';
+
+  @override
+  String get speechCallEnded => 'Call ended';
+
+  @override
+  String get speechCallEndPermission => 'No microphone permission';
+
+  @override
+  String get speechCallEndMicrophone => 'The microphone is busy or can\'t be opened';
+
+  @override
+  String get speechCallEndNoRecognizer =>
+      'A call needs a recognizer that takes recordings: sign in to DeepSeek, add an API key, or download the voice model';
+
+  @override
+  String get speechCallEndBackground => 'Calls end when the app goes to the background';
+
+  @override
+  String get speechCallEndFailed => 'Recording failed; the call has ended';
+
+  @override
+  String get speechCallSendFailed => 'That didn\'t go through. Say it again';
+
+  @override
+  String get speechCallSkipHint => 'Skip this answer';
+
+  @override
+  String get speechCallMute => 'Mute';
+
+  @override
+  String get speechCallUnmute => 'Unmute';
+
+  @override
+  String get speechCallHangUp => 'Hang up';
+
+  @override
+  String get speechCallSpeakerOn => 'Speaker';
+
+  @override
+  String get speechCallEarpiece => 'Earpiece';
+
+  @override
+  String get speechBackdropTitle => 'Call background';
+
+  @override
+  String get speechBackdropSea => 'Deep sea';
+
+  @override
+  String get speechBackdropImage => 'My picture';
+
+  @override
+  String get speechBackdropImagePick => 'Pick a picture';
+
+  @override
+  String get speechBackdropCompanion => 'Companion';
+
+  @override
+  String get speechBackdropHint =>
+      'Pictures are softened and darkened so captions stay readable. With your companion, she speaks along with the voice.';
+
+  @override
+  String get speechBackdropHintChange =>
+      'Tap My picture again to change it. With your companion, she speaks along with the voice.';
+
+  @override
+  String get speechBackdropNoCompanion => 'Set her up in the companion room first to bring her into calls.';
+
+  @override
+  String get speechBackdropReplace => 'Change picture';
+
+  @override
+  String get speechBackdropPickFailed => 'That picture can\'t be used. Try another';
+
+  @override
+  String get speechInsecure => 'That service\'s address isn\'t https; the key can\'t be sent that way';
 
   @override
   String starPromptTitle(int hours) {
@@ -20538,6 +20737,15 @@ class L10nEn extends L10n {
   }
 
   @override
+  String get tavernInspectCost => 'Estimated cost';
+
+  @override
+  String get tavernInspectCostPeak => 'At DeepSeek\'s list prices, peak hours';
+
+  @override
+  String get tavernInspectCostOffPeak => 'At DeepSeek\'s list prices, off-peak (half price)';
+
+  @override
   String tavernInspectSegments(int count) {
     String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: '$count parts sent', one: '1 part sent');
     return '$_temp0';
@@ -20999,6 +21207,61 @@ class L10nEn extends L10n {
   String get tavernSessionMore => 'More';
 
   @override
+  String get tavernAudio => 'Music and sound';
+
+  @override
+  String get tavernAudioBgm => 'Music';
+
+  @override
+  String get tavernAudioAmbient => 'Sound effects';
+
+  @override
+  String get tavernAudioNothing => 'Not playing';
+
+  @override
+  String get tavernAudioPlay => 'Play';
+
+  @override
+  String get tavernAudioPause => 'Pause';
+
+  @override
+  String get tavernAudioMode => 'Play mode';
+
+  @override
+  String get tavernAudioModeOne => 'One';
+
+  @override
+  String get tavernAudioModeAll => 'All';
+
+  @override
+  String get tavernAudioModeShuffle => 'Shuffle';
+
+  @override
+  String get tavernAudioModeOnce => 'Once';
+
+  @override
+  String get tavernAudioVolume => 'Volume';
+
+  @override
+  String get tavernAudioAllow => 'Let the card play';
+
+  @override
+  String get tavernAudioAdd => 'Add background music';
+
+  @override
+  String get tavernAudioAddTitle => 'Link to the music';
+
+  @override
+  String get tavernAudioAddNote =>
+      'The web address of an audio file (mp3, ogg…). It joins this chat\'s music list, with the card\'s own.';
+
+  @override
+  String get tavernAudioAddConfirm => 'Add';
+
+  @override
+  String get tavernAudioAddInvalid => 'Starts with http:// or https://';
+
+  @override
   String get tavernStageState => 'State';
 
   @override
@@ -21154,10 +21417,11 @@ class L10nEn extends L10n {
   String get tavernUndoFailed => 'Couldn\'t undo';
 
   @override
-  String get tavernShowUsage => 'Show usage under each reply';
+  String get tavernShowUsage => 'Show usage and cost under each reply';
 
   @override
-  String get tavernShowUsageSubtitle => 'Input and output tokens as the model reports them; no cost estimates';
+  String get tavernShowUsageSubtitle =>
+      'Input and output tokens as the model reports them; for DeepSeek models, a cost at their list prices, peak and off-peak hours apart';
 
   @override
   String tavernUsageLine(int input, int output) {
@@ -21179,6 +21443,31 @@ class L10nEn extends L10n {
     final String outputString = outputNumberFormat.format(output);
 
     return 'In $inputString ($cachedString cached) · out $outputString';
+  }
+
+  @override
+  String tavernUsageCost(String usd) {
+    return 'about $usd';
+  }
+
+  @override
+  String tavernUsageCostUnder(String usd) {
+    return 'under $usd';
+  }
+
+  @override
+  String get tavernCostAlert => 'Per-turn cost reminder';
+
+  @override
+  String get tavernCostAlertSubtitle =>
+      'When a turn costs more than this at DeepSeek\'s list prices, say so over the composer; other models aren\'t estimated';
+
+  @override
+  String get tavernCostAlertOff => 'Off';
+
+  @override
+  String tavernCostAlertNotice(String cost, String line) {
+    return 'This turn cost $cost, over your reminder line of $line';
   }
 
   @override
@@ -21684,6 +21973,22 @@ class L10nEn extends L10n {
   String get tavernSessionUsageNone => 'The model hasn\'t reported any usage yet';
 
   @override
+  String tavernSessionUsageCost(String usd) {
+    return 'About $usd at DeepSeek\'s list prices, peak and off-peak hours apart; China\'s public holidays are off-peak all day, so those days come out a little high here';
+  }
+
+  @override
+  String tavernSessionUsageUnpriced(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count replies used a model not on the price list and aren\'t in the cost',
+      one: '1 reply used a model not on the price list and isn\'t in the cost',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get tavernComposerNoKey => 'Add a key to begin';
 
   @override
@@ -21726,7 +22031,7 @@ class L10nEn extends L10n {
   String get tavernUsageStats => 'Usage';
 
   @override
-  String get tavernUsageStatsSubtitle => 'How many tokens each chat has taken';
+  String get tavernUsageStatsSubtitle => 'How many tokens each chat has taken, and about what it cost';
 
   @override
   String get tavernUsageAllNote =>
@@ -21960,7 +22265,14 @@ class L10nEn extends L10n {
 
   @override
   String get tavernStThemeImportNote =>
-      'Takes the quote and italics colours from a theme file exported from SillyTavern.';
+      'Takes the quote and italics colours, and its custom CSS, from a theme file exported from SillyTavern.';
+
+  @override
+  String get tavernStThemeCss => 'Use its custom CSS';
+
+  @override
+  String get tavernStThemeCssSubtitle =>
+      'With 「ST」 as the colours, it goes into the whole-story canvas and overrides the default look, as in ST. Turn it off if the page comes apart; the colours stay.';
 
   @override
   String get tavernStThemeRemove => 'Remove';
@@ -21972,7 +22284,7 @@ class L10nEn extends L10n {
 
   @override
   String tavernStThemeNoColors(String name) {
-    return '“$name” has no quote or italics colour to use';
+    return '“$name” has no quote or italics colour or custom CSS to use';
   }
 
   @override
@@ -22151,6 +22463,11 @@ class L10nEn extends L10n {
   String get tavernGameHere => 'A mini-game goes here; it can\'t be played here yet';
 
   @override
+  String tavernCanvasReplied(String name) {
+    return '$name replied';
+  }
+
+  @override
   String get tavernRegexEdit => 'Edit rule';
 
   @override
@@ -22251,11 +22568,608 @@ class L10nEn extends L10n {
   String get tavernCanvas => 'Whole-page canvas (trial)';
 
   @override
+  String tavernCardScriptsHint(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'This card has $count scripts; they run only with Whole-page canvas (trial) on',
+      one: 'This card has a script; it runs only with Whole-page canvas (trial) on',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tavernCardScriptsHintAction => 'Turn on';
+
+  @override
+  String get tavernRender => 'How it shows';
+
+  @override
+  String get tavernRenderSubtitle =>
+      'Only this character\'s own chats: a card\'s status bars and styling need pages or the canvas, and its scripts run only on the canvas';
+
+  @override
+  String get tavernRenderText => 'Text';
+
+  @override
+  String get tavernRenderIslands => 'Pages';
+
+  @override
+  String get tavernRenderCanvas => 'Canvas';
+
+  @override
   String get tavernCanvasSubtitle =>
-      'The whole chat in one web page laid out as SillyTavern does, so a card\'s ST styles reach across messages. Not for visual novel; card scripts don\'t run here yet.';
+      'The whole chat in one web page laid out as SillyTavern does, so a card\'s ST styles reach across messages. Card scripts run here; turn on \"No card scripts in those pages\" to stop them. Not for visual novel.';
 
   @override
   String get tavernCanvasReloaded => 'The page reloaded';
+
+  @override
+  String tavernGroupSpeaking(String name) {
+    return '$name is speaking';
+  }
+
+  @override
+  String tavernGroupThen(String names) {
+    return 'then $names';
+  }
+
+  @override
+  String get tavernGroupNoSpeakers => 'No one took this turn. Tap a name above to have them speak.';
+
+  @override
+  String get tavernGroupSpeakNext => 'Let them go on';
+
+  @override
+  String get tavernGroupNew => 'New group chat';
+
+  @override
+  String get tavernGroupMembers => 'Who\'s in it';
+
+  @override
+  String get tavernGroupMembersNote =>
+      'In the order picked; the first hosts it, and the story\'s shared state lives on that card.';
+
+  @override
+  String get tavernGroupHost => 'Host';
+
+  @override
+  String get tavernGroupTitle => 'Name';
+
+  @override
+  String get tavernGroupActivation => 'Taking turns';
+
+  @override
+  String get tavernGroupNatural => 'Natural';
+
+  @override
+  String get tavernGroupListOrder => 'In order';
+
+  @override
+  String get tavernGroupRandom => 'Random';
+
+  @override
+  String get tavernGroupManual => 'Manual';
+
+  @override
+  String get tavernGroupDirector => 'Director';
+
+  @override
+  String get tavernGroupNaturalNote =>
+      'As SillyTavern does: whoever is named speaks first, the rest by how talkative each is; the most per turn is in the group\'s settings.';
+
+  @override
+  String get tavernGroupListOrderNote => 'Each turn goes down the list from the top (the muted are skipped).';
+
+  @override
+  String get tavernGroupRandomNote => 'Each turn picks one who hasn\'t spoken since your last line.';
+
+  @override
+  String get tavernGroupManualNote => 'No one speaks on their own; tap a name above the box to have them speak.';
+
+  @override
+  String get tavernGroupDirectorNote => 'The director picks who speaks next, as the story goes.';
+
+  @override
+  String get tavernGroupPickTwo => 'Pick at least two';
+
+  @override
+  String tavernGroupCreate(int count) {
+    return 'Create ($count)';
+  }
+
+  @override
+  String tavernGroupCreateFailed(String reason) {
+    return 'Couldn\'t create the group: $reason';
+  }
+
+  @override
+  String get tavernGroupTag => 'Group';
+
+  @override
+  String tavernGroupMemberCount(int count) {
+    return '$count members';
+  }
+
+  @override
+  String get tavernGroupSettings => 'Group settings';
+
+  @override
+  String get tavernGroupMaxSpeakers => 'Most to speak each turn';
+
+  @override
+  String get tavernGroupSelfResponses => 'May answer themselves';
+
+  @override
+  String get tavernGroupSelfResponsesNote => 'Whoever spoke last may still go first this turn.';
+
+  @override
+  String tavernGroupHostNote(String name) {
+    return 'Hosted by $name: the story\'s shared state, director and secrets live on that card; the host need not be among the speakers.';
+  }
+
+  @override
+  String get tavernGroupMuted => 'Muted';
+
+  @override
+  String get tavernGroupMutedNote => 'Won\'t speak on their own; still speaks when named.';
+
+  @override
+  String get tavernGroupTalkativeness => 'Talkativeness';
+
+  @override
+  String get tavernGroupTalkativenessNote => 'In natural turns, the higher, the likelier to speak.';
+
+  @override
+  String get tavernGroupHelperModel => 'Helper model';
+
+  @override
+  String get tavernGroupHelperModelNote =>
+      'Speaks with the helper model (automatic: flash without thinking on DeepSeek, the main model elsewhere): for side characters.';
+
+  @override
+  String get tavernGroupMoveUp => 'Move up';
+
+  @override
+  String get tavernGroupMoveDown => 'Move down';
+
+  @override
+  String get tavernGroupRemove => 'Remove from the group';
+
+  @override
+  String get tavernGroupAdd => 'Add a character';
+
+  @override
+  String get tavernGroupNoOthers => 'Everyone on the shelf is in it';
+
+  @override
+  String get tavernGroupUnavailable => 'Card missing';
+
+  @override
+  String tavernGroupSaveFailed(String reason) {
+    return 'Couldn\'t save: $reason';
+  }
+
+  @override
+  String get tavernGroupErrorNotGroup => 'This is no longer a group chat';
+
+  @override
+  String get tavernGroupErrorCharacterNotFound => 'That character\'s card is gone';
+
+  @override
+  String get tavernGroupErrorMemberExists => 'That character is already in the group';
+
+  @override
+  String get tavernGroupErrorMemberNotFound => 'That character is no longer in the group';
+
+  @override
+  String get tavernGroupErrorInvalidMembers => 'Members can\'t repeat, and a group needs at least one character';
+
+  @override
+  String get tavernGroupErrorInvalidTalkativeness => 'Talkativeness goes from 0 to 1';
+
+  @override
+  String get tavernGroupErrorInvalidLimit => 'At least one member speaks each round';
+
+  @override
+  String get tavernGroupErrorInvalidOrder => 'That order doesn\'t match the members; open it again and reorder';
+
+  @override
+  String get tavernGroupErrorHostInUse => 'This character hosts a group chat; delete that chat first';
+
+  @override
+  String get tavernGroupErrorInvalidTitle => 'A group chat\'s name can\'t be blank';
+
+  @override
+  String tavernToolRollUnsettled(String dice) {
+    return '🎲 $dice: result not confirmed yet';
+  }
+
+  @override
+  String tavernToolRollNotDone(String dice) {
+    return '🎲 $dice: not rolled';
+  }
+
+  @override
+  String tavernToolRollPass(int target) {
+    return 'target $target, passed';
+  }
+
+  @override
+  String tavernToolRollFail(int target) {
+    return 'target $target, missed';
+  }
+
+  @override
+  String tavernToolMemory(String text) {
+    return 'Wants to remember: \"$text\"';
+  }
+
+  @override
+  String get tavernToolMemoryAccept => 'Remember';
+
+  @override
+  String get tavernToolMemoryReject => 'No';
+
+  @override
+  String get tavernToolMemoryStaged => 'Decided once this turn is written';
+
+  @override
+  String tavernToolMemoryIneligible(String reason) {
+    return 'Can\'t be decided now: $reason';
+  }
+
+  @override
+  String get tavernToolMemoryAccepted => 'Remembered';
+
+  @override
+  String get tavernToolMemoryAuto => 'Remembered by the automatic setting';
+
+  @override
+  String get tavernToolMemoryRejected => 'Not remembered';
+
+  @override
+  String get tavernToolMemoryInactive => 'This turn didn\'t finish normally; not remembered';
+
+  @override
+  String get tavernToolMemoryWaiting => 'Your last decision hasn\'t gone through yet';
+
+  @override
+  String tavernToolMemoryNotApplied(String reason) {
+    return 'Not remembered: $reason';
+  }
+
+  @override
+  String tavernToolMemoryFailed(String detail) {
+    return 'Didn\'t go through: $detail';
+  }
+
+  @override
+  String get tavernToolReasonRevision => 'it has changed; refresh and decide again';
+
+  @override
+  String get tavernToolReasonResolved => 'already decided';
+
+  @override
+  String get tavernToolReasonContext => 'the chat has changed';
+
+  @override
+  String get tavernToolReasonDeleted => 'that reply was deleted';
+
+  @override
+  String get tavernToolReasonChanged => 'that reply was edited';
+
+  @override
+  String get tavernToolReasonBranch => 'not on the current branch';
+
+  @override
+  String get tavernToolReasonInactive => 'no longer active';
+
+  @override
+  String get tavernToolReasonUnknown => 'reason unknown';
+
+  @override
+  String get tavernToolPolicy => 'Tools';
+
+  @override
+  String get tavernToolPolicyRoll => 'Let characters roll dice';
+
+  @override
+  String get tavernToolPolicyRollSubtitle => 'When a reply needs a roll, the tavern rolls it and keeps the result';
+
+  @override
+  String get tavernToolPolicyRemember => 'Let characters keep notes';
+
+  @override
+  String get tavernToolPolicyRememberSubtitle =>
+      'What a character finds worth remembering goes into memory, as set below';
+
+  @override
+  String get tavernToolPolicyMode => 'Keeping notes';
+
+  @override
+  String get tavernToolPolicyModeAsk => 'Ask me first';
+
+  @override
+  String get tavernToolPolicyModeAuto => 'Automatically';
+
+  @override
+  String get tavernToolPolicyDiagnostics =>
+      'Part of this setting couldn\'t be read; the tool it belongs to is off for now';
+
+  @override
+  String get tavernToolPolicyNote =>
+      'Replies only use these with DeepSeek and thinking off; a change applies from the next turn, and a character card can turn them off';
+
+  @override
+  String tavernToolPolicyFailed(String detail) {
+    return 'Didn\'t change: $detail';
+  }
+
+  @override
+  String get tavernChatTools => 'Tools in this chat';
+
+  @override
+  String get tavernChatToolFollow => 'As set';
+
+  @override
+  String get tavernChatToolOn => 'On';
+
+  @override
+  String get tavernChatToolOff => 'Off';
+
+  @override
+  String tavernChatToolNow(String roll, String remember) {
+    return 'In this chat: dice $roll, memories $remember';
+  }
+
+  @override
+  String get tavernChatToolHeld => 'What tavern settings turned off stays off, even if on here';
+
+  @override
+  String tavernInspectRequests(int count) {
+    return '$count requests';
+  }
+
+  @override
+  String tavernInspectUsageTotals(String prompt, String hit, String completion) {
+    return 'In $prompt (cached $hit) · out $completion';
+  }
+
+  @override
+  String get tavernReqUsagePrompt => 'In';
+
+  @override
+  String get tavernReqUsageCache => 'Cached';
+
+  @override
+  String get tavernReqUsageCompletion => 'Out';
+
+  @override
+  String tavernReqUsageLine(String field, String parts) {
+    return '$field: $parts';
+  }
+
+  @override
+  String get tavernReqUsageJoin => ', ';
+
+  @override
+  String tavernReqUsageKnown(String known) {
+    return '$known known';
+  }
+
+  @override
+  String tavernReqUsageUnknown(int count) {
+    return '$count not known';
+  }
+
+  @override
+  String tavernReqUsageMissing(int count) {
+    return '$count not reported';
+  }
+
+  @override
+  String tavernReqUsageInvalid(int count) {
+    return '$count reported wrongly';
+  }
+
+  @override
+  String get tavernToolFailBudget =>
+      'This turn has used up its tool requests and stops here; dice already rolled still count';
+
+  @override
+  String get tavernToolFailBatch => 'The model asked for too many tools at once; that batch was not run';
+
+  @override
+  String get tavernToolFailProtocol => 'The model\'s tool call was malformed and was not run';
+
+  @override
+  String get tavernToolFailSnapshot => 'This model\'s reply can\'t continue with tools, so it stops here';
+
+  @override
+  String get tavernToolFailReceipt => 'A tool\'s result couldn\'t be saved; check this turn again shortly';
+
+  @override
+  String get tavernToolFailAnchor => 'The chat changed during this turn, so it did not go on';
+
+  @override
+  String get tavernToolFail => 'Something went wrong with a tool';
+
+  @override
+  String tavernToolFailDetail(String detail) {
+    return 'Something went wrong with a tool: $detail';
+  }
+
+  @override
+  String get tavernDiceUnsettled => 'The result is not confirmed yet; check again';
+
+  @override
+  String get tavernDicePending => 'Your last roll isn\'t confirmed yet';
+
+  @override
+  String get tavernDiceRecheck => 'Check again';
+
+  @override
+  String get tavernDiceForget => 'Let it go';
+
+  @override
+  String get tavernDiceBusy => 'Busy right now; roll once this turn is written';
+
+  @override
+  String get tavernDiceOff => 'Dice are turned off in tavern settings';
+
+  @override
+  String tavernDiceFailed(String detail) {
+    return 'Didn\'t roll: $detail';
+  }
+
+  @override
+  String tavernDiceNotSaved(String detail) {
+    return 'Didn\'t go through: $detail';
+  }
+
+  @override
+  String get tavernChannel => 'Channel';
+
+  @override
+  String get tavernChannelDeepSeek => 'DeepSeek';
+
+  @override
+  String get tavernChannelDeepSeekNote => 'Uses the app\'s DeepSeek key';
+
+  @override
+  String get tavernChannelAdd => 'Add a channel';
+
+  @override
+  String get tavernChannelEdit => 'Edit channel';
+
+  @override
+  String get tavernChannelsNote =>
+      'Any OpenAI-compatible service works: a relay, OpenRouter, a model running on your own computer. Keys stay in this phone\'s secure storage. Cost estimates know DeepSeek\'s prices only; other channels show token counts.';
+
+  @override
+  String get tavernChannelName => 'Name';
+
+  @override
+  String get tavernChannelNameHint => 'Leave empty to use the address';
+
+  @override
+  String get tavernChannelBaseUrlInvalid => 'Starts with http:// or https://';
+
+  @override
+  String get tavernChannelKeyOptional => 'A local server without a key can leave this empty';
+
+  @override
+  String get tavernChannelKeyKept => 'A key is saved; leave empty to keep it';
+
+  @override
+  String get tavernChannelFetchModels => 'Fetch list';
+
+  @override
+  String get tavernChannelFetching => 'Fetching…';
+
+  @override
+  String tavernChannelFetchFailed(String detail) {
+    return 'Couldn\'t get the model list ($detail). You can type the model name.';
+  }
+
+  @override
+  String get tavernChannelNoModels => 'This service lists no models. Type the model name.';
+
+  @override
+  String get tavernChannelModelHint => 'The model name your provider gives';
+
+  @override
+  String get tavernChannelModelMissing => 'Enter a model name';
+
+  @override
+  String get tavernChannelPickModel => 'Pick a model';
+
+  @override
+  String get tavernChannelSearchModels => 'Search models';
+
+  @override
+  String get tavernChannelDeepSeekApi => 'Send as DeepSeek\'s API';
+
+  @override
+  String get tavernChannelDeepSeekApiNote =>
+      'Uses DeepSeek\'s continuation and the Thinking switch. Turn on only for DeepSeek itself or a relay that forwards it as is.';
+
+  @override
+  String get tavernChannelDelete => 'Delete channel';
+
+  @override
+  String tavernChannelDeleteTitle(String name) {
+    return 'Delete “$name”?';
+  }
+
+  @override
+  String get tavernChannelDeleteMessage => 'Its key is deleted too. If it\'s in use, DeepSeek takes over.';
+
+  @override
+  String get tavernChannelCopyFromApp => 'Copy from the app\'s channels';
+
+  @override
+  String get tavernModelName => 'Model name';
+
+  @override
+  String get tavernNumberCustom => 'Custom';
+
+  @override
+  String get tavernNumberType => 'Enter a number';
+
+  @override
+  String tavernNumberRange(String min, String max) {
+    return 'Enter a number from $min to $max';
+  }
+
+  @override
+  String tavernNumberRangeWhole(String min, String max) {
+    return 'Enter a whole number from $min to $max';
+  }
+
+  @override
+  String get tavernTopP => 'Top P';
+
+  @override
+  String get tavernPresencePenalty => 'Presence penalty';
+
+  @override
+  String get tavernFrequencyPenalty => 'Frequency penalty';
+
+  @override
+  String get tavernPresetSampling => 'Sampling';
+
+  @override
+  String get tavernChannelHeaders => 'Request headers (optional)';
+
+  @override
+  String get tavernChannelHeadersNote =>
+      'One per line, as “Name: value”. Kept in this phone\'s secure storage, like the key.';
+
+  @override
+  String get tavernChannelHeadersInvalid => 'Write each line as “Name: value”';
+
+  @override
+  String get tavernAuxiliary => 'Helper model';
+
+  @override
+  String get tavernAuxiliaryNote => 'Used for the director, picking who speaks in a group, and secrets';
+
+  @override
+  String get tavernAuxiliaryAuto => 'Automatic';
+
+  @override
+  String get tavernAuxiliaryAutoNote => 'Follows the main channel: Flash on DeepSeek, the same model elsewhere';
+
+  @override
+  String get tavernAuxiliaryDeepSeek => 'DeepSeek Flash';
+
+  @override
+  String get tavernChannelKeyClear => 'Clear';
+
+  @override
+  String get tavernChannelKeyCleared => 'The key is cleared when you save';
 
   @override
   String get updateCheck => 'Check for updates';
@@ -24101,7 +25015,7 @@ class L10nEn extends L10n {
   String get viewUiDialectNote => 'Shown in DSH Web';
 
   @override
-  String get voiceSettingsTitle => 'Voice input';
+  String get voiceSettingsTitle => 'Voice';
 
   @override
   String get voiceModeAuto => 'Automatic';
@@ -24113,7 +25027,8 @@ class L10nEn extends L10n {
   String get voiceModeEngine => 'Voice model';
 
   @override
-  String get voiceModeAutoHint => 'Uses the voice model when it’s ready, otherwise the phone’s service';
+  String get voiceModeAutoHint =>
+      'Uses DeepSeek when you’re signed in or have an API key, otherwise the voice model or the phone’s service';
 
   @override
   String get voiceModeSystemHint => 'Use the recognition service selected on this phone';
@@ -24319,6 +25234,30 @@ class L10nEn extends L10n {
 
   @override
   String get voiceModelNoticeFailed => 'Voice model download failed. Open the app to retry.';
+
+  @override
+  String get voiceModeDeepseek => 'DeepSeek';
+
+  @override
+  String get voiceModeDeepseekHint => 'DeepSeek’s recognizer, paid by your signed-in account or API key';
+
+  @override
+  String get voiceModeCloud => 'Another cloud service';
+
+  @override
+  String get voiceModeCloudHint => 'An OpenAI-compatible transcription API, such as Whisper or SiliconFlow';
+
+  @override
+  String get voiceCloudSection => 'Cloud recognition service';
+
+  @override
+  String get voiceCloudFooter => 'Recordings are sent to this service. The key stays on this phone.';
+
+  @override
+  String get voiceCloudBaseHelper => 'Up to /v1; the app calls …/audio/transcriptions';
+
+  @override
+  String get voiceCloudModelHelper => 'For example whisper-1 or FunAudioLLM/SenseVoiceSmall';
 
   @override
   String get voiceScribeReadFailed => 'Could not read voice settings. Retry.';
@@ -24995,6 +25934,9 @@ class L10nEn extends L10n {
       'Uninstalled, but some places didn\'t catch up. Reopen the app to bring them up to date.';
 
   @override
+  String get workshopInstalledDismissFailure => 'Got it';
+
+  @override
   String get workshopMinePublish => 'Submit';
 
   @override
@@ -25444,6 +26386,105 @@ class L10nEn extends L10n {
 
   @override
   String get workshopPublishErrorAgain => 'It can\'t be submitted again right now.';
+
+  @override
+  String get workshopPublishSectionPreview => 'Preview';
+
+  @override
+  String get workshopPublishPreviewSwitch => 'Show a preview in the Workshop';
+
+  @override
+  String get workshopPublishPreviewIdle => 'The first frame of the idle animation';
+
+  @override
+  String get workshopPublishSectionCover => 'Cover (optional)';
+
+  @override
+  String get workshopPublishCoverPick => 'Choose a cover';
+
+  @override
+  String get workshopPublishCoverHelper =>
+      'PNG, up to 512 px a side and 2 MB. Without one, the first letter of the name is shown.';
+
+  @override
+  String get workshopPublishCoverChosen => 'Your cover';
+
+  @override
+  String get workshopPublishCoverReplace => 'Replace';
+
+  @override
+  String get workshopPublishCoverRemove => 'Remove';
+
+  @override
+  String get workshopPublishCoverBadSize => 'This image is empty or larger than 2 MB. Try another.';
+
+  @override
+  String get workshopPublishCoverBadPng => 'This isn\'t an intact PNG image. Try another.';
+
+  @override
+  String get workshopPublishCoverBadDimensions =>
+      'This image is too large: 512 px a side at most. Shrink it and choose again.';
+
+  @override
+  String get workshopPublishCoverUnreadable => 'Couldn\'t read this image. Try another.';
+
+  @override
+  String get workshopPublishReviewPreviewIdle => 'First idle frame';
+
+  @override
+  String get workshopPublishReviewPreviewNone => 'No preview';
+
+  @override
+  String get workshopPublishErrorPreviewPet =>
+      'This pet\'s frame is larger than 512 px, so it can\'t have a preview. Turn the preview off to submit as usual.';
+
+  @override
+  String get workshopPublishErrorPreviewConflict =>
+      'The companion\'s package already has a preview.png, so the cover can\'t be added. Remove the cover to submit as usual.';
+
+  @override
+  String get workshopPublishErrorPreviewMissing =>
+      'The preview to use wasn\'t found. Choose it again, or submit without one.';
+
+  @override
+  String get workshopPublishErrorPreviewUnsupported =>
+      'This Workshop isn\'t taking previews right now. Submit without one as usual.';
+
+  @override
+  String get workshopPublishLetGo => 'Let go of this record';
+
+  @override
+  String get workshopPublishLetGoTitle => 'Let go of this phone\'s record?';
+
+  @override
+  String workshopPublishLetGoAccount(String forum, String worker) {
+    return 'Only this phone\'s unfinished record for the account on forum $forum at Workshop $worker is removed.';
+  }
+
+  @override
+  String workshopPublishLetGoAll(String forum, String worker) {
+    return 'The submission records on this phone can\'t be read as a whole. Letting go removes the unfinished-submission records of every account on this phone, not just the one for forum $forum at Workshop $worker.';
+  }
+
+  @override
+  String get workshopPublishLetGoFacts =>
+      'The Workshop isn\'t told to cancel: if it already received this submission, it stays there and shows under My uploads. If it didn\'t, you\'ll need to submit again, and if it did arrive after all there will be two.';
+
+  @override
+  String get workshopPublishLetGoFactsKnown =>
+      'The Workshop isn\'t told to cancel: its result stays as it is, and this submission is still under My uploads.';
+
+  @override
+  String get workshopPublishLetGoConfirm => 'Let go';
+
+  @override
+  String get workshopPublishLetGoDone => 'This phone\'s record was let go';
+
+  @override
+  String get workshopPublishLetGoStale => 'The record just changed. Tap again to confirm it anew.';
+
+  @override
+  String get workshopPublishLetGoUnsupported => 'This version can\'t let go of the record here.';
 
   @override
   String get workspaceRecoveryTitle => 'Workspace index recovery';
