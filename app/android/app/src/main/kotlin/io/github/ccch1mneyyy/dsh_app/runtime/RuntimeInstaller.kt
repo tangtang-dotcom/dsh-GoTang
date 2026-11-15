@@ -313,7 +313,11 @@ enum class ResetKeep(val wire: String, val paths: List<String>) {
     UI_AND_SKILLS("uiAndSkills", listOf("root/.dsh/dsh-go", "root/.dsh/skills", "root/.agents/skills")),
 
     /** Installed plugins with their settings, the global settings layer and the home `.env`. */
-    PLUGINS_AND_SETTINGS("pluginsAndSettings", listOf("root/.dsh/profiles", "root/.dsh/cordis.patch.yml", "root/.dsh/.env"));
+    PLUGINS_AND_SETTINGS(
+        "pluginsAndSettings",
+        // fork: .credentials.yaml 存供应商 API Key，重置/迁移时一并保留
+        listOf("root/.dsh/profiles", "root/.dsh/cordis.patch.yml", "root/.dsh/.env", "root/.dsh/.credentials.yaml"),
+    );
 
     companion object {
         /** Every path a reset can keep; none lies inside another. */
