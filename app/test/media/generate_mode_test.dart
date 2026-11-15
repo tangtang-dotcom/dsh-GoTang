@@ -41,8 +41,10 @@ Future<ChatHarness> pumpGenerate(
     testApp(
       MediaQuery.withClampedTextScaling(minScaleFactor: scale, maxScaleFactor: scale, child: const ChatScreen()),
       brightness: brightness,
+      // 终端胶囊自己的测试管它那一行；这里量的是输入条边上的胶囊。
       overrides: [
         ...h.overrides,
+        rootPillOff,
         ...mediaOverrides(plugin: plugin, modes: modes, catalog: catalog),
       ],
     ),

@@ -387,6 +387,34 @@ class PhoneControl private constructor(private val app: Context) : PhoneEnv, Con
         return true
     }
 
+    // ── 终端权限 ──────────────────────────────────────────────────────────────
+
+    private val shellStore by lazy { ShellPolicyStore.of(app) }
+
+    override fun shellPolicy(): ShellPolicy = shellStore.snapshot()
+
+    override fun cacheDir(): File? = app.cacheDir
+
+    /** 设置 → 终端权限：档位、命令白名单、/sdcard 开关。 */
+    fun setShellMode(mode: String): Boolean {
+        shellStore.setMode(ShellMode.of(mode))
+        emitStatus()
+        return true
+    }
+
+    fun setAllowedCommands(commands: List<String>): Boolean {
+        shellStore.setAllowed(commands.toSet())
+        emitStatus()
+        return true
+    }
+
+    fun setSdcardAllowed(on: Boolean): Boolean {
+        shellStore.setSdcardAllowed(on)
+        emitStatus()
+        return true
+    }
+
+
     override fun policies(): PhonePolicies = policiesCache
 
     /** Construction only, before any registry/worker can read the published cache. */
@@ -805,6 +833,7 @@ class PhoneControl private constructor(private val app: Context) : PhoneEnv, Con
             "notifications" to nm.areNotificationsEnabled(),
             "confirmationNotifications" to notificationGate.available(),
             "background" to backgroundStatus(),
+            "shell" to ForkShellStatus.map(shellPolicy()),
             "a11yKeeper" to keeperStatus(),
             "task" to tasks.snapshot().toMap(),
             "taskInterruption" to taskJournal.status(),

@@ -25,6 +25,7 @@ import '../../../l10n/l10n.dart';
 import '../../../plugins/native/native_model.dart';
 import '../../../plugins/native/native_state.dart';
 import '../../../state/chat_state.dart';
+import '../../../fork/chat/plus_panel_switches.dart';
 import '../../../state/connection_state.dart';
 import '../../../state/features_state.dart';
 import '../../../state/hosts_state.dart';
@@ -307,6 +308,7 @@ class _ThisChatCardState extends ConsumerState<_ThisChatCard> {
             trailing: Switch(value: plan, onChanged: _busy ? null : (v) => unawaited(_togglePlan(v))),
           ),
         ),
+        ...forkChatPillSwitches(context, ref),
       ],
     );
   }

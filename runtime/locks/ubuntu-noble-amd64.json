@@ -8,11 +8,11 @@
   "packages": [
     {
       "package": "ca-certificates",
-      "version": "20260816ubuntu0.24.04.1",
+      "version": "20260816ubuntu0.24.04.2",
       "architecture": "all",
-      "filename": "pool/main/c/ca-certificates/ca-certificates_20260816ubuntu0.24.04.1_all.deb",
-      "sha256": "8a0a754aaafed72cc8efb8c1731808133284a84fbfc76a4fcc73fce9e01b4187",
-      "size": 138884,
+      "filename": "pool/main/c/ca-certificates/ca-certificates_20260816ubuntu0.24.04.2_all.deb",
+      "sha256": "f9fbacd417b515450b831032cc39d18059e9874e67525679a43c16071dabf9a0",
+      "size": 140064,
       "installedSize": 330,
       "upgradesBase": null,
       "neededBy": "requested"
@@ -41,11 +41,11 @@
     },
     {
       "package": "libbrotli1",
-      "version": "1.1.0-2build2",
+      "version": "1.1.0-2ubuntu0.1",
       "architecture": "amd64",
-      "filename": "pool/main/b/brotli/libbrotli1_1.1.0-2build2_amd64.deb",
-      "sha256": "74492419b8fda803774b8c9acef6afc5d2f9ff31782635aae212906adae7b277",
-      "size": 330730,
+      "filename": "pool/main/b/brotli/libbrotli1_1.1.0-2ubuntu0.1_amd64.deb",
+      "sha256": "70b188a86d81f30d7510aab30e25d638ed5037dded6691af1533952b71ac61de",
+      "size": 330968,
       "installedSize": 843,
       "upgradesBase": null,
       "neededBy": "libcurl3t64-gnutls"

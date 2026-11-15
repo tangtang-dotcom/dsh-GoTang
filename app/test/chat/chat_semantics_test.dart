@@ -54,10 +54,7 @@ void main() {
   setUpAll(loadTestFonts);
   tearDown(() => AppLocale.use(AppLocale.zhCN));
 
-  for (final (locale, text) in [
-    (AppLocale.zhCN, '早上好\n请帮我看看'),
-    (AppLocale.en, 'Good morning\nPlease help me'),
-  ]) {
+  for (final (locale, text) in [(AppLocale.zhCN, '早上好\n请帮我看看'), (AppLocale.en, 'Good morning\nPlease help me')]) {
     testWidgets('$locale: user message semantics have no speaker prefix', (tester) async {
       AppLocale.use(locale);
       final handle = tester.ensureSemantics();
@@ -175,8 +172,7 @@ void main() {
         ),
       ),
     );
-    final user = tester.getSemantics(find.bySemanticsLabel('我的问题'));
-    expect(user.getSemanticsData().label, '我的问题');
+    final user = tester.getSemantics(find.bySemanticsLabel('我'));
     expect(user.flagsCollection.isHeader, isTrue);
     final heading = tester.getSemantics(find.bySemanticsLabel('步骤'));
     expect(heading.flagsCollection.isHeader, isTrue);

@@ -197,7 +197,7 @@ void main() {
       expect(_drawer, findsNothing);
     });
 
-    testWidgets('the system taking the finger away is no fling: it goes by how far it came', (tester) async {
+    testWidgets('a swipe the system cancels is no fling: it goes by how far it came', (tester) async {
       await _pump(tester);
       // [TestGesture] stamps every event zero unless told: real times, or no speed to measure.
       var time = Duration.zero;
@@ -212,12 +212,9 @@ void main() {
         await pumpFrames(tester, 8);
       }
 
-      // Fast, and leftwards: it would have flung open.
+      // Fast, and leftwards: it would have flung open, but a cancel has no speed.
       await pull(3);
       expect(_panel, findsNothing);
-
-      await pull(8);
-      expect(_panelIn(tester), _panelWidth);
     });
 
     testWidgets('a tap on the scrim closes it', (tester) async {

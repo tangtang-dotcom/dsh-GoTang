@@ -25,6 +25,9 @@ object PhoneToolCatalog {
     const val ANDROID_SHELL = "android_shell"
     const val DIAGNOSTICS = DiagnosticsTool.NAME
 
+    /** 设置 → 终端权限：经 su 执行；档位与命令白名单在 App 里定。 */
+    const val SHELL = "shell"
+
     class Tool(val name: String, val description: String, val properties: Map<String, Any?>, val required: List<String>) {
         fun toJson(): Map<String, Any?> = linkedMapOf(
             "name" to name,
@@ -278,6 +281,20 @@ object PhoneToolCatalog {
                 "refresh" to bool("默认true，主动刷新；false仅读取已发布的普通诊断缓存，不含手动输入法报告"),
             ),
             emptyList(),
+        ),
+        Tool(
+            SHELL,
+            // l10n:keep agent tool catalog
+            "在手机上以 root 执行一条 shell 命令（经 su）。返回标准输出（合并 stderr），超过 8000 字符截断。" +
+                "只在用户开启了 设置 → 终端权限 时可用；进阶模式只放行用户勾选的命令。" +
+                "只读查询优先，不要用它改系统、刷机或删除用户数据。",
+            linkedMapOf(
+                // l10n:keep agent tool catalog
+                "command" to str("要执行的命令，例如 id 或 ls /sdcard/Download"),
+                // l10n:keep agent tool catalog
+                "timeoutMs" to int("超时毫秒，1000–120000，默认 20000"),
+            ),
+            listOf("command"),
         ),
     )
 

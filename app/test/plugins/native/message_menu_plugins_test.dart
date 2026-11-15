@@ -46,7 +46,8 @@ Future<FakeComposer> pumpReply(WidgetTester tester, FakeBridge bridge, {bool inC
 }
 
 Future<void> openMenu(WidgetTester tester) async {
-  await tester.longPress(find.textContaining('正文'));
+  // 长按现在选中正文；回复菜单在操作行的 ⋯ 里。
+  await tester.tap(find.byTooltip('更多').last);
   await tester.pumpAndSettle();
 }
 

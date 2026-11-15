@@ -4,6 +4,7 @@ import io.github.ccch1mneyyy.dsh_app.phone.background.Reasons
 import io.github.ccch1mneyyy.dsh_app.phone.skills.PhoneTaskTrace
 import io.github.ccch1mneyyy.dsh_app.phone.skills.PhoneSkillReplaySelections
 import io.github.ccch1mneyyy.dsh_app.phone.skills.PhoneSkillOutcomes
+import java.io.File
 import java.time.ZoneId
 import java.util.concurrent.atomic.AtomicReference
 
@@ -37,6 +38,12 @@ interface PhoneEnv {
      */
     fun beforeHandoff(screen: PhoneScreen, owner: PhoneTasks.Owner): String? = null
     fun sleep(ms: Long) = Thread.sleep(ms)
+
+    /** 终端权限（设置 → 终端权限）：档位、命令白名单、是否放开整个 /sdcard。 */
+    fun shellPolicy(): ShellPolicy = ShellPolicy.DISABLED
+
+    /** 终端命令的输出临时目录；null 时退回系统临时目录。 */
+    fun cacheDir(): File? = null
 }
 
 /**
@@ -383,6 +390,7 @@ class PhoneCore(
                 PhoneToolCatalog.TAP, PhoneToolCatalog.TYPE, PhoneToolCatalog.SCROLL, PhoneToolCatalog.TAP_XY -> act(name, a, scope, owner)
                 PhoneToolCatalog.KEY -> key(a, owner)
                 PhoneToolCatalog.HANDOFF -> handoff(a, scope, owner)
+                PhoneToolCatalog.SHELL -> shell(a, owner)
                 // l10n:keep agent tool result
                 else -> Out("没有这个手机工具：$name", error = true)
             }
@@ -391,8 +399,20 @@ class PhoneCore(
         }
     }
 
-    private fun current(owner: PhoneTasks.Owner): Boolean =
+private fun current(owner: PhoneTasks.Owner): Boolean =
         tasks.isCurrent(owner) && !Thread.currentThread().isInterrupted
+
+    /** `shell`: 全部逻辑在 fork 层（ForkShell），这里只做参数转换。 */
+    private fun shell(a: Args, owner: PhoneTasks.Owner): Out {
+        if (!current(owner)) return stoppedOut("shell")
+        val result = ForkShell.run(
+            env.shellPolicy(),
+            a.str("command").orEmpty(),
+            (a.int("timeoutMs")?.toLong() ?: 20_000L).coerceIn(1_000L, 120_000L),
+            env.cacheDir(),
+        )
+        return Out(result.text, error = result.error, summary = result.summary, decision = result.decision)
+    }
 
     private fun androidShell(a: Args, scope: SerialWorker.Scope, owner: PhoneTasks.Owner): Out {
         val request = PhoneAndroidShell.parse(a) ?: return Out(
@@ -1389,6 +1409,7 @@ class PhoneCore(
             PhoneToolCatalog.SCREEN -> 12_000L
             PhoneToolCatalog.COLLECT -> 120_000L
             PhoneToolCatalog.HANDOFF -> 30_000L
+            PhoneToolCatalog.SHELL -> 120_000L
             else -> 30_000L
         }
     }

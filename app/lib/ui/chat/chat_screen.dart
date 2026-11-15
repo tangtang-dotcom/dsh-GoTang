@@ -30,6 +30,8 @@ import '../../state/agents_state.dart' show subagentParentProvider;
 import '../../state/attachments.dart';
 import '../../state/balance_state.dart';
 import '../../state/chat_error_text.dart';
+import '../../fork/chat/chat_pill_prefs.dart';
+import '../../fork/chat/root_dock.dart';
 import '../../state/chat_state.dart';
 import '../../state/commands_state.dart';
 import '../../state/compose_inbox.dart';
@@ -92,7 +94,9 @@ import 'chat_list.dart';
 import 'composer.dart';
 import 'composer_toast.dart';
 import 'dock/chat_dock.dart';
+import 'dock/dock_pill.dart';
 import 'dock/dock_stack.dart';
+import '../../fork/chat/root_pill.dart';
 import 'empty_state.dart';
 import 'new_chat_options.dart';
 import 'media/generate_mode.dart';
@@ -1775,11 +1779,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> with WidgetsBindingObse
     final running = chat?.running ?? false;
     final pillsBesideStrip = sessionId != null && running && !typing;
     final pillsInCapsules = !readOnly && !running && !typing;
+    // 终端胶囊在上、完全权限在下时是两行；两者同开时合成一行，
+    // 完全权限收成右端的圆形 ⚠（见 [ForkRootDock]）。
+    final rootPillShown = sessionId != null && local && !pillsBesideStrip && ref.watch(showRootPillProvider);
     final composerPills = _composerPills(
       sessionId,
       autoApprove: chat?.autoApprove ?? false,
       generate: readOnly ? null : generate,
       risk: !pillsBesideStrip,
+      permission: !rootPillShown,
     );
     final headerHeight = typing ? MediaQuery.paddingOf(context).top + AppSpace.sm : ChatHeader.heightOf(context);
 
@@ -2115,6 +2123,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen> with WidgetsBindingObse
                                     child: DockStack(
                                       cards: [
                                         if (sessionId != null) ...[
+                                          // 终端权限只属于本机引擎；生成期间它缩成
+                                          // 活动条旁的紧凑图标，这里不再放第二份。
+                                          if (rootPillShown)
+                                            DockSlot(
+                                              key: const ValueKey('root'),
+                                              child: ForkRootDock(
+                                                sessionId: sessionId,
+                                                autoApprove: chat?.autoApprove ?? false,
+                                              ),
+                                            ),
                                           TodoDockSlot(sessionId: sessionId),
                                           GoalDockSlot(sessionId: sessionId),
                                           ActivityStripSlot(
@@ -2127,9 +2145,24 @@ class _ChatScreenState extends ConsumerState<ChatScreen> with WidgetsBindingObse
                                         // It gives the activity strip its place while a reply generates.
                                         if (!readOnly) ComposerStripSlot(sessionId: sessionId, visible: !running),
                                       ],
-                                      accessory: pillsBesideStrip
-                                          ? _stripRisk(sessionId, autoApprove: chat?.autoApprove ?? false)
-                                          : null,
+                                      accessory: switch (pillsBesideStrip) {
+                                        // 有东西才占位：空的附件行也会把活动条挤窄 8。
+                                        false => null,
+                                        // pillsBesideStrip 已保证会话存在。
+                                        true => switch ((
+                                          local && ref.watch(showRootPillProvider),
+                                          _stripRisk(sessionId!, autoApprove: chat?.autoApprove ?? false),
+                                        )) {
+                                          (false, null) => null,
+                                          (final pill, final risk) => Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              if (pill) ...[const RootPill(compact: true), const SizedBox(width: 6)],
+                                              risk ?? const SizedBox.shrink(),
+                                            ],
+                                          ),
+                                        },
+                                      },
                                     ),
                                   ),
                                 ),
@@ -2144,6 +2177,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> with WidgetsBindingObse
                                       visible: !running,
                                       leading: pillsInCapsules ? composerPills : null,
                                       strip: false,
+                                      showChatPluginsCapsule:
+                                          sessionId != null && !rootPillShown && ref.watch(showPluginPillProvider),
                                     ),
                                   ),
                                 if (_preparedPhoneSkill case final prepared?)
@@ -2273,7 +2308,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> with WidgetsBindingObse
   /// client allows everything, else 「⚠ 完全权限 ›」 for a conversation looser
   /// than 工作区内修改 (unless [risk] is false: they are beside the activity
   /// strip), then the generation mode's capsule; nothing otherwise.
-  Widget? _composerPills(String? sessionId, {required bool autoApprove, GenerateParams? generate, bool risk = true}) {
+  Widget? _composerPills(
+    String? sessionId, {
+    required bool autoApprove,
+    GenerateParams? generate,
+    bool risk = true,
+    bool permission = true,
+  }) {
     final capsule = generate == null
         ? null
         : GenerateCapsule(params: generate, onTap: () => _openGenerateSheet(generate), onExit: _exitGenerate);
@@ -2282,7 +2323,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> with WidgetsBindingObse
       // Beside the activity strip ([_stripRisk]).
     } else if (sessionId != null && autoApprove) {
       pill = AutoApprovePill(onDisable: () => ref.read(chatProvider(sessionId).notifier).setAutoApprove(false));
-    } else if (sessionId != null) {
+    } else if (sessionId != null && permission && ref.watch(showPermissionPillProvider)) {
       final risky = ref.watch(sessionModesProvider(sessionId).select((m) => m.risky ? m.preset : null));
       if (risky != null) {
         // Beside the mode capsule it shrinks to its ⚠ (§4.2).
@@ -2307,12 +2348,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen> with WidgetsBindingObse
 
   /// 「自动允许中」/「完全权限」 beside the activity strip while a reply generates.
   Widget? _stripRisk(String sessionId, {required bool autoApprove}) {
+    // 隐藏开关只关「完全权限」提醒；「自动允许中」是另一回事，必须一直显示。
     if (autoApprove) {
       return StripRiskChip.autoApprove(
         context,
         onDisable: () => ref.read(chatProvider(sessionId).notifier).setAutoApprove(false),
       );
     }
+    // 生成期间这是「完全权限」徽标的另一条显示路径（贴在活动条旁边），
+    // 隐藏开关也要管到这里，否则一回复就又冒出来。
+    if (!ref.watch(showPermissionPillProvider)) return null;
     final risky = ref.watch(sessionModesProvider(sessionId).select((m) => m.risky ? m.preset : null));
     if (risky == null) return null;
     return StripRiskChip.permission(

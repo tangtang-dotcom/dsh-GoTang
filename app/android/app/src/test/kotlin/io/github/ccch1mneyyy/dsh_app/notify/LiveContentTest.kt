@@ -55,9 +55,10 @@ class LiveContentTest {
         assertEquals(LiveContent.CHIP_MAX, c.chip!!.length)
     }
 
-    @Test fun aRunsChipShowsItsClockAndTheRestTheirWords() {
+    @Test fun aRunsChipKeepsItsWords() {
         val run = LiveContent.fromMap(running)!!
-        assertNull(run.chipWords)
+        // 运行中也保留状态词：HyperOS/ColorOS 的岛把它当标题，只看时钟会像卡住了。
+        assertEquals("工作中", run.chipWords)
         assertEquals("工作中", run.copy(sinceMs = null).chipWords)
         assertEquals("待确认", run.copy(kind = LiveContent.Kind.WAITING, chip = "待确认").chipWords)
         val done = run.copy(kind = LiveContent.Kind.DONE, chip = "完成")
@@ -88,7 +89,8 @@ class LiveContentTest {
         assertEquals(XiaomiFocus.PIC_ICON, (big["picInfo"] as Map<*, *>)["pic"])
         assertEquals("待确认", (big["textInfo"] as Map<*, *>)["title"])
         val base = v2["baseInfo"] as Map<*, *>
-        assertEquals("修一下登录页", base["title"])
+        // 岛上要的是「现在在干什么」：状态词当标题，会话名退到正文。
+        assertEquals("待确认", base["title"])
         assertEquals("运行：git push", base["content"])
     }
 

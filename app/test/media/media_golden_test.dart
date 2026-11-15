@@ -15,6 +15,7 @@ import 'package:dsh_app/ui/theme/theme.dart';
 import 'package:dsh_client/dsh_client.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../chat/support/harness.dart';
 import 'support.dart';
@@ -73,6 +74,9 @@ Future<void> _pumpCards(
 void main() {
   // The generation mosaic starts at a random moment; the same one every run here.
   ImageGeneration.debugSeed = 7;
+
+  // 语音与界面偏好都读 SharedPreferences；测试里给它一个空实现。
+  setUp(() => SharedPreferences.setMockInitialValues({}));
   for (final brightness in Brightness.values) {
     final suffix = brightness.name;
 

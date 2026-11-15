@@ -34,7 +34,7 @@ Future<ChatHarness> _pump(
 }) async {
   usePhoneView(tester);
   mockClipboard(tester);
-  final harness = ChatHarness(session: 's1', states: {'s1': _state(prompt)});
+  final harness = ChatHarness(session: 's1', states: {'s1': _state(prompt)}, extra: [rootPillOff]);
   await tester.pumpWidget(testApp(const ChatScreen(), brightness: brightness, overrides: harness.overrides));
   await pumpFrames(tester);
   final chat = harness.controllers['s1']!;

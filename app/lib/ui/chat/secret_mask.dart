@@ -10,6 +10,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
+import '../../fork/chat/tap_to_menu.dart';
 import '../../l10n/l10n.dart';
 import '../theme/theme.dart';
 
@@ -745,13 +746,18 @@ class _EyeButton extends StatelessWidget {
       label: revealed ? l10n.activitySecretHide : l10n.activitySecretShow,
       excludeSemantics: true,
       onTap: onTap,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onTap,
-        child: Center(
-          child: CustomPaint(
-            size: Size.square(size),
-            painter: _EyePainter(color, crossed: revealed),
+      child: Listener(
+        // 气泡整块轻点会开消息菜单；眼睛自己吃掉这一下。
+        onPointerDown: (_) => TapToMenu.suppressNextTap(),
+        child: GestureDetector(
+          key: const ValueKey('secret-eye-toggle'),
+          behavior: HitTestBehavior.opaque,
+          onTap: onTap,
+          child: Center(
+            child: CustomPaint(
+              size: Size.square(size),
+              painter: _EyePainter(color, crossed: revealed),
+            ),
           ),
         ),
       ),

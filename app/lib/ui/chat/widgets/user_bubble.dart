@@ -4,9 +4,9 @@
 
 import 'package:flutter/material.dart';
 
+import '../../../l10n/l10n.dart';
 import '../../../state/composer_quote.dart' show splitQuote;
 import '../../common/expand_reveal.dart';
-import '../../common/fluid_bits.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/theme.dart';
 import '../media/generate_header.dart';
@@ -14,6 +14,7 @@ import '../media/media_format.dart' show mediaParamsLine;
 import '../mention/mention_chip.dart';
 import '../secret_mask.dart';
 import 'message_actions.dart';
+import '../../../fork/chat/tap_to_menu.dart';
 import 'quote_chip.dart';
 
 /// 用户消息:**右对齐的软气泡**,比页面深一档,像"按进去"的。
@@ -88,6 +89,7 @@ class UserBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final surfaces = DshSurfaces.of(context);
     final style = AppType.chatBody(context, color: surfaces.onUserBubble);
     // A generation request (generation mode's parameter header on the first
@@ -100,6 +102,7 @@ class UserBubble extends StatelessWidget {
     // Selecting goes through the menu ("选择文字"): long-press is the menu.
     // `@` references draw as chips; text with a credential stays a plain
     // SecretText.
+    // 选区由聊天列表统一提供，气泡自己不再套 SelectionArea。
     Widget content = ReferenceText(quote == null ? shown : body, style: style, interactive: interactive);
     if (quote != null) {
       content = Column(
@@ -117,8 +120,13 @@ class UserBubble extends StatelessWidget {
     final bubble = Semantics(
       container: true,
       header: true,
-      child: HoldLift(
-        onLongPress: () => _menu(context),
+      // 「我」是这一条的名字，正文和按钮仍是它自己的节点（读屏和测试都按文本找得到）。
+      explicitChildNodes: true,
+      label: l10n.chatMe,
+      child: TapToMenu(
+        // 长按交给 SelectionArea 选字；轻点打开消息菜单（指针事件在手势竞技场之前，
+        // 所以 SelectionArea 抢不走判定）。
+        onTap: () => _menu(context),
         child: DecoratedBox(
           decoration: ShapeDecoration(color: surfaces.userBubble, shape: AppShape.bubble),
           child: Padding(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8), child: content),

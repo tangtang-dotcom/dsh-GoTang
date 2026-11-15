@@ -8,11 +8,11 @@ import 'package:dsh_client/dsh_client.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../fork/chat/tap_to_menu.dart';
 import '../../../l10n/l10n.dart';
 import '../../../speech/read_aloud.dart';
 import '../../speech/speech_ui.dart';
 import '../../common/expand_reveal.dart';
-import '../../common/fluid_bits.dart';
 import '../../common/typing_indicator.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/theme.dart';
@@ -139,7 +139,14 @@ class _AssistantMessageState extends State<AssistantMessage> {
       // Long-press opens the menu; selecting text is one of its entries.
       // repairBareViews: a model that forgets the ```dsh-ui fence still gets
       // its view drawn instead of a wall of JSON.
-      _body = MarkdownBody(text: text, streaming: streaming, reveal: reveal, selectable: false, repairBareViews: true);
+      _body = MarkdownBody(
+        text: text,
+        streaming: streaming,
+        reveal: reveal,
+        // 选区由聊天列表统一提供，消息自己不再套 SelectionArea。
+        selectable: false,
+        repairBareViews: true,
+      );
       _bodyText = text;
       _bodyStreaming = streaming;
       _bodyReveal = reveal;
@@ -184,51 +191,49 @@ class _AssistantMessageState extends State<AssistantMessage> {
     }
 
     final actions = widget.showActions && !streaming && text.isNotEmpty;
-    final reply = HoldLift(
-      behavior: HitTestBehavior.opaque,
-      onLongPress: streaming || text.isEmpty ? null : () => _menu(text),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (reasoning.isNotEmpty) ...[
-            ThinkingPill(
-              reasoning: reasoning,
-              active: streaming && text.isEmpty,
-              streaming: streaming,
-              growIn: _waited,
-            ),
-            if (text.isNotEmpty && !_textAfterThinking) const SizedBox(height: 8),
-          ],
-          if (text.isNotEmpty)
-            _textAfterThinking ? _FirstTextIn(child: _markdown(text, streaming)) : _markdown(text, streaming),
-          if (item.interrupted) const _InterruptedMark(),
-          // 一轮结束时和输入条上的胶囊同一节奏展开:胶囊收回多少,这里长出
-          // 多少,回答不会先被顶上去再落回来。打开对话时已结束的轮直接展开。
-          ExpandReveal(
-            open: actions,
-            duration: AppMotion.standard,
-            curve: AppMotion.std,
-            child: actions
-                ? Consumer(
-                    builder: (context, ref, _) => ReplyActionRow(
-                      // Copy / share carry a one-line summary of each visual
-                      // reply, never its raw JSON.
-                      text: () => dshUiPlainText(text),
-                      onBranch: widget.onBranch,
-                      branching: widget.branching,
-                      onShare: () => shareReply(context, widget.item),
-                      onReadAloud: () => readAloudReply(context, widget.item.key, dshUiPlainText(text)),
-                      reading: ref.watch(readAloudProvider.select((s) => s.phaseOf(widget.item.key))),
-                      onRegenerate: widget.onRegenerate,
-                      regenerating: widget.regenerating,
-                      onMore: () => _menu(text),
-                      trailing: widget.footnote,
-                    ),
-                  )
-                : const SizedBox.shrink(),
-          ),
+    // 正文轻点打开消息菜单；长按交给聊天列表统一的 SelectionArea 选字。
+    // 思考条和底部操作行不套 TapToMenu，避免和它们自己的点击冲突。
+    final reply = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (reasoning.isNotEmpty) ...[
+          ThinkingPill(reasoning: reasoning, active: streaming && text.isEmpty, streaming: streaming, growIn: _waited),
+          if (text.isNotEmpty && !_textAfterThinking) const SizedBox(height: 8),
         ],
-      ),
+        if (text.isNotEmpty)
+          TapToMenu(
+            onTap: () {
+              if (!streaming) unawaited(_menu(text));
+            },
+            child: _textAfterThinking ? _FirstTextIn(child: _markdown(text, streaming)) : _markdown(text, streaming),
+          ),
+        if (item.interrupted) const _InterruptedMark(),
+        // 一轮结束时和输入条上的胶囊同一节奏展开:胶囊收回多少,这里长出
+        // 多少,回答不会先被顶上去再落回来。打开对话时已结束的轮直接展开。
+        ExpandReveal(
+          open: actions,
+          duration: AppMotion.standard,
+          curve: AppMotion.std,
+          child: actions
+              ? Consumer(
+                  builder: (context, ref, _) => ReplyActionRow(
+                    // Copy / share carry a one-line summary of each visual
+                    // reply, never its raw JSON.
+                    text: () => dshUiPlainText(text),
+                    onBranch: widget.onBranch,
+                    branching: widget.branching,
+                    onShare: () => shareReply(context, widget.item),
+                    onReadAloud: () => readAloudReply(context, widget.item.key, dshUiPlainText(text)),
+                    reading: ref.watch(readAloudProvider.select((s) => s.phaseOf(widget.item.key))),
+                    onRegenerate: widget.onRegenerate,
+                    regenerating: widget.regenerating,
+                    onMore: () => _menu(text),
+                    trailing: widget.footnote,
+                  ),
+                )
+              : const SizedBox.shrink(),
+        ),
+      ],
     );
     // 一条回复是读屏里的一个分组,里面的段落、标题照常逐个读。
     final message = Semantics(key: const ValueKey('reply'), container: true, explicitChildNodes: true, child: reply);

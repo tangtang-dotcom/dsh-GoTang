@@ -14,6 +14,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'support/harness.dart';
 
@@ -158,6 +159,9 @@ List<String> _composerTexts(WidgetTester tester) => [
 }
 
 void main() {
+  // 语音与界面偏好都读 SharedPreferences；测试里给它一个空实现。
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+
   setUpAll(loadTestFonts);
 
   group('ChatController message actions', () {
@@ -267,7 +271,6 @@ void main() {
       expect(await chat().forkBeforePrompt(prompt(8)), isNull);
       expect(state().error, '分叉失败：这里不能分叉');
     });
-
   });
 
   group('reply actions', () {
@@ -322,7 +325,7 @@ void main() {
       await tester.pump(const Duration(seconds: 2));
     });
 
-    testWidgets('long-press menu: copy, select text, share, branch', (tester) async {
+    testWidgets('reply menu: copy, select text, share, branch', (tester) async {
       final platform = _platform(tester);
       final harness = ChatHarness(session: 's1', states: {'s1': _conversation()});
       await _pump(tester, harness);
@@ -330,8 +333,9 @@ void main() {
       harness.controllers['s1']!.emit(_conversation());
       await pumpFrames(tester);
 
+      // 长按现在选中正文；回复菜单在操作行的 ⋯ 里。
       Future<void> menu() async {
-        await tester.longPress(find.textContaining('多发了一次请求', findRichText: true).first);
+        await tester.tap(find.byTooltip('更多').last);
         await pumpFrames(tester);
       }
 
@@ -350,7 +354,10 @@ void main() {
       await tester.tap(find.widgetWithText(SettingsTile, '分享'));
       await pumpFrames(tester);
       expect(find.byType(SharePanel), findsOneWidget);
-      expect(tester.widget<SegmentedPill<ShareScope>>(find.byType(SegmentedPill<ShareScope>)).selected, ShareScope.reply);
+      expect(
+        tester.widget<SegmentedPill<ShareScope>>(find.byType(SegmentedPill<ShareScope>)).selected,
+        ShareScope.reply,
+      );
       expect(platform.shared, isEmpty);
       Navigator.of(tester.element(find.byType(SharePanel))).pop();
       await pumpFrames(tester);
@@ -359,9 +366,8 @@ void main() {
       await tester.tap(find.widgetWithText(SettingsTile, '选择文字'));
       await pumpFrames(tester);
       expect(find.text('全部复制'), findsOneWidget);
-      expect(find.byType(SelectionArea), findsOneWidget);
+      expect(find.byType(SelectionArea), findsWidgets);
     });
-
   });
 
   group('prompt actions', () {

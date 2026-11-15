@@ -40,7 +40,7 @@ int _ms(DateTime t) => t.millisecondsSinceEpoch;
 
 /// A parent with three children (finished, running, failed), one of which
 /// delegated once more.
-Map<String, SessionSummary> sampleAgentSessions({bool withTeam = false}) {
+Map<String, SessionSummary> sampleAgentSessions({bool withTeam = false, bool anyRunning = true}) {
   final rows = [
     _summary(
       parentId,
@@ -100,7 +100,7 @@ Map<String, SessionSummary> sampleAgentSessions({bool withTeam = false}) {
     _summary(
       testsId,
       parent: parentId,
-      running: true,
+      running: anyRunning,
       values: {
         'subagent': _identity('补连点的测试'),
         'subagentTiming': {

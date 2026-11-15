@@ -1,0 +1,78 @@
+// 输入条上方的终端权限胶囊：显示当前档位，点一下进设置。
+// 原版灰 / 进阶黄 / 高危红——危险档位不该安安静静待在那儿。
+
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../fork_text.dart';
+import '../../state/phone_state.dart';
+import '../phone/shell/shell_permissions_page.dart';
+import '../../ui/theme/app_icons.dart';
+import '../../ui/theme/theme.dart';
+import '../../ui/chat/dock/dock_pill.dart';
+import '../../ui/phone/phone_control_screen.dart';
+
+/// 「▣ 启用终端                  点击设置」
+/// 「▣ 终端 · 进阶               点击设置」
+/// 「▣ 终端 · 高危               点击设置」
+class RootPill extends ConsumerWidget {
+  const RootPill({super.key, this.compact = false});
+
+  /// 生成回复期间改用圆形图标：文字太长会把「完全权限」挤出屏幕。
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final phone = ref.watch(phoneProvider.select((s) => (enabled: s.status.enabled, shell: s.status.shell)));
+    final theme = Theme.of(context);
+    // 手机操控关着时引擎根本不挂 shell 工具，存储的档位不会生效：不显示成已启用。
+    final mode = phone.enabled ? phone.shell.mode : 'off';
+    final (label, color, icon) = switch (mode) {
+      'safe' => (ForkText.rootTierSafe, Colors.amber.shade700, AppIcons.redacted),
+      'full' => (ForkText.rootTierFull, Colors.red.shade600, AppIcons.command),
+      _ => (ForkText.rootEnable, theme.colorScheme.onSurfaceVariant, AppIcons.command),
+    };
+    if (compact) {
+      return Semantics(
+        button: true,
+        label: ForkText.rootSemantics(label),
+        onTap: () => _open(context, enabled: phone.enabled),
+        excludeSemantics: true,
+        child: GlassSurface(
+          tier: GlassTier.chrome,
+          borderRadius: BorderRadius.circular(DockMetrics.radius),
+          grouped: true,
+          onTap: () => _open(context, enabled: phone.enabled),
+          child: SizedBox(
+            width: DockMetrics.height,
+            height: DockMetrics.height,
+            child: Center(child: DockGlyph.icon(icon, color: color)),
+          ),
+        ),
+      );
+    }
+    return Semantics(
+      button: true,
+      label: ForkText.rootSemantics(label),
+      onTap: () => _open(context, enabled: phone.enabled),
+      excludeSemantics: true,
+      child: GlassSurface(
+        tier: GlassTier.chrome,
+        borderRadius: DockMetrics.shape,
+        grouped: true,
+        onTap: () => _open(context, enabled: phone.enabled),
+        child: DockRow(
+          leading: DockGlyph.icon(icon, color: color),
+          content: Text(label, style: DockText.title(context, color: color)),
+          accessory: Text(ForkText.rootSettings, style: DockText.detail(context)),
+        ),
+      ),
+    );
+  }
+
+  void _open(BuildContext context, {required bool enabled}) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => enabled ? const ShellPermissionsPage() : const PhoneControlScreen()),
+    );
+  }
+}

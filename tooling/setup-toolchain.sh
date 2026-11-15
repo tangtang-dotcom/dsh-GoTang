@@ -2,7 +2,7 @@
 # Installs the Android build toolchain for dsh-app into $DEV_ROOT (user-level, no sudo):
 # Temurin JDK 17, Flutter stable, Android SDK (cmdline-tools, platform, build-tools, NDK,
 # emulator + x86_64 system image). Re-runnable: finished steps are skipped.
-set -euo pipefail
+set -Eeuo pipefail
 
 DEV_ROOT="${DEV_ROOT:-$HOME/dev}"
 [[ $DEV_ROOT == /* ]] || DEV_ROOT="$PWD/$DEV_ROOT"
@@ -10,6 +10,9 @@ FLUTTER_VERSION="${FLUTTER_VERSION:-3.47.7}"
 FLUTTER_SHA256="${FLUTTER_SHA256:-af7455f540df951184c7953fbe3cf884766e7541dacf8571f9f582db03dd6230}"
 CMDLINE_TOOLS_BUILD="${CMDLINE_TOOLS_BUILD:-13114758}"
 SYSTEM_IMAGE="${SYSTEM_IMAGE:-system-images;android-35;google_apis;x86_64}"
+# The emulator and its system image are for local device testing, not for building an APK:
+# a CI runner that only packages one needs ~2 GB less disk. Set INSTALL_EMULATOR=1 to keep them.
+INSTALL_EMULATOR="${INSTALL_EMULATOR:-1}"
 
 JDK_DIR="$DEV_ROOT/jdk-17"
 FLUTTER_DIR="$DEV_ROOT/flutter"
@@ -18,6 +21,10 @@ DL="$DEV_ROOT/.downloads"
 mkdir -p "$DEV_ROOT" "$DL"
 
 log() { printf '[toolchain %s] %s\n' "$(date +%H:%M:%S)" "$*"; }
+die() { printf '[toolchain %s] error: %s\n' "$(date +%H:%M:%S)" "$*" >&2; exit 1; }
+# Any failure names itself, even when the command that failed says nothing (a bare exit 1
+# from a subshell in the background left the CI logs with no clue at all).
+trap 'rc=$?; printf "[toolchain %s] error: exit %s at %s:%s: %s\n" "$(date +%H:%M:%S)" "$rc" "${BASH_SOURCE[0]}" "$LINENO" "$BASH_COMMAND" >&2' ERR
 
 download_cached() (
   local destination="$1" url="$2" pending_download
@@ -48,13 +55,32 @@ install_jdk() {
 install_flutter() {
   if [ -x "$FLUTTER_DIR/bin/flutter" ] && [ ! -f "$FLUTTER_DIR/.dsh-toolchain-incomplete" ]; then log "Flutter present"; return; fi
   local name="flutter_linux_${FLUTTER_VERSION}-stable.tar.xz"
-  local url="https://storage.flutter-io.cn/flutter_infra_release/releases/stable/linux/$name"
+  # The official host first (the CN mirror drops large transfers from time to time), then
+  # the mirror. A failed attempt writes .part, so a half file never looks downloaded.
+  local -a mirrors=(
+    "https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/$name"
+    "https://storage.flutter-io.cn/flutter_infra_release/releases/stable/linux/$name"
+  )
   log "Flutter: $name"
-  download_cached "$DL/$name" "$url"
-  echo "$FLUTTER_SHA256  $DL/$name" | sha256sum -c -
+  if [ ! -f "$DL/$name" ]; then
+    local got=0 url
+    for url in "${mirrors[@]}"; do
+      if curl -fL --retry 5 --retry-all-errors --retry-delay 3 --connect-timeout 20 \
+          -o "$DL/$name.part" "$url"; then
+        mv "$DL/$name.part" "$DL/$name"; got=1; break
+      fi
+      rm -f "$DL/$name.part"
+      log "Flutter download failed from one host; trying the next"
+    done
+    [ "$got" = 1 ] || die "could not download $name"
+  fi
+  echo "$FLUTTER_SHA256  $DL/$name" | sha256sum -c - || die "Flutter archive failed its checksum"
+  df -h "$DEV_ROOT" | tail -1
+  free -m | head -2
   mkdir -p "$FLUTTER_DIR"
   touch "$FLUTTER_DIR/.dsh-toolchain-incomplete"
-  tar -xJf "$DL/$name" -C "$DEV_ROOT"
+  tar -xJf "$DL/$name" -C "$DEV_ROOT" || die "could not extract $name"
+  [ -x "$FLUTTER_DIR/bin/flutter" ] || die "$name extracted without bin/flutter"
   rm -f "$FLUTTER_DIR/.dsh-toolchain-incomplete"
 }
 
@@ -83,17 +109,37 @@ export ANDROID_HOME="$SDK_DIR" ANDROID_SDK_ROOT="$SDK_DIR"
 export PATH="$JDK_DIR/bin:$FLUTTER_DIR/bin:$SDK_DIR/cmdline-tools/latest/bin:$SDK_DIR/platform-tools:$SDK_DIR/emulator:$PATH"
 export PUB_HOSTED_URL="https://pub.flutter-io.cn" FLUTTER_STORAGE_BASE_URL="https://storage.flutter-io.cn"
 
-# Versions Flutter's Gradle plugin defaults to (compileSdk / NDK).
-GRADLE_EXT=$(find "$FLUTTER_DIR/packages/flutter_tools/gradle/src/main" -name 'FlutterExtension.*' -print -quit)
-NDK_VERSION=$(grep -oE 'ndkVersion[^"]*"[0-9.]+"' "$GRADLE_EXT" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
-COMPILE_SDK=$(grep -oE 'compileSdkVersion[^0-9]*[0-9]+' "$GRADLE_EXT" | grep -oE '[0-9]+$' | head -1)
+# Versions Flutter's Gradle plugin defaults to (compileSdk / NDK). Read them from the
+# FlutterExtension declaration itself (a whole-tree grep also hits stale pins in other
+# files and picks the wrong NDK); fall back to the pair this Flutter release ships.
+GRADLE_EXT=$(find "$FLUTTER_DIR/packages/flutter_tools/gradle/src/main" -name 'FlutterExtension.*' -print -quit 2>/dev/null || true)
+if [ -n "$GRADLE_EXT" ]; then
+  NDK_VERSION=$(grep -oE 'ndkVersion[^"]*"[0-9.]+"' "$GRADLE_EXT" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || true)
+  COMPILE_SDK=$(grep -oE 'compileSdkVersion[^0-9]*[0-9]+' "$GRADLE_EXT" | grep -oE '[0-9]+$' | head -1 || true)
+fi
+NDK_VERSION="${NDK_VERSION:-28.2.13676358}"
+COMPILE_SDK="${COMPILE_SDK:-36}"
 log "Flutter defaults: compileSdk=$COMPILE_SDK ndk=$NDK_VERSION"
+
+# libtawcroot.so is built against the NDK pinned in runtime/tawcroot/source.json, which can
+# differ from Flutter's default; install that one too or the tawcroot build (and a release
+# APK) fails with "needs NDK <version>".
+TAWCROOT_NDK=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["ndkVersion"])' \
+  "$(dirname "$0")/../runtime/tawcroot/source.json" 2>/dev/null || true)
 
 # Building the app requires accepting the Android SDK licenses.
 yes | sdkmanager --sdk_root="$SDK_DIR" --licenses >/dev/null || true
-sdkmanager --sdk_root="$SDK_DIR" \
-  "platform-tools" "platforms;android-${COMPILE_SDK:-36}" "build-tools;${COMPILE_SDK:-36}.0.0" \
-  "ndk;${NDK_VERSION}" "cmake;3.22.1" "emulator" "$SYSTEM_IMAGE"
+SDK_PACKAGES=(
+  "platform-tools" "platforms;android-${COMPILE_SDK}" "build-tools;${COMPILE_SDK}.0.0"
+  "ndk;${NDK_VERSION}" "cmake;3.22.1"
+)
+if [ -n "$TAWCROOT_NDK" ] && [ "$TAWCROOT_NDK" != "$NDK_VERSION" ]; then
+  SDK_PACKAGES+=("ndk;${TAWCROOT_NDK}")
+fi
+if [[ "$INSTALL_EMULATOR" == 1 ]]; then
+  SDK_PACKAGES+=("emulator" "$SYSTEM_IMAGE")
+fi
+sdkmanager --sdk_root="$SDK_DIR" "${SDK_PACKAGES[@]}"
 
 flutter config --no-analytics --android-sdk "$SDK_DIR" --jdk-dir "$JDK_DIR" >/dev/null
 flutter precache --android
@@ -105,6 +151,9 @@ cat > "$(dirname "$0")/env.sh" <<EOF
 export JAVA_HOME="$JDK_DIR"
 export ANDROID_HOME="$SDK_DIR"
 export ANDROID_SDK_ROOT="$SDK_DIR"
+# A CI image may preship ANDROID_NDK_HOME pointing at another NDK; tawcroot verifies the
+# exact revision, so pin it to the one installed here.
+export ANDROID_NDK_HOME="$SDK_DIR/ndk/${TAWCROOT_NDK:-$NDK_VERSION}"
 export PUB_HOSTED_URL="https://pub.flutter-io.cn"
 export FLUTTER_STORAGE_BASE_URL="https://storage.flutter-io.cn"
 export PATH="$JDK_DIR/bin:$FLUTTER_DIR/bin:$SDK_DIR/cmdline-tools/latest/bin:$SDK_DIR/platform-tools:$SDK_DIR/emulator:\$PATH"

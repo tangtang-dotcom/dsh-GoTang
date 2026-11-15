@@ -42,9 +42,10 @@ object XiaomiFocus {
      * and the line in the card. Long titles and lines are cut to stay within [PARAM_MAX_BYTES].
      */
     fun param(c: LiveContent): String {
+        // 岛上要的是「现在在干什么」，不是会话名：状态词当标题，会话名退到正文。
         val word = (c.chip ?: c.title).take(ISLAND_CHARS)
-        var title = c.title
-        var text = c.text
+        var title = c.headline
+        var text = c.detail
         while (true) {
             val json = Json.write(template(c, word, title, text))
             if (json.toByteArray(Charsets.UTF_8).size <= PARAM_MAX_BYTES || (title.length <= 8 && text.isEmpty())) return json

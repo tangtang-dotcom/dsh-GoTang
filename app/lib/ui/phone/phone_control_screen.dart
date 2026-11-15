@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../fork/fork_text.dart';
 import '../../l10n/l10n.dart';
 import '../../runtime/local_footprint.dart';
 import '../../runtime/runtime_bridge.dart';
@@ -31,6 +32,7 @@ import '../theme/theme.dart';
 import 'action_log_page.dart';
 import 'android_shell_page.dart';
 import 'a11y_restore_sheet.dart';
+import '../../fork/phone/shell/shell_permissions_page.dart';
 import 'app_rules_page.dart';
 import 'dnd_mode_page.dart';
 import 'phone_disclosure_sheet.dart';
@@ -525,6 +527,17 @@ class _PhoneControlScreenState extends ConsumerState<PhoneControlScreen> {
                   gap,
                   ListPageCard(
                     children: [
+                      ListPageRow(
+                        icon: AppIcons.terminal,
+                        title: ForkText.terminalPermissions,
+                        subtitle: switch (status.shell.mode) {
+                          'safe' => ForkText.tierSafeCount(status.shell.allowed.length),
+                          'full' => ForkText.tierFullAny,
+                          _ => ForkText.tierOff,
+                        },
+                        subtitleMaxLines: 2,
+                        onTap: () => _push(const ShellPermissionsPage()),
+                      ),
                       ListPageRow(
                         key: const Key('phone-a11y-restore'),
                         icon: AppIcons.keepAlive,

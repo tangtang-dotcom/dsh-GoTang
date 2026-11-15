@@ -11,12 +11,16 @@ import 'package:dsh_app/ui/chat/widgets/live_clock.dart';
 import 'package:dsh_app/ui/chat/widgets/whale_tail.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../support/english_preview.dart';
 import 'support/harness.dart';
 import 'support/sample_chat.dart';
 
 void main() {
+  // 语音与界面偏好都读 SharedPreferences；测试里给它一个空实现。
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+
   setUpAll(() async {
     await loadTestFonts();
     await WhaleSprites.load();
