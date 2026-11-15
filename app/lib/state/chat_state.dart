@@ -13,7 +13,7 @@ import 'chat_error_text.dart';
 import 'connection_state.dart';
 import 'hosts_state.dart';
 import 'models_state.dart';
-import 'notify_state.dart' show appForegroundProvider;
+import 'notify_state.dart' show appActiveProvider, appForegroundProvider;
 import 'run_pulse.dart';
 import 'sessions_state.dart';
 
@@ -624,6 +624,15 @@ class ChatController extends Notifier<ChatState> {
       _onScreen(ref.read(appForegroundProvider), building: true);
       ref.listen(appForegroundProvider, (_, onScreen) => _onScreen(onScreen));
     }
+    // Stop turning streamed tokens into frames while the app is not in front
+    // (recents / app switcher, screen off, another app). The transcript keeps
+    // accumulating; one flush on return catches the screen up. Unlike [_quiet]
+    // — a remote-host token-relay optimisation that waits 30s — this fires at
+    // once, on any host (local included), so the transition into recents is not
+    // rendering every token and re-blurring the glass while the system
+    // composites the switch.
+    _suspended = !ref.read(appActiveProvider);
+    ref.listen(appActiveProvider, (_, active) => _setSuspended(!active));
     // Token speed and compaction for the activity pill (see run_pulse.dart).
     final pulse = ref.watch(runPulseProvider(sessionId));
     _listen(client, pulse, building: true);
@@ -1147,9 +1156,30 @@ class ChatController extends Notifier<ChatState> {
     }
   }
 
+  /// While the app is not in front nobody is looking: coalesced streaming
+  /// updates are held (the transcript still accumulates) and the first frame
+  /// back flushes the latest state. Set from [appActiveProvider] in [build].
+  bool _suspended = false;
+
+  void _setSuspended(bool suspended) {
+    if (_suspended == suspended) return;
+    _suspended = suspended;
+    if (suspended) {
+      // Drop any coalesced update still waiting so it cannot paint one last
+      // frame into the transition.
+      _flush?.cancel();
+      _flush = null;
+    } else {
+      _schedule();
+    }
+  }
+
   /// Coalesces streaming updates to roughly one rebuild per frame.
   void _schedule() {
     _dirty = true;
+    // Off screen nothing is repainting: hold the update until we are back in
+    // front, where [_setSuspended] flushes it.
+    if (_suspended) return;
     _flush ??= Timer(const Duration(milliseconds: 32), () {
       _flush = null;
       if (_dirty) _publish();

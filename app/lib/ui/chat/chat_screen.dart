@@ -33,6 +33,7 @@ import '../../state/chat_error_text.dart';
 import '../../fork/chat/chat_pill_prefs.dart';
 import '../../fork/chat/root_dock.dart';
 import '../../state/chat_state.dart';
+import '../../state/notify_state.dart';
 import '../../state/commands_state.dart';
 import '../../state/compose_inbox.dart';
 import '../../state/composer_insert.dart';
@@ -1792,6 +1793,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> with WidgetsBindingObse
     final headerHeight = typing ? MediaQuery.paddingOf(context).top + AppSpace.sm : ChatHeader.heightOf(context);
 
     Widget backdrop(Widget child) => widget.backdrop ? WallpaperBackdrop(child: child) : child;
+    // While the app is being covered (recents, screen off, another app) the page
+    // stops its tickers — the streaming cursor's 144Hz breathing, the list's
+    // glide, reveal, thinking sweep — so the transition does not keep drawing.
+    final appActive = ref.watch(appActiveProvider);
     final screen = AnnotatedRegion<SystemUiOverlayStyle>(
       value: dshSystemOverlay(Theme.of(context).brightness),
       child: backdrop(
@@ -2301,7 +2306,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> with WidgetsBindingObse
         ),
       ),
     );
-    return UiTrace(scope: 'chat', child: screen);
+    return UiTrace(scope: 'chat', child: TickerMode(enabled: appActive, child: screen));
   }
 
   /// What sits on the composer's top-left edge: 「自动允许中 ×」 while this

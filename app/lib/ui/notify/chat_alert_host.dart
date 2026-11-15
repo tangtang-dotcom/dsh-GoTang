@@ -43,14 +43,24 @@ class _ChatAlertHostState extends ConsumerState<ChatAlertHost> {
   static bool _onScreen(AppLifecycleState? state) =>
       state == null || state == AppLifecycleState.resumed || state == AppLifecycleState.inactive;
 
+  // Stricter than [_onScreen]: only truly in front counts, so pages can power
+  // down their rendering the instant the app starts being covered.
+  static bool _active(AppLifecycleState? state) => state == null || state == AppLifecycleState.resumed;
+
   @override
   void initState() {
     super.initState();
     _lifecycle = AppLifecycleListener(
-      onStateChange: (state) => ref.read(appForegroundProvider.notifier).set(_onScreen(state)),
+      onStateChange: (state) {
+        ref.read(appForegroundProvider.notifier).set(_onScreen(state));
+        ref.read(appActiveProvider.notifier).set(_active(state));
+      },
     );
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) ref.read(appForegroundProvider.notifier).set(_onScreen(WidgetsBinding.instance.lifecycleState));
+      if (!mounted) return;
+      final state = WidgetsBinding.instance.lifecycleState;
+      ref.read(appForegroundProvider.notifier).set(_onScreen(state));
+      ref.read(appActiveProvider.notifier).set(_active(state));
     });
   }
 

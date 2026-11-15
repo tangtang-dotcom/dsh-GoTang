@@ -171,6 +171,14 @@ class FlagController extends Notifier<bool> {
 /// shade is down). Set from the app lifecycle by the alert host.
 final appForegroundProvider = NotifierProvider<FlagController, bool>(() => FlagController(true));
 
+/// The app is actively in front (resumed). Unlike [appForegroundProvider], the
+/// brief inactive states on the way out — the recents / app switcher, a system
+/// dialog, the notification shade — count as NOT active. Pages use this to stop
+/// animating and to stop turning streamed tokens into frames while they are
+/// being covered, so the system's own transition (and live blur) is not
+/// fighting this app for the GPU.
+final appActiveProvider = NotifierProvider<FlagController, bool>(() => FlagController(true));
+
 /// The chat is the current route (no settings page or sheet pushed over it).
 final chatOnScreenProvider = NotifierProvider<FlagController, bool>(() => FlagController(true));
 
