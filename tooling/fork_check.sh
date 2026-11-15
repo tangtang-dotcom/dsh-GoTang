@@ -36,6 +36,7 @@ allowed_files=(
   app/android/app/src/test/kotlin/io/github/ccch1mneyyy/dsh_app/phone/PhoneToolSchemaTest.kt
   app/lib/ui/agents/header_agents.dart
   app/lib/ui/phone/phone_control_screen.dart
+  app/lib/ui/phone/dnd_mode_page.dart
   app/android/app/src/main/kotlin/io/github/ccch1mneyyy/dsh_app/phone/PhoneControl.kt
   app/android/app/src/main/kotlin/io/github/ccch1mneyyy/dsh_app/phone/PhonePlugin.kt
   app/android/app/src/main/kotlin/io/github/ccch1mneyyy/dsh_app/phone/PhoneToolCatalog.kt
