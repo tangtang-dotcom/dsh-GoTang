@@ -391,7 +391,7 @@ APK 内置的 Linux 运行时由 `runtime/build-runtime.sh` 构建，以下组�
 | proot | 5.1.107.102 | Termux（源码 https://github.com/termux/proot） | GPL-2.0（`licenses/proot-COPYING.txt`） |
 | libtalloc | 2.5.0 | Termux | LGPL-3.0-or-later（`licenses/libtalloc-notice.txt`） |
 | libandroid-shmem | 0.7 | Termux | BSD-3-Clause（`licenses/libandroid-shmem-copyright.txt`） |
-| Ubuntu Base 与软件包（tzdata、ca-certificates、git 及依赖） | 24.04.5 | Canonical / Ubuntu | 各包自带，见 `/usr/share/doc/` |
+| Ubuntu Base 与软件包（tzdata、ca-certificates、git 及依赖） | 24.04.4 | Canonical / Ubuntu | 各包自带，见 `/usr/share/doc/` |
 | Node.js | 24.22.1 | https://nodejs.org | MIT 及其捆绑组件的许可 |
 | CPython | 3.12.15 | astral-sh/python-build-standalone | PSF-2.0 及其捆绑组件的许可 |
 | pnpm | 11.28.5 | npm | MIT |
