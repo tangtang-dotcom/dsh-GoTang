@@ -3,7 +3,7 @@
   "androidShellEntryHint": "Separate system-command channel, off by default",
   "androidShellSubtitle": "Run Android system commands on this phone through Shizuku or self-ADB, not bash inside Ubuntu.",
   "androidShellEnable": "Allow Android Shell",
-  "androidShellEnableHint": "A separate switch, independent of non-disruptive mode and screen confirmation settings.",
+  "androidShellEnableHint": "A separate switch, independent of non-disruptive mode and screen confirmation. It only adds an Android command channel; Ubuntu tools such as bash and run_code keep working, and both can be used together.",
   "androidShellConfirmationNote": "Every command needs confirmation and may change system settings and files.",
   "androidShellMasterOff": "Turn on Phone control on the previous page first.",
   "androidShellRiskTitle": "Allow Android system commands?",
@@ -66,6 +66,7 @@
   "androidShellErrorAdbNotPaired": "Pair this phone with wireless debugging, then connect ADB.",
   "androidShellErrorConnectFailed": "Connection failed. Check the selected channel and current wireless-debugging connection port, then retry.",
   "androidShellErrorIdentityChanged": "The channel identity changed. Stop, then authorize or connect again.",
+  "androidShellErrorHelperStartFailed": "The Android Shell helper failed to start. The command did not run.",
   "androidShellErrorBusy": "Another operation is still pending. Retry later or stop Android Shell first.",
   "androidShellErrorInvalidArguments": "Invalid input. Use a six-digit pairing code and a port from 1 to 65535.",
   "androidShellErrorCancelled": "The operation was cancelled.",
@@ -78,6 +79,7 @@
   "androidShellErrorProtocolMismatch": "The native module does not support this Shell protocol. Update the app.",
   "androidShellErrorNativeUnavailable": "The Android Shell native module is unavailable in this build.",
   "androidShellErrorInvalidResponse": "No valid native status was received. Refresh or update the app.",
+  "androidShellErrorStopped": "This round has ended or is paused. Turn it on again and retry.",
   "androidShellErrorStopFailed": "Stopping was not confirmed. Refresh the status and retry stopping.",
   "androidShellErrorUnknown": "The outcome could not be confirmed. Verify it first; never automatically retry a dispatched command."
 }

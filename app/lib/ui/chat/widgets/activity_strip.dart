@@ -4,6 +4,7 @@
 
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -300,6 +301,10 @@ class _Line extends StatelessWidget {
   final Duration? elapsed;
   final String? stats;
 
+  // Leave the transition unkeyed so AnimatedSwitcher assigns each fade its own key.
+  // The same activity can return while an older copy is still fading out.
+  static Widget _fade(Widget child, Animation<double> animation) => FadeTransition(opacity: animation, child: child);
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -345,49 +350,37 @@ class _Line extends StatelessWidget {
       theme.textTheme.labelSmall!.copyWith(fontSize: 12, color: a.waiting ? dsh.warning : dsh.textTertiary),
     );
 
-    // 条被挤到几十像素时（320dp × 1.3 字 + 右侧胶囊），时钟既放不下也没意义：
-    // 先让它退出，标题再于自己的行里省略。
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final showClock = elapsed != null && constraints.maxWidth >= 110;
-        return Row(
-          children: [
-            Expanded(
-              child: AnimatedSwitcher(
-                duration: AppMotion.of(context, AppMotion.quick),
-                layoutBuilder: (current, previous) =>
-                    Stack(alignment: Alignment.centerLeft, children: [...previous, ?current]),
-                child: Row(
-                  key: ValueKey('${a.title}\u0000$second'),
-                  children: [
-                    Flexible(
-                      child: Text(
-                        a.title,
-                        style: titleStyle,
-                        maxLines: 1,
-                        softWrap: false,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+    return Row(
+      children: [
+        Expanded(
+          child: AnimatedSwitcher(
+            duration: AppMotion.of(context, AppMotion.quick),
+            transitionBuilder: !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS
+                ? _fade
+                : AnimatedSwitcher.defaultTransitionBuilder,
+            layoutBuilder: (current, previous) =>
+                Stack(alignment: Alignment.centerLeft, children: [...previous, ?current]),
+            child: Row(
+              key: ValueKey('${a.title}\u0000$second'),
+              children: [
+                Text(a.title, style: titleStyle),
+                if (second.isNotEmpty) ...[
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text.rich(
+                      TextSpan(children: spans),
+                      maxLines: 1,
+                      softWrap: false,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    if (second.isNotEmpty) ...[
-                      const SizedBox(width: 6),
-                      Flexible(
-                        child: Text.rich(
-                          TextSpan(children: spans),
-                          maxLines: 1,
-                          softWrap: false,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
+                  ),
+                ],
+              ],
             ),
-            if (showClock) ...[const SizedBox(width: 8), Text(formatClock(elapsed!), style: clockStyle)],
-          ],
-        );
-      },
+          ),
+        ),
+        if (elapsed != null) ...[const SizedBox(width: 8), Text(formatClock(elapsed!), style: clockStyle)],
+      ],
     );
   }
 }
