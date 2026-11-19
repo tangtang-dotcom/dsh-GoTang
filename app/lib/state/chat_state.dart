@@ -13,7 +13,7 @@ import 'chat_error_text.dart';
 import 'connection_state.dart';
 import 'hosts_state.dart';
 import 'models_state.dart';
-import 'notify_state.dart' show appForegroundProvider;
+import 'notify_state.dart' show appActiveProvider, appForegroundProvider;
 import 'run_pulse.dart';
 import 'sessions_state.dart';
 
@@ -469,6 +469,11 @@ class ChatController extends Notifier<ChatState> {
   Timer? _stopTimeout;
   _ChatOperation? _stoppingOperation;
   bool _dirty = false;
+
+  /// The app is not `resumed` (recents/overview, notification shade, another
+  /// app). Token-driven rebuilds are dropped until it is resumed again; the
+  /// transcript keeps accumulating and one flush catches up on return.
+  bool _suspended = false;
   ModelSelection? _model;
   Object? _modelChange;
   bool _defaultModelSaveFailed = false;
@@ -631,6 +636,8 @@ class ChatController extends Notifier<ChatState> {
       _onScreen(ref.read(appForegroundProvider), building: true);
       ref.listen(appForegroundProvider, (_, onScreen) => _onScreen(onScreen));
     }
+    _suspended = !ref.read(appActiveProvider);
+    ref.listen(appActiveProvider, (_, active) => _setSuspended(!active));
     // Token speed and compaction for the activity pill (see run_pulse.dart).
     final pulse = ref.watch(runPulseProvider(sessionId));
     _listen(client, pulse, building: true);
@@ -1157,10 +1164,22 @@ class ChatController extends Notifier<ChatState> {
   /// Coalesces streaming updates to roughly one rebuild per frame.
   void _schedule() {
     _dirty = true;
+    if (_suspended) return;
     _flush ??= Timer(const Duration(milliseconds: 32), () {
       _flush = null;
       if (_dirty) _publish();
     });
+  }
+
+  void _setSuspended(bool suspended) {
+    if (_suspended == suspended) return;
+    _suspended = suspended;
+    if (suspended) {
+      _flush?.cancel();
+      _flush = null;
+    } else {
+      _schedule();
+    }
   }
 
   void _publish({bool freshSnapshot = false}) {

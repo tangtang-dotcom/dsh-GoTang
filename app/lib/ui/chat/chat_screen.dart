@@ -35,6 +35,7 @@ import '../../state/chat_error_text.dart';
 import '../../fork/chat/chat_pill_prefs.dart';
 import '../../fork/chat/root_dock.dart';
 import '../../state/chat_state.dart';
+import '../../state/notify_state.dart';
 import '../../state/commands_state.dart';
 import '../../state/compose_inbox.dart';
 import '../../state/composer_insert.dart';
@@ -2331,7 +2332,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> with WidgetsBindingObse
         ),
       ),
     );
-    return UiTrace(scope: 'chat', child: screen);
+    final appActive = ref.watch(appActiveProvider);
+    return UiTrace(
+      scope: 'chat',
+      child: TickerMode(enabled: appActive, child: screen),
+    );
   }
 
   /// What sits on the composer's top-left edge: 「自动允许中 ×」 while this

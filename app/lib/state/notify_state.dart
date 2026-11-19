@@ -175,6 +175,13 @@ final appForegroundProvider = NotifierProvider<FlagController, bool>(() => FlagC
 /// The chat is the current route (no settings page or sheet pushed over it).
 final chatOnScreenProvider = NotifierProvider<FlagController, bool>(() => FlagController(true));
 
+/// The app is in the foreground and actually being looked at: only `resumed`.
+/// Distinct from [appForegroundProvider], which also counts a briefly inactive
+/// app (notification shade, a system dialog, the recents/overview transition)
+/// as on screen. The chat stops painting while this is false, so sliding into
+/// recents no longer fights the system compositor for the GPU.
+final appActiveProvider = NotifierProvider<FlagController, bool>(() => FlagController(true));
+
 /// Something asked for the person's attention unbidden in this launch (the
 /// usage statistics toast, an update offer, the background running line):
 /// the star prompt waits for another launch.
