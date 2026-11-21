@@ -62,7 +62,8 @@ jobs:
           # （bcpkix → bcutil:[1.81,1.82)），整次构建就废了。
           export FLUTTER_STORAGE_BASE_URL=https://storage.googleapis.com
           export PUB_HOSTED_URL=https://pub.dev
-          bash tooling/build-apk.sh -f arm64
+          # 1.3.0 起 release 构建默认要求伴侣包（CI 没有 keys，无法提供），显式 --no-companion。
+          bash tooling/build-apk.sh -f arm64 --no-companion
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
