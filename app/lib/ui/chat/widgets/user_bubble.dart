@@ -13,7 +13,7 @@ import '../media/media_format.dart' show mediaParamsLine;
 import '../mention/mention_chip.dart';
 import '../secret_mask.dart';
 import 'message_actions.dart';
-import 'message_selection.dart';
+import '../../../fork/chat/tap_to_menu.dart';
 import 'quote_chip.dart';
 
 /// 用户消息:**右对齐的软气泡**,比页面深一档,像"按进去"的。
@@ -21,7 +21,7 @@ import 'quote_chip.dart';
 /// 禁配:气泡底上只用主文字 / 次级文字;三级文字(4.32)与主色(4.22)
 /// 不过 AA。
 ///
-/// 长按气泡里的字就地选字([MessageSelection]);选区上的「更多」打开菜单:复制 /
+/// 轻点气泡打开消息菜单;长按交给列表 SelectionArea 就地选字:复制 /
 /// 选择文字 / 引用 / 编辑后重发([onEdit])。
 ///
 /// 以引用块开头的消息(引用追问),引文画在气泡顶部([BubbleQuote]),
@@ -122,17 +122,20 @@ class UserBubble extends StatelessWidget {
       );
     }
 
-    // Its own semantics node, carrying the text; a screen reader's long-press
-    // opens the menu.
+    // Its own semantics node, carrying the text. 轻点打开消息菜单；长按交给
+    // 聊天列表统一的 SelectionArea 选字（指针事件先于手势竞技场，SelectionArea
+    // 抢不走判定）。
     final bubble = Semantics(
       container: true,
       header: true,
-      onLongPress: () => _menu(context),
-      child: DecoratedBox(
-        decoration: ShapeDecoration(color: surfaces.userBubble, shape: AppShape.bubble),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: MessageSelection(text: _shown, onQuote: onQuote, onMore: () => _menu(context), child: content),
+      child: TapToMenu(
+        onTap: () => _menu(context),
+        child: DecoratedBox(
+          decoration: ShapeDecoration(color: surfaces.userBubble, shape: AppShape.bubble),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: content,
+          ),
         ),
       ),
     );
