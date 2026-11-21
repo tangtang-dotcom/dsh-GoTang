@@ -14,7 +14,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'support/harness.dart';
 
@@ -159,9 +158,6 @@ List<String> _composerTexts(WidgetTester tester) => [
 }
 
 void main() {
-  // 语音与界面偏好都读 SharedPreferences；测试里给它一个空实现。
-  setUp(() => SharedPreferences.setMockInitialValues({}));
-
   setUpAll(loadTestFonts);
 
   group('ChatController message actions', () {
@@ -271,6 +267,7 @@ void main() {
       expect(await chat().forkBeforePrompt(prompt(8)), isNull);
       expect(state().error, '分叉失败：这里不能分叉');
     });
+
   });
 
   group('reply actions', () {
@@ -325,7 +322,7 @@ void main() {
       await tester.pump(const Duration(seconds: 2));
     });
 
-    testWidgets('reply menu: copy, select text, share, branch', (tester) async {
+    testWidgets('long-press menu: copy, select text, share, branch', (tester) async {
       final platform = _platform(tester);
       final harness = ChatHarness(session: 's1', states: {'s1': _conversation()});
       await _pump(tester, harness);
@@ -333,9 +330,10 @@ void main() {
       harness.controllers['s1']!.emit(_conversation());
       await pumpFrames(tester);
 
-      // 长按现在选中正文；回复菜单在操作行的 ⋯ 里。
       Future<void> menu() async {
-        await tester.tap(find.byTooltip('更多').last);
+        await tester.longPress(find.textContaining('多发了一次请求', findRichText: true).first);
+        await pumpFrames(tester);
+        await tester.tap(find.widgetWithText(TextSelectionToolbarTextButton, '更多'));
         await pumpFrames(tester);
       }
 
@@ -354,10 +352,7 @@ void main() {
       await tester.tap(find.widgetWithText(SettingsTile, '分享'));
       await pumpFrames(tester);
       expect(find.byType(SharePanel), findsOneWidget);
-      expect(
-        tester.widget<SegmentedPill<ShareScope>>(find.byType(SegmentedPill<ShareScope>)).selected,
-        ShareScope.reply,
-      );
+      expect(tester.widget<SegmentedPill<ShareScope>>(find.byType(SegmentedPill<ShareScope>)).selected, ShareScope.reply);
       expect(platform.shared, isEmpty);
       Navigator.of(tester.element(find.byType(SharePanel))).pop();
       await pumpFrames(tester);
@@ -366,8 +361,10 @@ void main() {
       await tester.tap(find.widgetWithText(SettingsTile, '选择文字'));
       await pumpFrames(tester);
       expect(find.text('全部复制'), findsOneWidget);
-      expect(find.byType(SelectionArea), findsWidgets);
+      final sheet = find.byWidgetPredicate((w) => w.runtimeType.toString() == '_SelectTextSheet');
+      expect(find.descendant(of: sheet, matching: find.byType(SelectionArea)), findsOneWidget);
     });
+
   });
 
   group('prompt actions', () {
@@ -377,6 +374,8 @@ void main() {
       await _pump(tester, harness);
       await tester.enterText(find.byType(TextField), '原对话草稿');
       await tester.longPress(find.text('帮我看看测试为什么失败'));
+      await pumpFrames(tester);
+      await tester.tap(find.widgetWithText(TextSelectionToolbarTextButton, '更多'));
       await pumpFrames(tester);
       for (final label in ['复制', '选择文字', '编辑后重发']) {
         expect(find.widgetWithText(SettingsTile, label), findsOneWidget);
@@ -399,6 +398,8 @@ void main() {
       await _pump(tester, harness);
       harness.controllers['s1']!.forkOutcome = null;
       await tester.longPress(find.text('帮我看看测试为什么失败'));
+      await pumpFrames(tester);
+      await tester.tap(find.widgetWithText(TextSelectionToolbarTextButton, '更多'));
       await pumpFrames(tester);
       await tester.tap(find.widgetWithText(SettingsTile, '编辑后重发'));
       await pumpFrames(tester);
@@ -423,6 +424,8 @@ void main() {
       );
       await _pump(tester, harness);
       await tester.longPress(find.text('再看看依赖'));
+      await pumpFrames(tester);
+      await tester.tap(find.widgetWithText(TextSelectionToolbarTextButton, '更多'));
       await pumpFrames(tester);
       expect(find.widgetWithText(SettingsTile, '编辑后重发'), findsNothing);
       await tester.tap(find.widgetWithText(SettingsTile, '复制'));

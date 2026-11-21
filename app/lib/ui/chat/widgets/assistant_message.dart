@@ -8,7 +8,6 @@ import 'package:dsh_client/dsh_client.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../fork/chat/tap_to_menu.dart';
 import '../../../l10n/l10n.dart';
 import '../../../speech/read_aloud.dart';
 import '../../speech/speech_ui.dart';
@@ -21,6 +20,7 @@ import '../../plugins/native/message_plugin_menu.dart';
 import '../../share/share_entry.dart' show shareReply;
 import '../render/markdown_body.dart';
 import 'message_actions.dart';
+import 'message_selection.dart';
 import 'stream_row.dart';
 import 'thinking_pill.dart';
 
@@ -43,9 +43,9 @@ const _firstTextIn = Duration(milliseconds: 200);
 ///                    ↻ 重新回答只给整个对话的最后一条)
 /// ```
 ///
-/// ⇪ 和菜单里的「分享」打开同一个分享面板。长按或 ⋯:同一个消息菜单(复制 /
-/// 选择文字 / 引用 / 分享 / 重新回答 / 从这里分叉)。正文因此不再直接长按选字,选字走菜单里的
-/// "选择文字",选中一段还能「引用」。
+/// ⇪ 和菜单里的「分享」打开同一个分享面板。⋯:消息菜单(复制 / 选择文字 / 引用 /
+/// 分享 / 重新回答 / 从这里分叉)。正文长按就地选字([MessageSelection]),选区上的
+/// 「更多」也打开这个菜单。
 class AssistantMessage extends StatefulWidget {
   const AssistantMessage({
     super.key,
@@ -136,17 +136,10 @@ class _AssistantMessageState extends State<AssistantMessage> {
   Widget _markdown(String text, bool streaming) {
     final reveal = _reveal = _reveal || (streaming && _startedEmpty && AppMotion.fluid(context));
     if (_body == null || _bodyText != text || _bodyStreaming != streaming || _bodyReveal != reveal) {
-      // Long-press opens the menu; selecting text is one of its entries.
+      // Selection is the message's own (MessageSelection around the text).
       // repairBareViews: a model that forgets the ```dsh-ui fence still gets
       // its view drawn instead of a wall of JSON.
-      _body = MarkdownBody(
-        text: text,
-        streaming: streaming,
-        reveal: reveal,
-        // 选区由聊天列表统一提供，消息自己不再套 SelectionArea。
-        selectable: false,
-        repairBareViews: true,
-      );
+      _body = MarkdownBody(text: text, streaming: streaming, reveal: reveal, selectable: false, repairBareViews: true);
       _bodyText = text;
       _bodyStreaming = streaming;
       _bodyReveal = reveal;
@@ -191,8 +184,6 @@ class _AssistantMessageState extends State<AssistantMessage> {
     }
 
     final actions = widget.showActions && !streaming && text.isNotEmpty;
-    // 正文轻点打开消息菜单；长按交给聊天列表统一的 SelectionArea 选字。
-    // 思考条和底部操作行不套 TapToMenu，避免和它们自己的点击冲突。
     final reply = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -200,11 +191,13 @@ class _AssistantMessageState extends State<AssistantMessage> {
           ThinkingPill(reasoning: reasoning, active: streaming && text.isEmpty, streaming: streaming, growIn: _waited),
           if (text.isNotEmpty && !_textAfterThinking) const SizedBox(height: 8),
         ],
+        // Always wrapped, streaming too: the Markdown subtree keeps its place
+        // when the turn ends.
         if (text.isNotEmpty)
-          TapToMenu(
-            onTap: () {
-              if (!streaming) unawaited(_menu(text));
-            },
+          MessageSelection(
+            text: text,
+            onQuote: widget.onQuote,
+            onMore: () => _menu(text),
             child: _textAfterThinking ? _FirstTextIn(child: _markdown(text, streaming)) : _markdown(text, streaming),
           ),
         if (item.interrupted) const _InterruptedMark(),
@@ -236,7 +229,14 @@ class _AssistantMessageState extends State<AssistantMessage> {
       ],
     );
     // 一条回复是读屏里的一个分组,里面的段落、标题照常逐个读。
-    final message = Semantics(key: const ValueKey('reply'), container: true, explicitChildNodes: true, child: reply);
+    // A screen reader's long-press opens the menu (a finger's selects text).
+    final message = Semantics(
+      key: const ValueKey('reply'),
+      container: true,
+      explicitChildNodes: true,
+      onLongPress: streaming || text.isEmpty ? null : () => _menu(text),
+      child: reply,
+    );
     return _waited ? _HandOff(waiting: false, child: message) : message;
   }
 

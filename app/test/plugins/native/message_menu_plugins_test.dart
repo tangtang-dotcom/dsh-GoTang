@@ -49,6 +49,8 @@ Future<void> openMenu(WidgetTester tester) async {
   // 长按现在选中正文；回复菜单在操作行的 ⋯ 里。
   await tester.tap(find.byTooltip('更多').last);
   await tester.pumpAndSettle();
+  await tester.tap(find.widgetWithText(TextSelectionToolbarTextButton, '更多'));
+  await tester.pumpAndSettle();
 }
 
 void main() {
