@@ -138,6 +138,9 @@ class RuntimeController private constructor(private val app: Context) : DshProce
     fun addSink(sink: EventSink) = synchronized(sinks) { sinks += sink }
     fun removeSink(sink: EventSink) = synchronized(sinks) { sinks -= sink }
 
+    internal fun shouldAutoStart(autoStart: Boolean): Boolean =
+        LaunchStart.shouldStart(autoStart, phase.wire, safeState.wire, autoSafe(), strikes)
+
     fun status(): Map<String, Any?> = mapOf(
         "abi" to (runCatching { manifest.abi }.getOrNull() ?: Build.SUPPORTED_ABIS.firstOrNull()),
         "bundledVersion" to runCatching { manifest.runtimeVersion }.getOrNull(),
@@ -556,6 +559,7 @@ class RuntimeController private constructor(private val app: Context) : DshProce
         timeline.requested()
         worker.execute {
             var launched: DshProcess? = null
+            var siwcStore: SiwcStoreBridge? = null
             try {
                 try {
                     installer.cleanupCommittedUpgrade()
@@ -598,6 +602,14 @@ class RuntimeController private constructor(private val app: Context) : DshProce
                         null
                     }
                 }
+                // Only the installed native endpoint may advertise SIWC for this launch.
+                env.remove(SiwcStoreBridge.ENV)
+                val launchStore = if (authOverlay && AppAuthGuest.writeSiwcFiles(app, installer.rootfs)) {
+                    try { SiwcStoreBridge.start(app) } catch (_: Exception) { null }
+                } else null
+                siwcStore = launchStore
+                if (launchStore != null) env[SiwcStoreBridge.ENV] = launchStore.endpoint
+                else if (authOverlay) log("[dsh-app] OpenAI SIWC secure storage not mounted", "system")
                 // startProcess advances runGen under this same monitor. Publish only while
                 // this queued launch still owns that generation; once published, its non-null
                 // process prevents another start from advancing the generation underneath it.
@@ -606,6 +618,11 @@ class RuntimeController private constructor(private val app: Context) : DshProce
                     else DshProcess(
                         app, manifest, installer.rootfs,
                         object : DshProcess.Listener by this@RuntimeController {
+                            override fun onExit(source: DshProcess, code: Int, expected: Boolean) {
+                                launchStore?.close()
+                                this@RuntimeController.onExit(source, code, expected)
+                            }
+
                             override fun onLog(line: String, stream: String, storageLine: String) {
                                 if (stream != "system") {
                                     synchronized(runTail) {
@@ -624,6 +641,7 @@ class RuntimeController private constructor(private val app: Context) : DshProce
                         process = it
                     }
                 } ?: run {
+                    launchStore?.close()
                     PhoneControl.get(app).onEngineStopped()
                     return@execute
                 }
@@ -640,6 +658,7 @@ class RuntimeController private constructor(private val app: Context) : DshProce
                 }
                 if (phone) PhoneControl.get(app).launched(p.phoneMounted)
             } catch (e: Throwable) {
+                siwcStore?.close()
                 // Keep ownership while the old UID sweep runs, including a
                 // failure after spawning but before the waiter was allocated.
                 launched?.launchDiagnostics?.failed("startFailed")
@@ -1234,6 +1253,7 @@ class RuntimeController private constructor(private val app: Context) : DshProce
         if (next != Phase.RUNNING) managedSkillGate.retire()
         phase = next
         emitStatus()
+        main.post { AndroidBackgroundProtection.get(app).refresh() }
         DshService.updateNotification(app)
     }
 
