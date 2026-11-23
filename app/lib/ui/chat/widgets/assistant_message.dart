@@ -20,8 +20,9 @@ import '../../plugins/native/message_plugin_menu.dart';
 import '../../share/share_entry.dart' show shareReply;
 import '../render/markdown_body.dart';
 import 'message_actions.dart';
-import 'message_selection.dart';
+import '../../../fork/chat/tap_to_menu.dart';
 import 'stream_row.dart';
+import 'theme_role_tag.dart';
 import 'thinking_pill.dart';
 
 /// 三个点交给下一块内容:旧的线性淡出,新的淡入并上移一点。
@@ -44,7 +45,7 @@ const _firstTextIn = Duration(milliseconds: 200);
 /// ```
 ///
 /// ⇪ 和菜单里的「分享」打开同一个分享面板。⋯:消息菜单(复制 / 选择文字 / 引用 /
-/// 分享 / 重新回答 / 从这里分叉)。正文长按就地选字([MessageSelection]),选区上的
+/// 分享 / 重新回答 / 从这里分叉)。轻点气泡开菜单、长按交给列表 SelectionArea 就地选字,选区上的
 /// 「更多」也打开这个菜单。
 class AssistantMessage extends StatefulWidget {
   const AssistantMessage({
@@ -136,10 +137,17 @@ class _AssistantMessageState extends State<AssistantMessage> {
   Widget _markdown(String text, bool streaming) {
     final reveal = _reveal = _reveal || (streaming && _startedEmpty && AppMotion.fluid(context));
     if (_body == null || _bodyText != text || _bodyStreaming != streaming || _bodyReveal != reveal) {
-      // Selection is the message's own (MessageSelection around the text).
+      // Selection comes from the chat list's SelectionArea around the rows.
       // repairBareViews: a model that forgets the ```dsh-ui fence still gets
       // its view drawn instead of a wall of JSON.
-      _body = MarkdownBody(text: text, streaming: streaming, reveal: reveal, selectable: false, repairBareViews: true);
+      _body = MarkdownBody(
+        text: text,
+        streaming: streaming,
+        reveal: reveal,
+        selectable: false,
+        repairBareViews: true,
+        replyTypography: true,
+      );
       _bodyText = text;
       _bodyStreaming = streaming;
       _bodyReveal = reveal;
@@ -193,12 +201,16 @@ class _AssistantMessageState extends State<AssistantMessage> {
         ],
         // Always wrapped, streaming too: the Markdown subtree keeps its place
         // when the turn ends.
+        // 正文轻点打开消息菜单；长按交给聊天列表统一的 SelectionArea 选字。
         if (text.isNotEmpty)
-          MessageSelection(
-            text: text,
-            onQuote: widget.onQuote,
-            onMore: () => _menu(text),
-            child: _textAfterThinking ? _FirstTextIn(child: _markdown(text, streaming)) : _markdown(text, streaming),
+          TapToMenu(
+            onTap: () {
+              if (!streaming) unawaited(_menu(text));
+            },
+            child: _wrapAssistantBody(
+              context,
+              _textAfterThinking ? _FirstTextIn(child: _markdown(text, streaming)) : _markdown(text, streaming),
+            ),
           ),
         if (item.interrupted) const _InterruptedMark(),
         // 一轮结束时和输入条上的胶囊同一节奏展开:胶囊收回多少,这里长出
@@ -229,15 +241,70 @@ class _AssistantMessageState extends State<AssistantMessage> {
       ],
     );
     // 一条回复是读屏里的一个分组,里面的段落、标题照常逐个读。
-    // A screen reader's long-press opens the menu (a finger's selects text).
     final message = Semantics(
       key: const ValueKey('reply'),
       container: true,
       explicitChildNodes: true,
-      onLongPress: streaming || text.isEmpty ? null : () => _menu(text),
       child: reply,
     );
     return _waited ? _HandOff(waiting: false, child: message) : message;
+  }
+
+  Widget _wrapAssistantBody(BuildContext context, Widget child) {
+    final themeStyle = DshThemeStyle.of(context);
+    if (themeStyle.pack == null) return child;
+    final scheme = Theme.of(context).colorScheme;
+    final rule = themeStyle.rule ?? scheme.primary.withValues(alpha: 0.65);
+    final Widget body = switch (themeStyle.components.assistantStyle) {
+      ThemeAssistantStyle.plain => child,
+      // Full width: a short reply's card is as wide as a long one's.
+      ThemeAssistantStyle.card => SizedBox(
+        width: double.infinity,
+        child: DecoratedBox(
+          decoration: ShapeDecoration(
+            color: themeStyle.assistantBubble ?? DshSurfaces.of(context).card.fill,
+            shape: themeStyle.cardShape(themeStyle.assistantBorder ?? scheme.outlineVariant, themeStyle.borderWidth),
+          ),
+          child: Padding(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10), child: child),
+        ),
+      ),
+      ThemeAssistantStyle.leftRule => DecoratedBox(
+        decoration: BoxDecoration(
+          border: Border(left: BorderSide(color: rule, width: 2.5)),
+        ),
+        child: Padding(padding: const EdgeInsets.only(left: 12), child: child),
+      ),
+      // Only the tint and the rule are clipped to the card's corners; the
+      // text is not, so nothing in it is cut.
+      ThemeAssistantStyle.quote => SizedBox(
+        width: double.infinity,
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: themeStyle.clipFor(
+                themeStyle.cardRadius,
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: scheme.primary.withValues(alpha: 0.06),
+                    border: Border(left: BorderSide(color: rule, width: 3)),
+                  ),
+                ),
+              ),
+            ),
+            if (themeStyle.assistantBorder case final border?)
+              Positioned.fill(
+                child: DecoratedBox(
+                  decoration: ShapeDecoration(shape: themeStyle.cardShape(border, themeStyle.borderWidth)),
+                ),
+              ),
+            Padding(padding: const EdgeInsets.fromLTRB(15, 10, 12, 10), child: child),
+          ],
+        ),
+      ),
+    };
+    final tag = themeRoleTag(context, themeStyle, user: false);
+    if (tag == null) return body;
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [tag, body]);
   }
 
   Future<void> _menu(String markdown) async {

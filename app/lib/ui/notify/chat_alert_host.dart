@@ -43,14 +43,22 @@ class _ChatAlertHostState extends ConsumerState<ChatAlertHost> {
   static bool _onScreen(AppLifecycleState? state) =>
       state == null || state == AppLifecycleState.resumed || state == AppLifecycleState.inactive;
 
+  /// Only `resumed` counts as actively on screen: `inactive` is the
+  /// recents/overview transition, the notification shade or a system dialog,
+  /// where the chat should stop painting rather than compete for the GPU.
+  static bool _active(AppLifecycleState? state) => state == null || state == AppLifecycleState.resumed;
+
+  void _apply(AppLifecycleState? state) {
+    ref.read(appForegroundProvider.notifier).set(_onScreen(state));
+    ref.read(appActiveProvider.notifier).set(_active(state));
+  }
+
   @override
   void initState() {
     super.initState();
-    _lifecycle = AppLifecycleListener(
-      onStateChange: (state) => ref.read(appForegroundProvider.notifier).set(_onScreen(state)),
-    );
+    _lifecycle = AppLifecycleListener(onStateChange: _apply);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) ref.read(appForegroundProvider.notifier).set(_onScreen(WidgetsBinding.instance.lifecycleState));
+      if (mounted) _apply(WidgetsBinding.instance.lifecycleState);
     });
   }
 
