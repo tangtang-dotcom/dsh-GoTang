@@ -11,6 +11,7 @@ import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../companion/companion_agent_phone_tools.dart' show companionPhoneWindow;
 import '../l10n/l10n.dart';
 import '../state/connection_state.dart';
 import '../state/hosts_state.dart';
@@ -30,10 +31,18 @@ sealed class LauncherEntry {
     final path = raw['path'];
     final taskId = raw['taskId'];
     final taskRev = raw['taskRev'];
+    final companion = companionPhoneWindow(sessionId is String ? sessionId : null);
     return switch (raw['kind']) {
       'new' => NewChatEntry(text: text),
       'voice' => NewChatEntry(voice: true, text: text),
+      'companion_assistant' => CompanionAssistantEntry(
+        page: raw['page'] is String ? raw['page'] as String : null,
+        returnToApp: raw['returnToApp'] == true,
+      ),
       'screenshot' when path is String && path.startsWith('/') && !path.contains('\u0000') => ScreenshotEntry(path),
+      // A companion phone task's way back comes on its own session id: she is
+      // no conversation in the chat.
+      'chat' when companion != null => OpenCompanionEntry(room: companion == 'room'),
       'chat' when sessionId is String && sessionId.isNotEmpty => OpenChatEntry(
         HostRef.decode(host is String ? host : null),
         sessionId,
@@ -55,6 +64,14 @@ class NewChatEntry extends LauncherEntry {
   final bool voice;
 }
 
+/// The Android digital assistant opened the room, optionally with a system Assist snapshot.
+class CompanionAssistantEntry extends LauncherEntry {
+  const CompanionAssistantEntry({this.page, this.returnToApp = false});
+
+  final String? page;
+  final bool returnToApp;
+}
+
 /// A pet screenshot in the app's private cache, authenticated by the native
 /// entry bridge. It is attached to a new-chat draft, never sent automatically.
 class ScreenshotEntry extends LauncherEntry {
@@ -69,6 +86,15 @@ class OpenChatEntry extends LauncherEntry {
 
   final HostRef host;
   final String sessionId;
+}
+
+/// Back from a companion phone task (it finished, 回到 DSH Go, a prompt
+/// opened): her [room] when it was asked for there; from her floating self or
+/// her notification, the app as the person left it.
+class OpenCompanionEntry extends LauncherEntry {
+  const OpenCompanionEntry({required this.room});
+
+  final bool room;
 }
 
 /// A trusted reminder notification opens its stored task, without choosing a

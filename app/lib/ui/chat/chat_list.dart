@@ -24,6 +24,8 @@ import '../../state/attachments.dart' show DraftAttachment;
 import '../../state/chat_reveal.dart';
 import '../../state/chat_state.dart';
 import '../../state/connection_state.dart';
+import '../../companion/companion_reply.dart' show companionHasMarks, companionWithoutMarks;
+import '../../companion/companion_state.dart' show companionSessionFilterProvider;
 import '../../state/hosts_state.dart' show HostKind, activeHostProvider;
 import '../../state/regenerate.dart';
 import '../../state/sessions_state.dart';
@@ -630,7 +632,12 @@ class _ChatListState extends ConsumerState<ChatList> with SingleTickerProviderSt
   // ---------------------------------------------------------------------------
   // 行与分界
 
-  void _deriveRows(ChatState s, {required bool foldTurns, List<TurnArtifacts> artifacts = const []}) {
+  void _deriveRows(
+    ChatState s, {
+    required bool foldTurns,
+    List<TurnArtifacts> artifacts = const [],
+    bool compactTools = false,
+  }) {
     final previous = _builtState;
     if (s.loading || !foldTurns) {
       _settling.clear();
@@ -650,6 +657,7 @@ class _ChatListState extends ConsumerState<ChatList> with SingleTickerProviderSt
     _builtState = s;
     final inputs = (
       foldTurns,
+      compactTools,
       artifacts,
       s.items,
       s.approvals,
@@ -691,7 +699,7 @@ class _ChatListState extends ConsumerState<ChatList> with SingleTickerProviderSt
     final oldestTurn = s.turns.firstOrNull?.startSeq;
     if (oldestTurn != null) _oldestRowSeq = math.min(_oldestRowSeq ?? oldestTurn, oldestTurn);
     final prepended = previousOldest != null && _oldestRowSeq != null && _oldestRowSeq! < previousOldest;
-    _rows = _rowCache.update(s, foldTurns: foldTurns, artifacts: artifacts);
+    _rows = _rowCache.update(s, foldTurns: foldTurns, artifacts: artifacts, compactTools: compactTools);
     _index = _rowCache.index;
     // Only a draft streaming on keeps the other rows' widgets: anything else
     // may change what a row shows beyond its own item (running, pending,
@@ -795,7 +803,7 @@ class _ChatListState extends ConsumerState<ChatList> with SingleTickerProviderSt
   static bool _draftHasWords(List<ChatItem> items) {
     for (var i = items.length - 1; i >= 0; i--) {
       switch (items[i]) {
-        case AssistantChatItem(seq: null, :final text) when text.trim().isNotEmpty:
+        case AssistantChatItem(seq: null, :final text) when text.trimLeft().isNotEmpty:
           return true;
         case AssistantChatItem(seq: null) || ToolChatItem(seq: null):
           continue;
@@ -932,10 +940,13 @@ class _ChatListState extends ConsumerState<ChatList> with SingleTickerProviderSt
   Widget build(BuildContext context) {
     final s = ref.watch(chatProvider(widget.sessionId));
     _running = s.running;
+    // Her conversation reads as talk: marks out, what she used folded away.
+    _hers = ref.watch(companionSessionFilterProvider)(ref.watch(activeHostProvider), widget.sessionId);
     _deriveRows(
       s,
-      foldTurns: ref.watch(settingsProvider.select((s) => s.foldCompletedTurns)),
+      foldTurns: _hers || ref.watch(settingsProvider.select((s) => s.foldCompletedTurns)),
       artifacts: ref.watch(sessionArtifactsProvider(widget.sessionId)),
+      compactTools: _hers,
     );
     final rows = _rows;
     final split = _split;
@@ -1146,7 +1157,7 @@ class _ChatListState extends ConsumerState<ChatList> with SingleTickerProviderSt
   /// 它们自带上下 4 的留白,彼此之间不再加间距(图形块之间正好 8)。
   static bool _isProcess(ChatRow? row) => switch (row) {
     ToolCallRow() || ToolGroupRow() || CommandNoticeRow() => true,
-    AssistantRow(:final item) => item.text.trim().isEmpty && (item.reasoning.trim().isNotEmpty || item.streaming),
+    AssistantRow(:final item) => item.text.trimLeft().isEmpty && (item.reasoning.trim().isNotEmpty || item.streaming),
     NoticeRowData(:final item) => item.kind != 'error',
     _ => false,
   };
@@ -1262,7 +1273,14 @@ class _ChatListState extends ConsumerState<ChatList> with SingleTickerProviderSt
   // ---------------------------------------------------------------------------
   // 消息操作:分叉打开的是一个新对话,原对话不动。
 
+  /// This is the companion's conversation (伙伴小屋).
+  bool _hers = false;
+
   Widget _reply(AssistantChatItem item, bool showActions, TurnTrace? footnote) {
+    // Her expression and action marks move her in the room; here they are not words.
+    if (_hers && companionHasMarks(item.text, streaming: item.streaming)) {
+      item = replyWithText(item, companionWithoutMarks(item.text, streaming: item.streaming));
+    }
     // A picture a media card shows is not drawn again in the reply.
     if (item.text.contains('![')) {
       if (withoutShownImages(item.text, ref.read(sessionMediaPathsProvider(widget.sessionId))) case final text?) {

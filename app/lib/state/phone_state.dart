@@ -503,7 +503,6 @@ class PhoneController extends Notifier<PhoneState> {
     return result;
   }
 
-  Future<bool> setSkillSavePrompt(bool enabled) => _thenRefresh(_channel.setSkillSavePrompt(enabled));
 }
 
 final phoneProvider = NotifierProvider<PhoneController, PhoneState>(PhoneController.new);
