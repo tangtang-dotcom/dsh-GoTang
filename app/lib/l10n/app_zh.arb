@@ -3156,6 +3156,23 @@
       }
     }
   },
+  "companionPhoneConnectionReplaced": "另一条手机连接已接手这个会话。请回到当前伙伴会话后再试。",
+  "companionPhoneSessionUnavailable": "主机找不到当前的伙伴会话，或这个会话已换了预设。请重新打开伙伴小屋。",
+  "companionPhoneToolsConflict": "主机没有接入这次手机工具连接。请重新打开当前伙伴会话后再试。",
+  "companionHostSelectionChanged": "主机会话的模型选择已改变。请检查当前会话后再发送。",
+  "companionLocalDisconnected": "未连上本机引擎。请检查引擎是否正在运行。",
+  "companionLocalUnavailable": "本机引擎暂时不能打开伙伴会话。请检查引擎及其伙伴预设。",
+  "companionLocalModelUnavailable": "本机引擎无法使用这个伙伴原先选择的模型。请检查模型设置。",
+  "companionContinuedOnPhone": "主机尚未收到这句话，这一轮已转为轻量模式。",
+  "companionLogOnDevice": "手机上的记录",
+  "companionSessionUsingTool": "正在用 {tool}",
+  "@companionSessionUsingTool": {
+    "placeholders": {
+      "tool": {
+        "type": "String"
+      }
+    }
+  },
   "companionTitle": "伙伴小屋",
   "companionEntrySubtitle": "和她待一会儿",
   "companionDefaultName": "她",
@@ -3194,7 +3211,7 @@
   "companionLogOpenChat": "在主对话里看",
   "companionLogOlder": "加载更早的记录",
   "companionMenuHistory": "查看聊天记录",
-  "companionMenuRestart": "重新认识",
+  "companionMenuRestart": "清空对话",
   "companionMenuRestartHint": "开始一段新对话",
   "companionMenuRestartConfirm": "她会忘记这段对话。旧的记录还留在主机上，不会被删除。",
   "companionMenuRemovePack": "移除素材",
@@ -4293,7 +4310,7 @@
   "companionReceiptPriorResult": "此前约定写出的表已找到；新的约定尚未完成。",
   "companionLegacyConversation": "旧对话（角色未记录）",
   "companionScreen": "陪你看屏幕",
-  "companionScreenHint": "隔一会儿看一眼屏幕，有值得说的才开口；看到的不会记下来",
+  "companionScreenHint": "陪你一起看屏幕，看到有意思的就说出来；屏幕内容不会存下来，她只记得自己刚说过的几句",
   "companionScreenNeedsAccess": "要先打开手机操控的无障碍，或者允许她录屏",
   "companionScreenAllowProjection": "允许录屏",
   "companionScreenVision": "允许发送屏幕图片",
@@ -4311,6 +4328,10 @@
   "companionScreenNormalHint": "看到有意思的会说一句",
   "companionScreenChatty": "话多",
   "companionScreenChattyHint": "多陪你聊几句",
+  "companionScreenLive": "实时",
+  "companionScreenLiveHint": "一直跟着看，一分钟里能说上好几句",
+  "companionScreenPerHour": "每小时最多搭话",
+  "companionScreenPerHourNone": "不限",
   "companionScreenUsageAccess": "让她知道你在用哪个 App",
   "companionScreenCost": "今天大概花了 ¥{amount}",
   "@companionScreenCost": {
@@ -17556,7 +17577,7 @@
     }
   },
   "workshopTitle": "创意工坊",
-  "workshopSubtitle": "大家做的宠物和伙伴，挑喜欢的装上",
+  "workshopSubtitle": "大家做的主题、宠物和伙伴，挑喜欢的装上",
   "workshopEntrySubtitle": "找别人做的宠物和伙伴",
   "workshopTabBrowse": "发现",
   "workshopTabMine": "我的投稿",
@@ -17895,14 +17916,15 @@
   "workshopPublishWaitingPrevious": "上一个操作还没结束，稍等。",
   "workshopPublishChooseTitle": "选一个要投稿的",
   "workshopPublishCompanionCurrent": "现在的伙伴",
-  "workshopPublishSourcesEmptyTitle": "还没有可以投稿的",
-  "workshopPublishSourcesEmptyMessage": "自己导入的像素宠物和现在的伙伴可以投稿，也可以直接从文件选一个。",
+  "workshopPublishSourcesEmptyTitle": "本机没有可投稿的内容",
+  "workshopPublishSourcesEmptyMessage": "可以投稿本机的主题、像素宠物或伙伴，也可以直接选择 ZIP。",
   "workshopPublishFromFile": "从文件选择",
-  "workshopPublishFromFileHint": "宠物或伙伴的 zip，不用先导入",
+  "workshopPublishFromFileHint": "主题、宠物或伙伴的 ZIP，不用先导入",
   "workshopPublishTitleEnHelper": "选填，留空就用中文名称",
   "workshopPublishAuthorHelper": "选填，留空就用你的 GitHub 用户名",
   "workshopPublishLicenseHelper": "选填，不选就是「作者授权」",
   "workshopPublishSourcesIssue": "没能读出本机可以投稿的内容。",
+  "workshopPublishThemesIssue": "没能读出本机的主题包。",
   "workshopPublishPetsIssue": "没能读出本机的像素宠物。",
   "workshopPublishCompanionIssue": "没能读出本机的伙伴。",
   "workshopPublishNoCompanion": "本机还没有伙伴，先到伙伴小屋请一位。",

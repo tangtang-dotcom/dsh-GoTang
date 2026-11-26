@@ -5037,6 +5037,38 @@ class L10nZh extends L10n {
   }
 
   @override
+  String get companionPhoneConnectionReplaced => '另一条手机连接已接手这个会话。请回到当前伙伴会话后再试。';
+
+  @override
+  String get companionPhoneSessionUnavailable => '主机找不到当前的伙伴会话，或这个会话已换了预设。请重新打开伙伴小屋。';
+
+  @override
+  String get companionPhoneToolsConflict => '主机没有接入这次手机工具连接。请重新打开当前伙伴会话后再试。';
+
+  @override
+  String get companionHostSelectionChanged => '主机会话的模型选择已改变。请检查当前会话后再发送。';
+
+  @override
+  String get companionLocalDisconnected => '未连上本机引擎。请检查引擎是否正在运行。';
+
+  @override
+  String get companionLocalUnavailable => '本机引擎暂时不能打开伙伴会话。请检查引擎及其伙伴预设。';
+
+  @override
+  String get companionLocalModelUnavailable => '本机引擎无法使用这个伙伴原先选择的模型。请检查模型设置。';
+
+  @override
+  String get companionContinuedOnPhone => '主机尚未收到这句话，这一轮已转为轻量模式。';
+
+  @override
+  String get companionLogOnDevice => '手机上的记录';
+
+  @override
+  String companionSessionUsingTool(String tool) {
+    return '正在用 $tool';
+  }
+
+  @override
   String get companionTitle => '伙伴小屋';
 
   @override
@@ -5132,7 +5164,7 @@ class L10nZh extends L10n {
   String get companionMenuHistory => '查看聊天记录';
 
   @override
-  String get companionMenuRestart => '重新认识';
+  String get companionMenuRestart => '清空对话';
 
   @override
   String get companionMenuRestartHint => '开始一段新对话';
@@ -7195,7 +7227,7 @@ class L10nZh extends L10n {
   String get companionScreen => '陪你看屏幕';
 
   @override
-  String get companionScreenHint => '隔一会儿看一眼屏幕，有值得说的才开口；看到的不会记下来';
+  String get companionScreenHint => '陪你一起看屏幕，看到有意思的就说出来；屏幕内容不会存下来，她只记得自己刚说过的几句';
 
   @override
   String get companionScreenNeedsAccess => '要先打开手机操控的无障碍，或者允许她录屏';
@@ -7247,6 +7279,18 @@ class L10nZh extends L10n {
 
   @override
   String get companionScreenChattyHint => '多陪你聊几句';
+
+  @override
+  String get companionScreenLive => '实时';
+
+  @override
+  String get companionScreenLiveHint => '一直跟着看，一分钟里能说上好几句';
+
+  @override
+  String get companionScreenPerHour => '每小时最多搭话';
+
+  @override
+  String get companionScreenPerHourNone => '不限';
 
   @override
   String get companionScreenUsageAccess => '让她知道你在用哪个 App';
@@ -28396,7 +28440,7 @@ class L10nZh extends L10n {
   String get workshopTitle => '创意工坊';
 
   @override
-  String get workshopSubtitle => '大家做的宠物和伙伴，挑喜欢的装上';
+  String get workshopSubtitle => '大家做的主题、宠物和伙伴，挑喜欢的装上';
 
   @override
   String get workshopEntrySubtitle => '找别人做的宠物和伙伴';
@@ -29082,16 +29126,16 @@ class L10nZh extends L10n {
   String get workshopPublishCompanionCurrent => '现在的伙伴';
 
   @override
-  String get workshopPublishSourcesEmptyTitle => '还没有可以投稿的';
+  String get workshopPublishSourcesEmptyTitle => '本机没有可投稿的内容';
 
   @override
-  String get workshopPublishSourcesEmptyMessage => '自己导入的像素宠物和现在的伙伴可以投稿，也可以直接从文件选一个。';
+  String get workshopPublishSourcesEmptyMessage => '可以投稿本机的主题、像素宠物或伙伴，也可以直接选择 ZIP。';
 
   @override
   String get workshopPublishFromFile => '从文件选择';
 
   @override
-  String get workshopPublishFromFileHint => '宠物或伙伴的 zip，不用先导入';
+  String get workshopPublishFromFileHint => '主题、宠物或伙伴的 ZIP，不用先导入';
 
   @override
   String get workshopPublishTitleEnHelper => '选填，留空就用中文名称';
@@ -29104,6 +29148,9 @@ class L10nZh extends L10n {
 
   @override
   String get workshopPublishSourcesIssue => '没能读出本机可以投稿的内容。';
+
+  @override
+  String get workshopPublishThemesIssue => '没能读出本机的主题包。';
 
   @override
   String get workshopPublishPetsIssue => '没能读出本机的像素宠物。';

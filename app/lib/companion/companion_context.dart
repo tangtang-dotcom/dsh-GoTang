@@ -40,7 +40,7 @@ class CompanionContextEvent {
   final DateTime at;
   final String detail;
 
-  static const kinds = {'pet', 'feed', 'task-finished', 'renamed'};
+  static const kinds = {'pet', 'feed', 'task-finished', 'renamed', 'screen'};
 
   Map<String, Object?> toJson() {
     if (!_identifier(id) ||
@@ -52,6 +52,17 @@ class CompanionContextEvent {
     }
     return {'id': id, 'kind': kind, 'at': at.millisecondsSinceEpoch, if (detail.isNotEmpty) 'detail': detail};
   }
+}
+
+/// A 'screen' event's detail: where she was looking and what she said there,
+/// on one line within the event's 160 characters.
+String companionScreenNote(String line, {String? app, String? scene}) {
+  final where = [?app, ?scene].join('，');
+  final note = '你看着对方的屏幕${where.isEmpty ? '' : '（$where）'}主动说了：「${line.trim()}」'.replaceAll(
+    RegExp(r'[\x00-\x1f\x7f\s]+'),
+    ' ',
+  );
+  return note.runes.length <= 160 ? note : '${String.fromCharCodes(note.runes.take(158))}…」';
 }
 
 final _controls = RegExp(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]');
@@ -296,6 +307,7 @@ CompanionFullContextPlan companionFullContextPlan({
   bool recall = true,
   String memoryMode = 'query',
   Map<String, Object?>? phoneMemory,
+  Map<String, Object?>? deviceContext,
 }) {
   if (!_identifier(sessionId) || !_identifier(requestId)) {
     throw const FormatException('Invalid companion request identity');
@@ -322,7 +334,7 @@ CompanionFullContextPlan companionFullContextPlan({
     instanceId: instanceId,
     contextAvailable: true,
     eventIds: List.unmodifiable(selected.map((event) => event.id)),
-    update: !changed && selected.isEmpty && !query && phoneMemory == null
+    update: !changed && selected.isEmpty && !query && phoneMemory == null && deviceContext == null
         ? null
         : Map.unmodifiable({
             'v': 1,
@@ -333,6 +345,7 @@ CompanionFullContextPlan companionFullContextPlan({
             if (changed) 'expectedProfileRevision': profileRevision,
             'events': List.unmodifiable([for (final event in selected) Map.unmodifiable(event.toJson())]),
             if (query) 'query': String.fromCharCodes(text.replaceAll(_controls, ' ').runes.take(256)),
+            if (deviceContext != null) 'deviceContext': Map<String, Object?>.unmodifiable(deviceContext),
             if (phoneMemory != null) 'phoneMemory': Map<String, Object?>.unmodifiable(phoneMemory),
           }),
   );

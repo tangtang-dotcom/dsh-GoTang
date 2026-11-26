@@ -9296,6 +9296,66 @@ abstract class L10n {
   /// **'{month}月{day}日'**
   String commonMonthDay(String month, int day);
 
+  /// No description provided for @companionPhoneConnectionReplaced.
+  ///
+  /// In zh, this message translates to:
+  /// **'另一条手机连接已接手这个会话。请回到当前伙伴会话后再试。'**
+  String get companionPhoneConnectionReplaced;
+
+  /// No description provided for @companionPhoneSessionUnavailable.
+  ///
+  /// In zh, this message translates to:
+  /// **'主机找不到当前的伙伴会话，或这个会话已换了预设。请重新打开伙伴小屋。'**
+  String get companionPhoneSessionUnavailable;
+
+  /// No description provided for @companionPhoneToolsConflict.
+  ///
+  /// In zh, this message translates to:
+  /// **'主机没有接入这次手机工具连接。请重新打开当前伙伴会话后再试。'**
+  String get companionPhoneToolsConflict;
+
+  /// No description provided for @companionHostSelectionChanged.
+  ///
+  /// In zh, this message translates to:
+  /// **'主机会话的模型选择已改变。请检查当前会话后再发送。'**
+  String get companionHostSelectionChanged;
+
+  /// No description provided for @companionLocalDisconnected.
+  ///
+  /// In zh, this message translates to:
+  /// **'未连上本机引擎。请检查引擎是否正在运行。'**
+  String get companionLocalDisconnected;
+
+  /// No description provided for @companionLocalUnavailable.
+  ///
+  /// In zh, this message translates to:
+  /// **'本机引擎暂时不能打开伙伴会话。请检查引擎及其伙伴预设。'**
+  String get companionLocalUnavailable;
+
+  /// No description provided for @companionLocalModelUnavailable.
+  ///
+  /// In zh, this message translates to:
+  /// **'本机引擎无法使用这个伙伴原先选择的模型。请检查模型设置。'**
+  String get companionLocalModelUnavailable;
+
+  /// No description provided for @companionContinuedOnPhone.
+  ///
+  /// In zh, this message translates to:
+  /// **'主机尚未收到这句话，这一轮已转为轻量模式。'**
+  String get companionContinuedOnPhone;
+
+  /// No description provided for @companionLogOnDevice.
+  ///
+  /// In zh, this message translates to:
+  /// **'手机上的记录'**
+  String get companionLogOnDevice;
+
+  /// No description provided for @companionSessionUsingTool.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在用 {tool}'**
+  String companionSessionUsingTool(String tool);
+
   /// No description provided for @companionTitle.
   ///
   /// In zh, this message translates to:
@@ -9485,7 +9545,7 @@ abstract class L10n {
   /// No description provided for @companionMenuRestart.
   ///
   /// In zh, this message translates to:
-  /// **'重新认识'**
+  /// **'清空对话'**
   String get companionMenuRestart;
 
   /// No description provided for @companionMenuRestartHint.
@@ -13371,7 +13431,7 @@ abstract class L10n {
   /// No description provided for @companionScreenHint.
   ///
   /// In zh, this message translates to:
-  /// **'隔一会儿看一眼屏幕，有值得说的才开口；看到的不会记下来'**
+  /// **'陪你一起看屏幕，看到有意思的就说出来；屏幕内容不会存下来，她只记得自己刚说过的几句'**
   String get companionScreenHint;
 
   /// No description provided for @companionScreenNeedsAccess.
@@ -13475,6 +13535,30 @@ abstract class L10n {
   /// In zh, this message translates to:
   /// **'多陪你聊几句'**
   String get companionScreenChattyHint;
+
+  /// No description provided for @companionScreenLive.
+  ///
+  /// In zh, this message translates to:
+  /// **'实时'**
+  String get companionScreenLive;
+
+  /// No description provided for @companionScreenLiveHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'一直跟着看，一分钟里能说上好几句'**
+  String get companionScreenLiveHint;
+
+  /// No description provided for @companionScreenPerHour.
+  ///
+  /// In zh, this message translates to:
+  /// **'每小时最多搭话'**
+  String get companionScreenPerHour;
+
+  /// No description provided for @companionScreenPerHourNone.
+  ///
+  /// In zh, this message translates to:
+  /// **'不限'**
+  String get companionScreenPerHourNone;
 
   /// No description provided for @companionScreenUsageAccess.
   ///
@@ -51867,7 +51951,7 @@ abstract class L10n {
   /// No description provided for @workshopSubtitle.
   ///
   /// In zh, this message translates to:
-  /// **'大家做的宠物和伙伴，挑喜欢的装上'**
+  /// **'大家做的主题、宠物和伙伴，挑喜欢的装上'**
   String get workshopSubtitle;
 
   /// No description provided for @workshopEntrySubtitle.
@@ -53175,13 +53259,13 @@ abstract class L10n {
   /// No description provided for @workshopPublishSourcesEmptyTitle.
   ///
   /// In zh, this message translates to:
-  /// **'还没有可以投稿的'**
+  /// **'本机没有可投稿的内容'**
   String get workshopPublishSourcesEmptyTitle;
 
   /// No description provided for @workshopPublishSourcesEmptyMessage.
   ///
   /// In zh, this message translates to:
-  /// **'自己导入的像素宠物和现在的伙伴可以投稿，也可以直接从文件选一个。'**
+  /// **'可以投稿本机的主题、像素宠物或伙伴，也可以直接选择 ZIP。'**
   String get workshopPublishSourcesEmptyMessage;
 
   /// No description provided for @workshopPublishFromFile.
@@ -53193,7 +53277,7 @@ abstract class L10n {
   /// No description provided for @workshopPublishFromFileHint.
   ///
   /// In zh, this message translates to:
-  /// **'宠物或伙伴的 zip，不用先导入'**
+  /// **'主题、宠物或伙伴的 ZIP，不用先导入'**
   String get workshopPublishFromFileHint;
 
   /// No description provided for @workshopPublishTitleEnHelper.
@@ -53219,6 +53303,12 @@ abstract class L10n {
   /// In zh, this message translates to:
   /// **'没能读出本机可以投稿的内容。'**
   String get workshopPublishSourcesIssue;
+
+  /// No description provided for @workshopPublishThemesIssue.
+  ///
+  /// In zh, this message translates to:
+  /// **'没能读出本机的主题包。'**
+  String get workshopPublishThemesIssue;
 
   /// No description provided for @workshopPublishPetsIssue.
   ///

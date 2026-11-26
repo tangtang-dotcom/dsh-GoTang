@@ -56,8 +56,8 @@ class UserBubble extends StatelessWidget {
   /// Small text actions after the pending label ("改为插话", "撤回").
   final List<(String, VoidCallback)> pendingActions;
 
-  /// "编辑后重发" in the long-press menu; null leaves it out (optimistic
-  /// bubbles: they have "撤回" instead).
+  /// "编辑后重发" in the selection toolbar and the full menu. Optimistic
+  /// bubbles leave it out; they have "撤回" instead.
   final VoidCallback? onEdit;
 
   /// "引用" in the long-press menu (and in 选择文字); null leaves it out.

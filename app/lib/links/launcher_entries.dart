@@ -53,6 +53,17 @@ sealed class LauncherEntry {
       _ => null,
     };
   }
+
+  /// Her full-mode session works the phone too. Its way back (a finished
+  /// task, 回到 DSH Go, a prompt) is her room like her own runs', never a chat.
+  /// Her room shows the [active] host's conversation: one on another host
+  /// opens as the chat it is there.
+  LauncherEntry forCompanion(bool Function(HostRef host, String sessionId) hers, {required HostRef active}) =>
+      switch (this) {
+        OpenChatEntry(:final host, :final sessionId) when host == active && hers(host, sessionId) =>
+          const OpenCompanionEntry(room: true),
+        _ => this,
+      };
 }
 
 /// A new conversation; [voice] starts dictation in its composer.
